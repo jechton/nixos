@@ -1,5 +1,5 @@
 {
-  perSystem = _: {
+  perSystem = {pkgs, ...}: {
     treefmt = {
       projectRootFile = "flake.nix";
 
@@ -26,6 +26,14 @@
       };
     };
 
-    pre-commit.settings.hooks.treefmt.enable = true;
+    pre-commit.settings.hooks = {
+      treefmt.enable = true;
+
+      betterleaks = {
+        enable = true;
+        entry = "${pkgs.betterleaks}/bin/betterleaks git --pre-commit --verbose --redact --staged";
+        pass_filenames = false;
+      };
+    };
   };
 }

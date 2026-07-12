@@ -84,12 +84,13 @@ in {
       du = getExe pkgs.dust;
       man = getExe pkgs.bat-extras.batman;
       md = "mkdir";
-      pb = getExe pkgs.bat-extras.prettybat;
       rd = "rmdir";
       rg = getExe pkgs.bat-extras.batgrep;
       # keep-sorted end
     };
-    sessionVariables = {PAGER = "bat";};
+    sessionVariables = {
+      PAGER = "bat";
+    };
   };
 
   programs = {
@@ -236,6 +237,7 @@ in {
     direnv = {
       enable = true;
       nix-direnv.enable = true;
+      silent = true;
     };
 
     eza = {
@@ -253,7 +255,13 @@ in {
 
     fzf.enable = true;
 
-    ghostty.enable = true;
+    ghostty = {
+      enable = true;
+      settings = {
+        cursor-invert-fg-bg = true;
+        mouse-hide-while-typing = true;
+      };
+    };
 
     ripgrep = {
       enable = true;

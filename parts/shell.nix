@@ -40,7 +40,7 @@
           command = "nix fmt \"$PRJ_ROOT\" && nix flake check --no-build \"$PRJ_ROOT\"";
         }
         {
-          name = "test";
+          name = "os-test";
           category = "system";
           help = "Dry-test the system configuration with nh";
           command = "nh os test -d always \"$@\"";
@@ -67,6 +67,12 @@
           category = "maintenance";
           help = "Garbage collect system profile and optimize nix-store";
           command = "nh clean all -k 4 --optimise \"$@\"";
+        }
+        {
+          name = "hash-url";
+          category = "tools";
+          help = "Prefetch a URL and print its SRI sha256 hash";
+          command = "nix-prefetch-url \"$@\" | xargs nix hash convert --hash-algo sha256";
         }
       ];
     };

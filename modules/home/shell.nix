@@ -4,6 +4,40 @@
   ...
 }: let
   inherit (lib) getExe;
+
+  ns = pkgs.writeShellApplication {
+    name = "ns";
+    runtimeInputs = [pkgs.fzf pkgs.nix-search-tv];
+    text = builtins.readFile "${pkgs.nix-search-tv.src}/nixpkgs.sh";
+  };
+
+  ocrRegion = pkgs.writeShellApplication {
+    name = "ocr-region";
+    runtimeInputs = with pkgs; [
+      coreutils
+      gnused
+      grim
+      libnotify
+      slurp
+      tesseract
+      wl-clipboard
+    ];
+    text = ''
+      image="$(mktemp --suffix=.png)"
+      trap 'rm -f "$image"' EXIT
+
+      geometry="$(slurp)" || exit 0
+      grim -g "$geometry" "$image"
+
+      text="$(tesseract "$image" stdout --psm 6 2>/dev/null | sed '/^[[:space:]]*$/d')"
+      if [ -n "$text" ]; then
+        printf '%s' "$text" | wl-copy
+        notify-send "OCR copied" "Recognized text is in the clipboard."
+      else
+        notify-send "OCR empty" "No text was recognized in the selected region."
+      fi
+    '';
+  };
 in {
   home = {
     packages = [
@@ -29,11 +63,8 @@ in {
 
       # Nix tools
       # keep-sorted start block=yes
-      (pkgs.writeShellApplication {
-        name = "ns";
-        runtimeInputs = [pkgs.fzf pkgs.nix-search-tv];
-        text = builtins.readFile "${pkgs.nix-search-tv.src}/nixpkgs.sh";
-      })
+      ns
+      ocrRegion
       pkgs.nix-diff
       pkgs.nix-init
       pkgs.nix-tree

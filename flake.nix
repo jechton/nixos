@@ -44,12 +44,17 @@
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    niri-nix.url = "git+https://codeberg.org/BANanaD3V/niri-nix";
+    niri = {
+      url = "github:sodiboo/niri-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
     nix-gaming.url = "github:fufexan/nix-gaming";
     nix-index-database = {
       url = "github:Mic92/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    noctalia.url = "github:noctalia-dev/noctalia-shell";
     nvf = {
       url = "github:notashelf/nvf";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -111,13 +116,6 @@
         ]
         ++ (import-tree ./parts).imports;
 
-      # perSystem = {system, ...}: {
-      #   _module.args.pkgs = import nixpkgs {
-      #     inherit system;
-      #     config.allowUnfree = true;
-      #   };
-      # };
-
       flake.nixosConfigurations = let
         mkHost = {
           system ? "x86_64-linux",
@@ -138,6 +136,7 @@
                 inputs.disko.nixosModules.disko
                 inputs.home-manager.nixosModules.home-manager
                 inputs.impermanence.nixosModules.impermanence
+                inputs.niri.nixosModules.niri
                 # keep-sorted end
 
                 {

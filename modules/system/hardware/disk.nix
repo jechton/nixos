@@ -112,6 +112,7 @@ in {
     fileSystems."/persist".neededForBoot = true;
     fileSystems."/var/log".neededForBoot = true;
     fileSystems."/var/lib".neededForBoot = true;
+    fileSystems."/home".neededForBoot = true;
 
     boot = {
       initrd.luks.devices = lib.mkIf cfg.luks {
@@ -124,14 +125,17 @@ in {
 
       tmp = {
         useTmpfs = true;
-        tmpfsSize = "50%";
+        tmpfsSize = "25%";
       };
     };
 
-    services.btrfs.autoScrub = {
-      enable = true;
-      interval = "weekly";
-      fileSystems = ["/"];
+    services = {
+      btrfs.autoScrub = {
+        enable = true;
+        interval = "weekly";
+        fileSystems = ["/"];
+      };
+      fstrim.enable = true;
     };
 
     zramSwap = {

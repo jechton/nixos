@@ -40,13 +40,11 @@
     hideMounts = true;
 
     directories = [
-      # This flake
       "/etc/nixos"
-      # Network config
       "/etc/NetworkManager/system-connections"
-      # System logs
+      "/var/lib/bluetooth"
+      "/var/lib/docker"
       "/var/log"
-      # Age key
       "/age"
     ];
 

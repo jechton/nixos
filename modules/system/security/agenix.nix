@@ -12,10 +12,10 @@ in {
 
     age.secrets = {
       user-password = {
-        file = ../../secrets/user-password.age;
+        file = ../../../secrets/user-password.age;
       };
       gpg-key = {
-        file = ../../secrets/gpg-key.age;
+        file = ../../../secrets/gpg-key.age;
         owner = "jeremiah";
       };
     };

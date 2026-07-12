@@ -10,7 +10,7 @@
     cursorsConf = ''
       sizes = 24, 32, 40, 48
 
-      gruvbox = color: ${c.base09}, label: ${c.base00}, shadow: ${c.base00}, shadow-opacity: 0.4, stroke: ${c.base00}, stroke-width: 1, stroke-opacity: 0.8
+      gruvbox = color: ${c.base05}, label: ${c.base00}, shadow: ${c.base00}, shadow-opacity: 0.4, stroke: ${c.base00}, stroke-width: 1, stroke-opacity: 0.8
     '';
   };
 in {
@@ -43,7 +43,7 @@ in {
     };
 
     cursor = {
-      name = "oreo_gruvbox_cursor";
+      name = "oreo_gruvbox_cursors";
       package = oreo-gruvbox-cursor;
       size = 32;
     };

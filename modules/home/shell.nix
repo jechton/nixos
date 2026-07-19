@@ -1,6 +1,7 @@
 {
   pkgs,
   lib,
+  inputs,
   ...
 }: let
   inherit (lib) getExe;
@@ -39,6 +40,8 @@
     '';
   };
 in {
+  imports = [inputs.nix-index-database.homeModules.nix-index];
+
   home = {
     packages = [
       # keep-sorted start
@@ -71,10 +74,8 @@ in {
       pkgs.nurl
       # keep-sorted end
     ];
-    shell.enableFishIntegration = true;
-  };
 
-  home = {
+    shell.enableFishIntegration = true;
     shellAliases = {
       # keep-sorted start
       archive = "${getExe pkgs.p7zip} a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $argv";
@@ -238,6 +239,13 @@ in {
       enable = true;
       nix-direnv.enable = true;
       silent = true;
+
+      config = {
+        global = {
+          hide_env_diff = true;
+          warn_timeout = "1m";
+        };
+      };
     };
 
     eza = {
@@ -262,6 +270,10 @@ in {
         mouse-hide-while-typing = true;
       };
     };
+
+    nix-index-database.comma.enable = true;
+
+    nix-index.enable = true;
 
     ripgrep = {
       enable = true;

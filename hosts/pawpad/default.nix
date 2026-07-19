@@ -1,14 +1,14 @@
 {
   hardware.facter.reportPath = ./facter.json;
 
-  networking.hostName = "vm";
+  networking.hostName = "pawpad";
 
   custom = {
     storage = {
       enable = true;
-      luks = false;
-      device = "/dev/vda";
-      swapSize = "10G";
+      luks = true;
+      device = "/dev/nvme0n1";
+      swapSize = "8G";
     };
     agenix.enable = true;
   };

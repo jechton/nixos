@@ -15,6 +15,7 @@
         gnugrep
         iputils
         iw
+        nixos-facter
         nixos-install-tools
         util-linux
         wpa_supplicant
@@ -157,18 +158,17 @@
         info "Re-mounting partitions under /mnt ..."
         disko --mode mount --flake "$FLAKE_DIR#$HOSTNAME"
 
-        # Generate hardware-configuration.nix if the host profile is new
-        HWCONF_DST="$FLAKE_DIR/hosts/$HOSTNAME/hardware-configuration.nix"
+        # Generate facter.json if the host profile is new
+        FACTER_DST="$FLAKE_DIR/hosts/$HOSTNAME/facter.json"
 
-        if [[ -f "$HWCONF_DST" ]]; then
-          info "Existing host profile found at '$HWCONF_DST'."
-          warn "Skipping hardware-configuration.nix generation to preserve existing config."
+        if [[ -f "$FACTER_DST" ]]; then
+          info "Existing host profile found at '$FACTER_DST'."
+          warn "Skipping hardware report generation to preserve existing config."
         else
-          info "No existing profile found. Generating hardware-configuration.nix ..."
-          nixos-generate-config --no-filesystems --root /mnt
-          mkdir -p "$(dirname "$HWCONF_DST")"
-          cp /mnt/etc/nixos/hardware-configuration.nix "$HWCONF_DST"
-          ok "hardware-configuration.nix saved → hosts/$HOSTNAME/"
+          info "No existing profile found. Generating facter.json ..."
+          mkdir -p "$(dirname "$FACTER_DST")"
+          nixos-facter -o "$FACTER_DST"
+          ok "facter.json saved → hosts/$HOSTNAME/"
         fi
 
         # Copy flake so nixos-install can reference it

@@ -26,15 +26,5 @@
     createDirectories = true;
   };
 
-  # custom.home = {
-  #   shell.enable = true;
-
-  #   git = {
-  #     enable = true;
-  #     name = displayName;
-  #     email = gitEmail;
-  #   };
-  # };
-
   home.stateVersion = "26.11";
 }

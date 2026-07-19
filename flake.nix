@@ -94,6 +94,11 @@
       "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
       # keep-sorted end
     ];
+
+    extra-experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
   };
 
   outputs = inputs @ {
@@ -158,6 +163,10 @@
       in {
         vm = mkHost {
           hostModule = ./hosts/vm;
+        };
+
+        pawpad = mkHost {
+          hostModule = ./hosts/pawpad;
         };
       };
     };

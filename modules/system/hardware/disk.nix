@@ -39,7 +39,10 @@
       "/swap" = {
         mountpoint = "/persist/swap";
         mountOptions = ["subvol=swap" "noatime" "nodatacow" "compress=no"];
-        swap.swapfile.size = cfg.swapSize;
+        swap.swapfile = {
+          size = cfg.swapSize;
+          priority = 0;
+        };
       };
     };
   };

@@ -42,9 +42,6 @@
     directories = [
       "/etc/nixos"
       "/etc/NetworkManager/system-connections"
-      "/var/lib/bluetooth"
-      "/var/lib/docker"
-      "/var/log"
       "/age"
     ];
 

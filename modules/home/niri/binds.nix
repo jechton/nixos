@@ -77,6 +77,7 @@ in {
 
     input = {
       focus-follows-mouse.enable = true;
+      keyboard.numlock = true;
 
       touchpad = {
         tap = true;

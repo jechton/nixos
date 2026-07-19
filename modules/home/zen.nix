@@ -13,19 +13,26 @@ in {
 
     policies = {
       # keep-sorted start
-      AutofillAdressEnabled = false;
+      AutofillAddressEnabled = false;
       AutofillCreditCardEnabled = false;
       DisableAppUpdate = true;
       DisableFeedbackCommands = true;
       DisableTelemetry = true;
       DisabledFirefoxStudies = true;
       DontCheckDefaultBrowser = true;
-      NoDefaultBookmarks = true;
-      OfferToSaveLogins = false;
+      EnableTrackingProtection = {
+        Value = true;
+        Locked = true;
+        Cryptomining = true;
+        Fingerprinting = true;
+        NoDefaultBookmarks = true;
+        OfferToSaveLogins = false;
+      };
       # keep-sorted end
 
       Preferences = mkLockedAttrs {
         # keep-sorted start
+        "browser.aboutConfig.showWarning" = false;
         "zen.tabs.vertical.right-side" = true;
         "zen.view.compact.enable-at-startup" = false;
         "zen.view.compact.toolbar-flash-popup" = true;

@@ -9,39 +9,83 @@
     leaf
     plain
     ;
+
+  windowOpenShader = ''
+    vec4 open_color(vec3 coords_geo, vec3 size_geo) {
+          float progress = niri_clamped_progress;
+          float opacity = clamp(progress * 1.5, 0.0, 1.0);
+          float slide_distance = 0.05;
+          float y_offset = (1.0 - progress) * slide_distance;
+          float scale = 0.95 + (0.05 * progress);
+          vec3 coords = vec3((coords_geo.xy - vec2(0.5, 1.0)) / scale + vec2(0.5, 1.0), 1.0);
+          coords.y -= y_offset;
+          vec3 coords_tex = niri_geo_to_tex * coords;
+          vec4 color = texture2D(niri_tex, coords_tex.st);
+          return color * opacity;
+      }
+  '';
+
+  windowCloseShader = ''
+    vec4 close_color(vec3 coords_geo, vec3 size_geo) {
+        float progress = 1.0 - niri_clamped_progress;
+        float opacity = progress;
+        float slide_distance = 0.05;
+        float y_offset = (1.0 - progress) * slide_distance;
+        float scale = 0.95 + (0.05 * progress);
+        vec3 coords = vec3((coords_geo.xy - vec2(0.5, 1.0)) / scale + vec2(0.5, 1.0), 1.0);
+        coords.y -= y_offset;
+        vec3 coords_tex = niri_geo_to_tex * coords;
+        vec4 color = texture2D(niri_tex, coords_tex.st);
+        return color * opacity;
+    }
+  '';
+
+  spring = stiffness: {
+    damping-ratio = 1.0;
+    inherit stiffness;
+    epsilon = 0.0001;
+  };
 in {
   programs.niri = {
     config = lib.mkOptionDefault (lib.mkAfter [
-      # (plain "window-rule" [
-      #   (plain "background-effect" [
-      #     (leaf "blur" true)
-      #     (leaf "xray" true)
-      #     (leaf "noise" 0.05)
-      #     (leaf "saturation" 2.4)
-      #   ])
-      # ])
-      # (plain "layer-rule" [
-      #   (leaf "match" {namespace = "^noctalia-(bar-[^\"]+|notification|dock|panel)$";})
-      #   (plain "background-effect" [
-      #     (leaf "blur" true)
-      #     (leaf "xray" false)
-      #     (leaf "noise" 0.05)
-      #     (leaf "saturation" 2.6)
-      #   ])
-      # ])
       (plain "layer-rule" [
         (leaf "match" {namespace = "^noctalia-backdrop";})
         (leaf "place-within-backdrop" true)
       ])
-      #   (plain "blur" [
-      #     (leaf "passes" 3)
-      #     (leaf "offset" 5.0)
-      #     (leaf "noise" 0.04)
-      #     (leaf "saturation" 1.8)
-      #   ])
     ]);
 
     settings = {
+      animations = {
+        workspace-switch.kind.spring = spring 1000;
+        horizontal-view-movement.kind.spring = spring 1000;
+        window-movement.kind.spring = spring 1000;
+        window-resize.kind.spring = spring 1000;
+        overview-open-close.kind.spring = spring 850;
+        window-open = {
+          kind.easing = {
+            duration-ms = 300;
+            curve = "ease-out-cubic";
+          };
+          custom-shader = windowOpenShader;
+        };
+        window-close = {
+          kind.easing = {
+            duration-ms = 200;
+            curve = "ease-out-quad";
+          };
+          custom-shader = windowCloseShader;
+        };
+        config-notification-open-close.kind.spring = {
+          damping-ratio = 0.95;
+          stiffness = 900;
+          epsilon = 0.001;
+        };
+        screenshot-ui-open.kind.easing = {
+          duration-ms = 200;
+          curve = "ease-out-quad";
+        };
+      };
+
       window-rules = [
         {
           geometry-corner-radius = {
@@ -78,23 +122,6 @@ in {
       ];
       prefer-no-csd = true;
       debug.honor-xdg-activation-with-invalid-serial = [];
-
-      layout = {
-        gaps = 10;
-        border.enable = false;
-        focus-ring = {
-          enable = true;
-          width = 2;
-        };
-        preset-column-widths = [
-          {proportion = 0.33333;}
-          {proportion = 0.5;}
-          {proportion = 0.66667;}
-          {proportion = 1.0;}
-        ];
-        default-column-width.proportion = 0.5;
-        always-center-single-column = true;
-      };
 
       cursor = {
         theme = config.stylix.cursor.name;

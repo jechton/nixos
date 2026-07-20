@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{ lib, pkgs, ... }: {
   nixpkgs.config = {
     allowUnfree = true;
     allowBroken = false;
@@ -89,7 +89,7 @@
     dev.enable = false;
     doc.enable = false;
     info.enable = false;
-    man.enable = true;
+    man.enable = lib.mkDefault true;
     nixos.enable = false;
   };
 

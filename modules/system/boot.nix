@@ -1,5 +1,6 @@
 {
   inputs,
+  config,
   pkgs,
   ...
 }:
@@ -17,7 +18,11 @@
         enable = true;
         configurationLimit = 10;
         editor = false;
-        consoleMode = "max";
+        # "max" queries the highest-resolution UEFI GOP text mode; on QEMU's
+        # virtio-gpu + OVMF that query often renders blank even though the
+        # menu is still running and accepting input. "keep" just uses
+        # whatever mode firmware already set, which is reliable there.
+        consoleMode = if config.burrow.profiles.vm.enable then "keep" else "max";
         bootCounting.enable = true;
       };
       generationsDir.copyKernels = true;

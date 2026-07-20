@@ -1,12 +1,14 @@
-{ config, ... }:
+{ lib, config, ... }:
 {
-  services.fwupd = {
-    enable = true;
-    daemonSettings.EspLocation = config.boot.loader.efi.efiSysMountPoint;
+  config = lib.mkIf (!config.burrow.profiles.vm.enable) {
+    services.fwupd = {
+      enable = true;
+      daemonSettings.EspLocation = config.boot.loader.efi.efiSysMountPoint;
+    };
+    systemd.services.fwupd-refresh = {
+      after = [ "polkit.service" ];
+      wants = [ "polkit.service" ];
+    };
+    hardware.enableRedistributableFirmware = true;
   };
-  systemd.services.fwupd-refresh = {
-    after = [ "polkit.service" ];
-    wants = [ "polkit.service" ];
-  };
-  hardware.enableRedistributableFirmware = true;
 }

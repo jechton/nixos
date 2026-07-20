@@ -5,5 +5,6 @@ in
 {
   options.burrow.profiles = {
     laptop.enable = mkEnableOption "Laptop";
+    vm.enable = mkEnableOption "Virtual machine";
   };
 }

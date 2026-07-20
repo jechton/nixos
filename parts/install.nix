@@ -43,6 +43,8 @@
               "  --flake     <path>   Path to flake directory (default: current directory)" \
               "  --wifi-ssid <ssid>   WiFi network name (skip if using Ethernet)" \
               "  --wifi-pass <pass>   WiFi password" \
+              "  --cores     <n>      Nix 'cores' setting, for constrained builders" \
+              "  --max-jobs  <n>      Nix 'max-jobs' setting, for constrained builders" \
               "  --help               Show this help"
             exit 0
           }
@@ -52,10 +54,12 @@
           FLAKE_DIR="$PWD"
           WIFI_SSID=""
           WIFI_PASS=""
+          CORES=""
+          MAX_JOBS=""
 
           PARSED=$(getopt \
             --options h \
-            --longoptions help,hostname:,age-key:,flake:,wifi-ssid:,wifi-pass: \
+            --longoptions help,hostname:,age-key:,flake:,wifi-ssid:,wifi-pass:,cores:,max-jobs: \
             --name "install" \
             -- "$@") || usage
 
@@ -68,6 +72,8 @@
               --flake)     FLAKE_DIR="$2";    shift 2 ;;
               --wifi-ssid) WIFI_SSID="$2";    shift 2 ;;
               --wifi-pass) WIFI_PASS="$2";    shift 2 ;;
+              --cores)     CORES="$2";        shift 2 ;;
+              --max-jobs)  MAX_JOBS="$2";     shift 2 ;;
               -h|--help)   usage ;;
               --)          shift; break ;;
               *)           die "Unknown argument: $1" ;;
@@ -86,8 +92,13 @@
             die "--wifi-ssid given but --wifi-pass is missing."
           fi
 
-          export NIX_CONFIG='experimental-features = nix-command flakes
+          NIX_CONFIG='experimental-features = nix-command flakes
           accept-flake-config = true'
+          [[ -n "$CORES" ]] && NIX_CONFIG="$NIX_CONFIG
+          cores = $CORES"
+          [[ -n "$MAX_JOBS" ]] && NIX_CONFIG="$NIX_CONFIG
+          max-jobs = $MAX_JOBS"
+          export NIX_CONFIG
 
           # Networking
           if [[ -n "$WIFI_SSID" ]]; then
@@ -174,15 +185,15 @@
           fi
 
           # Copy flake so nixos-install can reference it
-          info "Copying flake to /mnt/etc/nixos/flake ..."
+          info "Copying flake to /mnt/etc/nixos ..."
           mkdir -p /mnt/etc/nixos
-          cp -r "$FLAKE_DIR" /mnt/etc/nixos/flake
+          cp -r "$FLAKE_DIR"/. /mnt/etc/nixos/
           ok "Flake copied."
 
           # Install
-          info "Running nixos-install --flake /mnt/etc/nixos/flake#$HOSTNAME ..."
+          info "Running nixos-install --flake /mnt/etc/nixos#$HOSTNAME ..."
           nixos-install --no-root-passwd \
-            --flake "/mnt/etc/nixos/flake#$HOSTNAME" \
+            --flake "/mnt/etc/nixos#$HOSTNAME" \
             --option accept-flake-config true
 
           printf '\n'

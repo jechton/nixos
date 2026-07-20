@@ -112,10 +112,12 @@ in {
       };
     };
 
-    fileSystems."/persist".neededForBoot = true;
-    fileSystems."/var/log".neededForBoot = true;
-    fileSystems."/var/lib".neededForBoot = true;
-    fileSystems."/home".neededForBoot = true;
+    fileSystems = {
+      "/persist".neededForBoot = true;
+      "/var/log".neededForBoot = true;
+      "/var/lib".neededForBoot = true;
+      "/home".neededForBoot = true;
+    };
 
     boot = {
       initrd.luks.devices = lib.mkIf cfg.luks {

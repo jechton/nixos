@@ -5,40 +5,6 @@
   ...
 }: let
   inherit (lib) getExe;
-
-  ns = pkgs.writeShellApplication {
-    name = "ns";
-    runtimeInputs = [pkgs.fzf pkgs.nix-search-tv];
-    text = builtins.readFile "${pkgs.nix-search-tv.src}/nixpkgs.sh";
-  };
-
-  ocrRegion = pkgs.writeShellApplication {
-    name = "ocr-region";
-    runtimeInputs = with pkgs; [
-      coreutils
-      gnused
-      grim
-      libnotify
-      slurp
-      tesseract
-      wl-clipboard
-    ];
-    text = ''
-      image="$(mktemp --suffix=.png)"
-      trap 'rm -f "$image"' EXIT
-
-      geometry="$(slurp)" || exit 0
-      grim -g "$geometry" "$image"
-
-      text="$(tesseract "$image" stdout --psm 6 2>/dev/null | sed '/^[[:space:]]*$/d')"
-      if [ -n "$text" ]; then
-        printf '%s' "$text" | wl-copy
-        notify-send "OCR copied" "Recognized text is in the clipboard."
-      else
-        notify-send "OCR empty" "No text was recognized in the selected region."
-      fi
-    '';
-  };
 in {
   imports = [inputs.nix-index-database.homeModules.nix-index];
 
@@ -65,9 +31,7 @@ in {
       # keep-sorted end
 
       # Nix tools
-      # keep-sorted start block=yes
-      ns
-      ocrRegion
+      # keep-sorted start
       pkgs.nix-diff
       pkgs.nix-init
       pkgs.nix-tree
@@ -142,13 +106,22 @@ in {
           body = "starship module character";
         };
 
-        halp = {
+        backup = {
+          description = "Backup file";
+          argumentNames = "item";
+          # fish
+          body = ''
+            cp -r "$item" "$item.bak.(date +%Y%m%d%H%M%S)"
+          '';
+        };
+
+        help = {
           description = "Show command help with syntax highlighting";
           argumentNames = ["cmd"];
           # fish
           body = ''
             if test -z "$cmd"
-              echo "Usage: halp <command>"
+              echo "Usage: help <command>"
               return 1
             end
             $cmd --help 2>&1 | bat --style=plain --language=help
@@ -242,6 +215,7 @@ in {
 
       config = {
         global = {
+          load_dotenv = true;
           hide_env_diff = true;
           warn_timeout = "1m";
         };
@@ -289,11 +263,6 @@ in {
         };
         updates.auto_update = true;
       };
-    };
-
-    uv = {
-      enable = true;
-      settings = {exclude-newer = "3 days";};
     };
 
     vivid.enable = true;

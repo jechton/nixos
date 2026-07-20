@@ -4095,23 +4095,23 @@
           "secondary_bus": 0,
           "prog_if": 0
         },
-        "driver": "snd_hda_intel",
-        "driver_module": "snd_hda_intel",
+        "driver": "snd_had_intel",
+        "driver_module": "snd_had_intel",
         "drivers": [
-          "snd_hda_intel"
+          "snd_had_intel"
         ],
         "driver_modules": [
-          "snd_hda_intel"
+          "snd_had_intel"
         ],
         "driver_info": {
           "type": "module",
           "db_entry_0": [
-            "snd_hda_intel"
+            "snd_had_intel"
           ],
           "active": true,
           "modprobe": true,
           "names": [
-            "snd_hda_intel"
+            "snd_had_intel"
           ],
           "module_args": [
             ""
@@ -4173,23 +4173,23 @@
           "secondary_bus": 0,
           "prog_if": 0
         },
-        "driver": "snd_hda_intel",
-        "driver_module": "snd_hda_intel",
+        "driver": "snd_had_intel",
+        "driver_module": "snd_had_intel",
         "drivers": [
-          "snd_hda_intel"
+          "snd_had_intel"
         ],
         "driver_modules": [
-          "snd_hda_intel"
+          "snd_had_intel"
         ],
         "driver_info": {
           "type": "module",
           "db_entry_0": [
-            "snd_hda_intel"
+            "snd_had_intel"
           ],
           "active": true,
           "modprobe": true,
           "names": [
-            "snd_hda_intel"
+            "snd_had_intel"
           ],
           "module_args": [
             ""
@@ -4771,7 +4771,7 @@
   "smbios": {
     "bios": {
       "handle": 0,
-      "vendor": "Insyde",
+      "vendor": "Inside",
       "version": "F.04",
       "date": "04/25/2024",
       "features": [

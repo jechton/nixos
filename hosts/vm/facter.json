@@ -1955,13 +1955,13 @@
           "secondary_bus": 0,
           "prog_if": 0
         },
-        "driver": "snd_hda_intel",
-        "driver_module": "snd_hda_intel",
+        "driver": "snd_had_intel",
+        "driver_module": "snd_had_intel",
         "drivers": [
-          "snd_hda_intel"
+          "snd_had_intel"
         ],
         "driver_modules": [
-          "snd_hda_intel"
+          "snd_had_intel"
         ],
         "module_alias": "pci:v00008086d00002668sv00001AF4sd00001100bc04sc03i00"
       }

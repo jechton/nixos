@@ -1,5 +1,10 @@
 {pkgs, ...}: {
-  nixpkgs.config.allowUnfree = true;
+  nixpkgs.config = {
+    allowUnfree = true;
+    allowBroken = false;
+    allowUnsupportedSystem = false;
+    allowAliases = false;
+  };
 
   # /root is a read-only btrfs subvolume boundary after rollback; the nix
   # daemon needs a writable cache dir, so redirect it to the persisted /var/lib.
@@ -7,6 +12,7 @@
 
   nix = {
     package = pkgs.lixPackageSets.stable.lix;
+    channel.enable = false;
     settings = {
       experimental-features = ["nix-command" "flakes"];
       trusted-users = ["root" "@wheel"];
@@ -15,6 +21,11 @@
       http-connections = 128;
       max-jobs = "auto";
       cores = 4;
+
+      # Free up to 20GiB whenever there is less than 5GB left.
+      # this setting is in bytes, so we multiply with 1024 by 3
+      min-free = 5 * 1024 * 1024 * 1024;
+      max-free = 20 * 1024 * 1024 * 1024;
 
       substituters = [
         # keep-sorted start
@@ -37,17 +48,23 @@
       ];
 
       auto-optimise-store = true;
-      accept-flake-config = true;
       warn-dirty = false;
+
+      # for direnv GC roots
+      keep-derivations = true;
+      keep-outputs = true;
+
+      # use xdg base directories for all the nix things
+      use-xdg-base-directories = true;
     };
   };
 
   documentation = {
     enable = true;
-    doc.enable = false;
-    man.enable = true;
     dev.enable = false;
+    doc.enable = false;
     info.enable = false;
+    man.enable = true;
     nixos.enable = false;
   };
 
@@ -55,8 +72,14 @@
     nh = {
       enable = true;
       clean.enable = true;
-      flake = "/etc/nixos";
     };
     nix-ld.enable = true;
+  };
+
+  services.envfs.enable = true;
+
+  environment.variables = {
+    FLAKE = "/etc/nixos";
+    NH_FLAKE = "/etc/nixos";
   };
 }

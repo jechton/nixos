@@ -10,6 +10,12 @@
 
   programs.dconf.enable = true;
 
+  environment.variables = {
+    NIXOS_OZONE_WL = "1";
+    GDK_BACKEND = "wayland,x11";
+    XDG_SESSION_TYPE = "wayland";
+  };
+
   services = {
     gvfs.enable = true;
     udisks2.enable = true;

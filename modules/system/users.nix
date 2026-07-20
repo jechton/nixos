@@ -26,7 +26,7 @@ in {
     users.users.${cfg.username} = {
       isNormalUser = true;
       description = cfg.displayName;
-      extraGroups = ["wheel" "networkmanager" "video" "audio"];
+      extraGroups = ["wheel" "networkmanager" "video" "audio" "input" "games" "pipewire" "power" "docker"];
       hashedPasswordFile = config.age.secrets.user-password.path;
     };
 

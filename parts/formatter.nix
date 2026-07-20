@@ -8,14 +8,22 @@
         statix.enable = true;
         deadnix.enable = true;
         keep-sorted.enable = true;
+        typos = {
+          enable = true;
+          configFile = "./.typos.toml";
+        };
       };
 
       settings = {
+        on-unmatched = "info";
         global.excludes = [
           ".git/*"
           "LICENSE"
           "README.md"
           "flake.lock"
+          "**/*.age"
+          "**/*.asc"
+          "hosts/**/facter.json"
         ];
 
         formatter = {
@@ -31,7 +39,7 @@
 
       betterleaks = {
         enable = true;
-        entry = "${pkgs.betterleaks}/bin/betterleaks git --pre-commit --verbose --redact --staged";
+        entry = "${pkgs.betterleaks}/bin/betterleaks git --pre-commit --verbose --staged";
         pass_filenames = false;
       };
     };

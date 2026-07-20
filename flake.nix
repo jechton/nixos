@@ -99,6 +99,8 @@
       "nix-command"
       "flakes"
     ];
+
+    http-connections = 128;
   };
 
   outputs = inputs @ {

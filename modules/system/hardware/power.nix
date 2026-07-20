@@ -1,8 +1,8 @@
 {
   services = {
-    fwupd.enable = true;
     power-profiles-daemon.enable = true;
     upower.enable = true;
+    tuned.ppdSettings.main.battery_detection = true;
   };
 
   systemd.services.fwupd-refresh = {

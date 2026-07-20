@@ -1,15 +1,43 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  lib,
+  ...
+}: {
   # Required for dconf to work during home-manager activation (GTK theming via stylix)
   programs.dconf.enable = true;
 
   fonts = {
-    packages = [
-      # keep-sorted start
-      pkgs.atkinson-hyperlegible-next
-      pkgs.corefonts
-      # keep-sorted end
-    ];
+    packages = lib.attrValues {
+      inherit
+        (pkgs)
+        # keep-sorted start
+        atkinson-hyperlegible-next
+        corefonts
+        dejavu_fonts
+        inter
+        material-design-icons
+        material-icons
+        noto-fonts
+        noto-fonts-cjk-sans
+        noto-fonts-cjk-serif
+        noto-fonts-color-emoji
+        source-sans
+        source-serif
+        twemoji-color-font
+        # keep-sorted end
+        ;
+
+      inherit (pkgs.nerd-fonts) symbols-only;
+    };
+
     enableDefaultPackages = true;
+
+    fontconfig = {
+      enable = true;
+      hinting.enable = true;
+      antialias = true;
+    };
+    fontDir.decompressFonts = true;
   };
 
   boot = {

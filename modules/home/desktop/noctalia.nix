@@ -28,6 +28,7 @@
           "media"
         ];
         end = [
+          "noctalia/bongocat:cat"
           "tray"
           "notifications"
           "clipboard"
@@ -73,6 +74,25 @@
       notification = {
         offset_x = 8;
         offset_y = 8;
+      };
+
+      plugins = {
+        enabled = [ "noctalia/bongocat" ];
+
+        source = [
+          {
+            name = "official";
+            kind = "path";
+            location = toString inputs.noctalia-official-plugins;
+            auto_update = false;
+          }
+          {
+            name = "community";
+            kind = "path";
+            location = toString inputs.noctalia-community-plugins;
+            auto_update = false;
+          }
+        ];
       };
 
       shell = {

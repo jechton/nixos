@@ -54,6 +54,14 @@
       url = "github:Mic92/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    noctalia-community-plugins = {
+      url = "github:noctalia-dev/community-plugins";
+      flake = false;
+    };
+    noctalia-official-plugins = {
+      url = "github:noctalia-dev/official-plugins";
+      flake = false;
+    };
     noctalia.url = "github:noctalia-dev/noctalia-shell";
     nvf = {
       url = "github:notashelf/nvf";

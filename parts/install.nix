@@ -171,6 +171,23 @@
           info "Re-mounting partitions under /mnt ..."
           disko --mode mount --flake "$FLAKE_DIR#$HOSTNAME"
 
+          # Installer environments often have no swap at all, so a heavy
+          # nixos-install (large closures, kernel builds) can get OOM-killed
+          # outright. Borrow space on the already-mounted target's swap
+          # subvolume (nodatacow, uncompressed) for the duration of the install.
+          INSTALL_SWAP=/mnt/persist/swap/install-swapfile
+          if [[ -d /mnt/persist/swap ]]; then
+            info "Setting up temporary install-time swap ..."
+            # plain truncate leaves holes, which the kernel refuses to swap
+            # on; mkswapfile allocates real extents and formats it in one go
+            btrfs filesystem mkswapfile --size 4G "$INSTALL_SWAP"
+            swapon "$INSTALL_SWAP"
+            trap 'swapoff "$INSTALL_SWAP" 2>/dev/null; rm -f "$INSTALL_SWAP"' EXIT
+            ok "Temporary install swap active (4G)."
+          else
+            warn "No /mnt/persist/swap subvolume found — skipping temporary install swap."
+          fi
+
           # Generate facter.json if the host profile is new
           FACTER_DST="$FLAKE_DIR/hosts/$HOSTNAME/facter.json"
 

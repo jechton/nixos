@@ -2,15 +2,16 @@
   inputs,
   pkgs,
   ...
-}: {
-  imports = [inputs.nix-gaming.nixosModules.pipewireLowLatency];
+}:
+{
+  imports = [ inputs.nix-gaming.nixosModules.pipewireLowLatency ];
 
   programs = {
     steam = {
       enable = true;
       protontricks.enable = true;
       gamescopeSession.enable = true;
-      extraCompatPackages = [pkgs.proton-ge-bin];
+      extraCompatPackages = [ pkgs.proton-ge-bin ];
     };
 
     gamemode = {

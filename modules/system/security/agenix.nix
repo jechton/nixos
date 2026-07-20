@@ -2,13 +2,15 @@
   config,
   lib,
   ...
-}: let
+}:
+let
   cfg = config.custom.agenix;
-in {
+in
+{
   options.custom.agenix.enable = lib.mkEnableOption "agenix secret management";
 
   config = lib.mkIf cfg.enable {
-    age.identityPaths = ["/persist/age/key.txt"];
+    age.identityPaths = [ "/persist/age/key.txt" ];
 
     age.secrets = {
       user-password = {

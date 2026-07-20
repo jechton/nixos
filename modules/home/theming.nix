@@ -4,7 +4,8 @@
   inputs,
   config,
   ...
-}: let
+}:
+let
   c = config.lib.stylix.colors.withHashtag;
   oreo-gruvbox-cursor = pkgs.oreo-cursors-plus.override {
     cursorsConf = ''
@@ -13,8 +14,9 @@
       gruvbox = color: ${c.base05}, label: ${c.base00}, shadow: ${c.base00}, shadow-opacity: 0.4, stroke: ${c.base00}, stroke-width: 1, stroke-opacity: 0.8
     '';
   };
-in {
-  imports = [inputs.stylix.homeModules.stylix];
+in
+{
+  imports = [ inputs.stylix.homeModules.stylix ];
 
   stylix = {
     enable = true;
@@ -53,5 +55,5 @@ in {
   # a D-Bus session bus that isn't available during system activation.
   # Niri doesn't use GNOME so these settings aren't needed; GTK theming via
   # file-based settings.ini still works.
-  dconf.settings = lib.mkForce {};
+  dconf.settings = lib.mkForce { };
 }

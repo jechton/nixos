@@ -1,6 +1,8 @@
-{config, ...}: let
+{ config, ... }:
+let
   inherit (config.custom.users) username;
-in {
+in
+{
   services.greetd = {
     enable = true;
     settings.initial_session = {

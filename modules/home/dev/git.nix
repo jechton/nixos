@@ -3,7 +3,8 @@
   displayName,
   gitEmail,
   ...
-}: {
+}:
+{
   programs = {
     git = {
       enable = true;
@@ -76,7 +77,9 @@
         };
         help.autocorrect = "prompt";
         init.defaultBranch = "main";
-        merge = {conflictstyle = "zdiff3";};
+        merge = {
+          conflictstyle = "zdiff3";
+        };
         pull.rebase = true;
         push = {
           autoSetupRemote = true;

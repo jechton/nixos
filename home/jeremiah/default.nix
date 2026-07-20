@@ -2,7 +2,8 @@
   inputs,
   username,
   ...
-}: {
+}:
+{
   imports = [
     (inputs.import-tree ../../modules/home)
     ./impermanence.nix

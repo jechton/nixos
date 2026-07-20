@@ -1,15 +1,26 @@
-{pkgs, ...}: {
-  boot.initrd.systemd.storePaths = [pkgs.btrfs-progs pkgs.coreutils pkgs.util-linux];
+{ pkgs, ... }: {
+  boot.initrd.systemd.storePaths = [
+    pkgs.btrfs-progs
+    pkgs.coreutils
+    pkgs.util-linux
+  ];
 
   boot.initrd.systemd.services.rollback = {
     description = "Rollback root and home btrfs subvolumes to blank snapshots";
-    wantedBy = ["initrd.target"];
-    after = ["cryptsetup.target" "dev-disk-by\\x2dlabel-nixos.device"];
-    requires = ["dev-disk-by\\x2dlabel-nixos.device"];
-    before = ["sysroot.mount"];
+    wantedBy = [ "initrd.target" ];
+    after = [
+      "cryptsetup.target"
+      "dev-disk-by\\x2dlabel-nixos.device"
+    ];
+    requires = [ "dev-disk-by\\x2dlabel-nixos.device" ];
+    before = [ "sysroot.mount" ];
     unitConfig.DefaultDependencies = "no";
     serviceConfig.Type = "oneshot";
-    path = [pkgs.btrfs-progs pkgs.coreutils pkgs.util-linux];
+    path = [
+      pkgs.btrfs-progs
+      pkgs.coreutils
+      pkgs.util-linux
+    ];
     script = ''
       mkdir -p /mnt
       mount -t btrfs /dev/disk/by-label/nixos /mnt
@@ -59,7 +70,10 @@
   fileSystems."/root" = {
     device = "tmpfs";
     fsType = "tmpfs";
-    options = ["mode=0700" "size=256M"];
+    options = [
+      "mode=0700"
+      "size=256M"
+    ];
     neededForBoot = true;
   };
 

@@ -2,9 +2,11 @@
   config,
   lib,
   ...
-}: let
+}:
+let
   cfg = config.custom.users;
-in {
+in
+{
   options.custom.users = {
     enable = lib.mkEnableOption "primary user account";
     username = lib.mkOption {
@@ -26,7 +28,19 @@ in {
     users.users.${cfg.username} = {
       isNormalUser = true;
       description = cfg.displayName;
-      extraGroups = ["wheel" "networkmanager" "video" "audio" "input" "games" "pipewire" "power" "docker"];
+      extraGroups = [
+        "wheel"
+        "nix"
+        "network"
+        "networkmanager"
+        "video"
+        "audio"
+        "pipewire"
+        "input"
+        "games"
+        "power"
+        "docker"
+      ];
       hashedPasswordFile = config.age.secrets.user-password.path;
     };
 
@@ -36,7 +50,7 @@ in {
     ];
 
     home-manager.users.${cfg.username} = {
-      imports = [../../home/${cfg.username}/default.nix];
+      imports = [ ../../home/${cfg.username}/default.nix ];
       _module.args = {
         inherit (cfg) username;
         inherit (cfg) displayName;

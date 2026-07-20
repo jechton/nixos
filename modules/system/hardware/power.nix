@@ -6,7 +6,7 @@
   };
 
   systemd.services.fwupd-refresh = {
-    after = ["polkit.service"];
-    wants = ["polkit.service"];
+    after = [ "polkit.service" ];
+    wants = [ "polkit.service" ];
   };
 }

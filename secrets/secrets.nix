@@ -7,7 +7,8 @@
 #   agenix -e [name].age
 let
   personal = "age1pk5423pk642emdzj9dfjt5rppq67j3efrcnfg376ez4rwwj6t33sydue6t";
-in {
-  "user-password.age".publicKeys = [personal];
-  "gpg-key.age".publicKeys = [personal];
+in
+{
+  "user-password.age".publicKeys = [ personal ];
+  "gpg-key.age".publicKeys = [ personal ];
 }

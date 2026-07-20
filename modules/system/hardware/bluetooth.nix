@@ -18,7 +18,7 @@
     };
   };
 
-  boot.kernelModules = ["btusb"];
+  boot.kernelModules = [ "btusb" ];
 
   services.blueman.enable = true;
 }

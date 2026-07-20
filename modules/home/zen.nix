@@ -1,15 +1,19 @@
-{inputs, ...}: let
-  mkLockedAttrs = builtins.mapAttrs (_: value: {
-    Value = value;
-    Status = "locked";
-  });
-in {
-  imports = [inputs.zen-browser.homeModules.twilight];
+{ inputs, ... }:
+let
+  mkLockedAttrs = builtins.mapAttrs (
+    _: value: {
+      Value = value;
+      Status = "locked";
+    }
+  );
+in
+{
+  imports = [ inputs.zen-browser.homeModules.twilight ];
 
   programs.zen-browser = {
     enable = true;
     setAsDefaultBrowser = true;
-    languagePacks = ["en-US"];
+    languagePacks = [ "en-US" ];
 
     policies = {
       # keep-sorted start
@@ -53,12 +57,21 @@ in {
       name = "Zen Twilight";
       genericName = "Web browser";
       exec = "zen-twilight %u";
-      categories = ["Network" "WebBrowser"];
+      categories = [
+        "Network"
+        "WebBrowser"
+      ];
       icon = "zen-twilight";
       terminal = false;
-      mimeType = ["text/html" "text/xml" "application/xhtml+xml" "x-scheme-handler/http" "x-scheme-handler/https"];
+      mimeType = [
+        "text/html"
+        "text/xml"
+        "application/xhtml+xml"
+        "x-scheme-handler/http"
+        "x-scheme-handler/https"
+      ];
     };
   };
 
-  stylix.targets.zen-browser.profileNames = ["default"];
+  stylix.targets.zen-browser.profileNames = [ "default" ];
 }

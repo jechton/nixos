@@ -1,19 +1,22 @@
-{lib, ...}: let
+{ lib, ... }:
+let
   noArg = action: {
-    action.${action} = [];
+    action.${action} = [ ];
   };
 
   withArg = action: value: {
     action.${action} = value;
   };
 
-  withTitle = title: actionBlock:
+  withTitle =
+    title: actionBlock:
     actionBlock
     // {
       hotkey-overlay.title = title;
     };
 
-  hidden = actionBlock:
+  hidden =
+    actionBlock:
     actionBlock
     // {
       hotkey-overlay.hidden = true;
@@ -23,23 +26,27 @@
     action.spawn = command;
   };
 
-  mkDirectionalBinds = modifier: {
-    left,
-    down,
-    up,
-    right,
-  }: {
-    "${modifier}+Left" = noArg left;
-    "${modifier}+Down" = noArg down;
-    "${modifier}+Up" = noArg up;
-    "${modifier}+Right" = noArg right;
-    "${modifier}+H" = noArg left;
-    "${modifier}+J" = noArg down;
-    "${modifier}+K" = noArg up;
-    "${modifier}+L" = noArg right;
-  };
+  mkDirectionalBinds =
+    modifier:
+    {
+      left,
+      down,
+      up,
+      right,
+    }:
+    {
+      "${modifier}+Left" = noArg left;
+      "${modifier}+Down" = noArg down;
+      "${modifier}+Up" = noArg up;
+      "${modifier}+Right" = noArg right;
+      "${modifier}+H" = noArg left;
+      "${modifier}+J" = noArg down;
+      "${modifier}+K" = noArg up;
+      "${modifier}+L" = noArg right;
+    };
 
-  mkWorkspaceNumberBinds = modifier: action:
+  mkWorkspaceNumberBinds =
+    modifier: action:
     builtins.listToAttrs (
       map (workspace: {
         name = "${modifier}+${toString workspace}";
@@ -47,31 +54,36 @@
       }) (lib.range 1 9)
     );
 
-  mkScrollBinds = modifier: {
-    left,
-    right,
-    up,
-    down,
-  }: {
-    "${modifier}+WheelScrollDown" = {
-      cooldown-ms = 150;
-      action.${down} = [];
+  mkScrollBinds =
+    modifier:
+    {
+      left,
+      right,
+      up,
+      down,
+    }:
+    {
+      "${modifier}+WheelScrollDown" = {
+        cooldown-ms = 150;
+        action.${down} = [ ];
+      };
+      "${modifier}+WheelScrollUp" = {
+        cooldown-ms = 150;
+        action.${up} = [ ];
+      };
+      "${modifier}+WheelScrollRight" = noArg right;
+      "${modifier}+WheelScrollLeft" = noArg left;
     };
-    "${modifier}+WheelScrollUp" = {
-      cooldown-ms = 150;
-      action.${up} = [];
-    };
-    "${modifier}+WheelScrollRight" = noArg right;
-    "${modifier}+WheelScrollLeft" = noArg left;
-  };
 
-  noctalia = command:
+  noctalia =
+    command:
     [
       "noctalia"
       "msg"
     ]
     ++ command;
-in {
+in
+{
   programs.niri.settings = {
     hotkey-overlay.skip-at-startup = true;
 
@@ -91,28 +103,71 @@ in {
         "Mod+B" = withTitle "Browser" (spawn "zen-twilight");
 
         "Mod+Shift+Slash" = noArg "show-hotkey-overlay";
-        "Mod+Space" = withTitle "Application Launcher" (spawn (noctalia ["panel-toggle" "launcher"]));
-        "Mod+S" = withTitle "Control Center" (spawn (noctalia ["panel-toggle" "control-center"]));
-        "Mod+Comma" = withTitle "Noctalia Settings" (spawn (noctalia ["settings-toggle"]));
-        "Mod+Shift+W" = withTitle "Wallpaper Panel" (spawn (noctalia ["panel-toggle" "wallpaper"]));
-        "Mod+Ctrl+V" = withTitle "Clipboard" (spawn (noctalia ["panel-toggle" "clipboard"]));
-        "Mod+N" = withTitle "Clear Notification" (spawn (noctalia ["notification-clear-active"]));
-        "Mod+Shift+N" = withTitle "Open Notifications" (spawn (noctalia ["panel-toggle" "control-center" "notifications"]));
-        "Mod+Ctrl+N" = withTitle "Toggle DND" (spawn (noctalia ["notification-dnd-toggle"]));
-        "Mod+Alt+L" = withTitle "Lock Session" (spawn (noctalia ["session" "lock"]));
-        "Mod+Shift+S" = withTitle "Screenshot Region" (spawn (noctalia ["screenshot-region"]));
-        "Mod+Ctrl+Shift+S" = withTitle "Screenshot Screen" (spawn (noctalia ["screenshot-fullscreen"]));
+        "Mod+Space" = withTitle "Application Launcher" (
+          spawn (noctalia [
+            "panel-toggle"
+            "launcher"
+          ])
+        );
+        "Mod+S" = withTitle "Control Center" (
+          spawn (noctalia [
+            "panel-toggle"
+            "control-center"
+          ])
+        );
+        "Mod+Comma" = withTitle "Noctalia Settings" (spawn (noctalia [ "settings-toggle" ]));
+        "Mod+Shift+W" = withTitle "Wallpaper Panel" (
+          spawn (noctalia [
+            "panel-toggle"
+            "wallpaper"
+          ])
+        );
+        "Mod+Ctrl+V" = withTitle "Clipboard" (
+          spawn (noctalia [
+            "panel-toggle"
+            "clipboard"
+          ])
+        );
+        "Mod+N" = withTitle "Clear Notification" (spawn (noctalia [ "notification-clear-active" ]));
+        "Mod+Shift+N" = withTitle "Open Notifications" (
+          spawn (noctalia [
+            "panel-toggle"
+            "control-center"
+            "notifications"
+          ])
+        );
+        "Mod+Ctrl+N" = withTitle "Toggle DND" (spawn (noctalia [ "notification-dnd-toggle" ]));
+        "Mod+Alt+L" = withTitle "Lock Session" (
+          spawn (noctalia [
+            "session"
+            "lock"
+          ])
+        );
+        "Mod+Shift+S" = withTitle "Screenshot Region" (spawn (noctalia [ "screenshot-region" ]));
+        "Mod+Ctrl+Shift+S" = withTitle "Screenshot Screen" (spawn (noctalia [ "screenshot-fullscreen" ]));
         "Mod+Ctrl+Print" = withTitle "OCR Region" (spawn "ocr-region");
 
-        "XF86AudioRaiseVolume" = hidden (spawn (noctalia ["volume-up"]));
-        "XF86AudioLowerVolume" = hidden (spawn (noctalia ["volume-down"]));
-        "XF86AudioMute" = hidden (spawn (noctalia ["volume-mute"]));
-        "XF86MonBrightnessUp" = hidden (spawn (noctalia ["brightness-up"]));
-        "XF86MonBrightnessDown" = hidden (spawn (noctalia ["brightness-down"]));
-        "XF86AudioPlay" = hidden (spawn ["playerctl" "play-pause"]);
-        "XF86AudioStop" = hidden (spawn ["playerctl" "stop"]);
-        "XF86AudioPrev" = hidden (spawn ["playerctl" "previous"]);
-        "XF86AudioNext" = hidden (spawn ["playerctl" "next"]);
+        "XF86AudioRaiseVolume" = hidden (spawn (noctalia [ "volume-up" ]));
+        "XF86AudioLowerVolume" = hidden (spawn (noctalia [ "volume-down" ]));
+        "XF86AudioMute" = hidden (spawn (noctalia [ "volume-mute" ]));
+        "XF86MonBrightnessUp" = hidden (spawn (noctalia [ "brightness-up" ]));
+        "XF86MonBrightnessDown" = hidden (spawn (noctalia [ "brightness-down" ]));
+        "XF86AudioPlay" = hidden (spawn [
+          "playerctl"
+          "play-pause"
+        ]);
+        "XF86AudioStop" = hidden (spawn [
+          "playerctl"
+          "stop"
+        ]);
+        "XF86AudioPrev" = hidden (spawn [
+          "playerctl"
+          "previous"
+        ]);
+        "XF86AudioNext" = hidden (spawn [
+          "playerctl"
+          "next"
+        ]);
 
         "Mod+Q" = noArg "close-window";
         "Mod+Home" = noArg "focus-column-first";
@@ -154,17 +209,22 @@ in {
         "Mod+W" = noArg "toggle-column-tabbed-display";
         "Mod+O" = {
           repeat = false;
-          action.toggle-overview = [];
+          action.toggle-overview = [ ];
         };
         "Print" = noArg "screenshot";
         "Ctrl+Print" = noArg "screenshot-screen";
         "Alt+Print" = noArg "screenshot-window";
         "Mod+Escape" = {
           allow-inhibiting = false;
-          action.toggle-keyboard-shortcuts-inhibit = [];
+          action.toggle-keyboard-shortcuts-inhibit = [ ];
         };
         "Mod+Shift+E" = noArg "quit";
-        "Ctrl+Alt+Delete" = withTitle "Open Session Management" (spawn (noctalia ["panel-toggle" "session"]));
+        "Ctrl+Alt+Delete" = withTitle "Open Session Management" (
+          spawn (noctalia [
+            "panel-toggle"
+            "session"
+          ])
+        );
         "Mod+Shift+P" = noArg "power-off-monitors";
       }
 

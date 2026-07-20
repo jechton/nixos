@@ -28,6 +28,9 @@ _: {
       ".config/Code/User/globalStorage"
     ];
 
-    files = [".config/Code/User/settings.json" ".config/Code/User/keybindings.json"];
+    files = [
+      ".config/Code/User/settings.json"
+      ".config/Code/User/keybindings.json"
+    ];
   };
 }

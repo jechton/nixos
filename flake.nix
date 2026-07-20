@@ -103,41 +103,45 @@
     http-connections = 128;
   };
 
-  outputs = inputs @ {
-    self,
-    nixpkgs,
-    flake-parts,
-    import-tree,
-    ...
-  }:
-    flake-parts.lib.mkFlake {inherit inputs;} {
-      systems = ["x86_64-linux" "aarch64-linux"];
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      flake-parts,
+      import-tree,
+      ...
+    }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
 
-      imports =
-        [
-          # keep-sorted start
-          inputs.devshell.flakeModule
-          inputs.pre-commit-hooks.flakeModule
-          inputs.treefmt-nix.flakeModule
-          # keep-sorted end
-        ]
-        ++ (import-tree ./parts).imports;
+      imports = [
+        # keep-sorted start
+        inputs.devshell.flakeModule
+        inputs.pre-commit-hooks.flakeModule
+        inputs.treefmt-nix.flakeModule
+        # keep-sorted end
+      ]
+      ++ (import-tree ./parts).imports;
 
-      flake.nixosConfigurations = let
-        mkHost = {
-          system ? "x86_64-linux",
-          hostModule,
-          user ? {
-            username = "jeremiah";
-            displayName = "Jeremiah";
-            gitEmail = "44993244+jechton@users.noreply.github.com";
-          },
-        }:
-          nixpkgs.lib.nixosSystem {
-            inherit system;
-            specialArgs = {inherit inputs self;};
-            modules =
-              [
+      flake.nixosConfigurations =
+        let
+          mkHost =
+            {
+              system ? "x86_64-linux",
+              hostModule,
+              user ? {
+                username = "jeremiah";
+                displayName = "Jeremiah";
+                gitEmail = "44993244+jechton@users.noreply.github.com";
+              },
+            }:
+            nixpkgs.lib.nixosSystem {
+              inherit system;
+              specialArgs = { inherit inputs self; };
+              modules = [
                 # keep-sorted start
                 inputs.agenix.nixosModules.default
                 inputs.disko.nixosModules.disko
@@ -150,26 +154,28 @@
                   home-manager = {
                     useGlobalPkgs = true;
                     useUserPackages = true;
-                    extraSpecialArgs = {inherit inputs;};
+                    extraSpecialArgs = { inherit inputs; };
                   };
 
-                  custom.users =
-                    {enable = true;}
-                    // user;
+                  custom.users = {
+                    enable = true;
+                  }
+                  // user;
                 }
 
                 hostModule
               ]
               ++ (import-tree ./modules/system).imports;
+            };
+        in
+        {
+          vm = mkHost {
+            hostModule = ./hosts/vm;
           };
-      in {
-        vm = mkHost {
-          hostModule = ./hosts/vm;
-        };
 
-        pawpad = mkHost {
-          hostModule = ./hosts/pawpad;
+          pawpad = mkHost {
+            hostModule = ./hosts/pawpad;
+          };
         };
-      };
     };
 }

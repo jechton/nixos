@@ -1,10 +1,10 @@
 {
-  perSystem = {pkgs, ...}: {
+  perSystem = { pkgs, ... }: {
     treefmt = {
       projectRootFile = "flake.nix";
 
       programs = {
-        alejandra.enable = true;
+        nixfmt.enable = true;
         statix.enable = true;
         deadnix.enable = true;
         keep-sorted.enable = true;
@@ -27,7 +27,7 @@
         ];
 
         formatter = {
-          alejandra.priority = 1;
+          nixfmt.priority = 1;
           statix.priority = 2;
           deadnix.priority = 3;
         };

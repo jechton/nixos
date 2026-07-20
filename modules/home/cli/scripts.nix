@@ -2,11 +2,15 @@
   pkgs,
   inputs,
   ...
-}: let
+}:
+let
   # keep-sorted start block=yes newline_separated=yes
   ns = pkgs.writeShellApplication {
     name = "ns";
-    runtimeInputs = [pkgs.fzf pkgs.nix-search-tv];
+    runtimeInputs = [
+      pkgs.fzf
+      pkgs.nix-search-tv
+    ];
     text = builtins.readFile "${pkgs.nix-search-tv.src}/nixpkgs.sh";
   };
 
@@ -38,8 +42,9 @@
     '';
   };
   # keep-sorted end
-in {
-  imports = [inputs.nix-index-database.homeModules.nix-index];
+in
+{
+  imports = [ inputs.nix-index-database.homeModules.nix-index ];
 
   home = {
     packages = [

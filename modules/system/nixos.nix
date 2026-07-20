@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+{ pkgs, ... }: {
   nixpkgs.config = {
     allowUnfree = true;
     allowBroken = false;
@@ -14,8 +14,14 @@
     package = pkgs.lixPackageSets.stable.lix;
     channel.enable = false;
     settings = {
-      experimental-features = ["nix-command" "flakes"];
-      trusted-users = ["root" "@wheel"];
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
+      trusted-users = [
+        "root"
+        "@wheel"
+      ];
 
       max-substitution-jobs = 128;
       http-connections = 128;

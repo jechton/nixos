@@ -3,42 +3,76 @@
   pkgs,
   lib,
   ...
-}: let
+}:
+let
   cfg = config.custom.storage;
 
   btrfsContent = {
     type = "btrfs";
-    extraArgs = ["-L" "nixos" "-f"];
+    extraArgs = [
+      "-L"
+      "nixos"
+      "-f"
+    ];
     subvolumes = {
       "/root" = {
         mountpoint = "/";
-        mountOptions = ["subvol=root" "compress=zstd" "noatime"];
+        mountOptions = [
+          "subvol=root"
+          "compress=zstd"
+          "noatime"
+        ];
       };
-      "/root-blank" = {};
+      "/root-blank" = { };
       "/home" = {
         mountpoint = "/home";
-        mountOptions = ["subvol=home" "compress=zstd" "noatime"];
+        mountOptions = [
+          "subvol=home"
+          "compress=zstd"
+          "noatime"
+        ];
       };
-      "/home-blank" = {};
+      "/home-blank" = { };
       "/nix" = {
         mountpoint = "/nix";
-        mountOptions = ["subvol=nix" "compress=zstd" "noatime"];
+        mountOptions = [
+          "subvol=nix"
+          "compress=zstd"
+          "noatime"
+        ];
       };
       "/persist" = {
         mountpoint = "/persist";
-        mountOptions = ["subvol=persist" "compress=zstd" "noatime"];
+        mountOptions = [
+          "subvol=persist"
+          "compress=zstd"
+          "noatime"
+        ];
       };
       "/log" = {
         mountpoint = "/var/log";
-        mountOptions = ["subvol=log" "compress=zstd" "noatime"];
+        mountOptions = [
+          "subvol=log"
+          "compress=zstd"
+          "noatime"
+        ];
       };
       "/lib" = {
         mountpoint = "/var/lib";
-        mountOptions = ["subvol=lib" "compress=zstd" "noatime"];
+        mountOptions = [
+          "subvol=lib"
+          "compress=zstd"
+          "noatime"
+        ];
       };
       "/swap" = {
         mountpoint = "/persist/swap";
-        mountOptions = ["subvol=swap" "noatime" "nodatacow" "compress=no"];
+        mountOptions = [
+          "subvol=swap"
+          "noatime"
+          "nodatacow"
+          "compress=no"
+        ];
         swap.swapfile = {
           size = cfg.swapSize;
           priority = 0;
@@ -46,7 +80,8 @@
       };
     };
   };
-in {
+in
+{
   options.custom.storage = {
     enable = lib.mkEnableOption "Btrfs Impermanence storage layout";
 
@@ -87,24 +122,25 @@ in {
                   type = "filesystem";
                   format = "vfat";
                   mountpoint = "/boot";
-                  mountOptions = ["defaults" "umask=0077"];
+                  mountOptions = [
+                    "defaults"
+                    "umask=0077"
+                  ];
                 };
               };
 
               root = {
                 size = "100%";
-                label =
-                  if cfg.luks
-                  then "luks"
-                  else "nixos";
+                label = if cfg.luks then "luks" else "nixos";
                 content =
-                  if cfg.luks
-                  then {
-                    type = "luks";
-                    name = "cryptroot";
-                    content = btrfsContent;
-                  }
-                  else btrfsContent;
+                  if cfg.luks then
+                    {
+                      type = "luks";
+                      name = "cryptroot";
+                      content = btrfsContent;
+                    }
+                  else
+                    btrfsContent;
               };
             };
           };
@@ -138,7 +174,7 @@ in {
       btrfs.autoScrub = {
         enable = true;
         interval = "weekly";
-        fileSystems = ["/"];
+        fileSystems = [ "/" ];
       };
       fstrim.enable = true;
     };
@@ -150,8 +186,6 @@ in {
       memoryPercent = 50;
     };
 
-    environment.systemPackages =
-      [pkgs.btrfs-progs]
-      ++ lib.optional cfg.luks pkgs.cryptsetup;
+    environment.systemPackages = [ pkgs.btrfs-progs ] ++ lib.optional cfg.luks pkgs.cryptsetup;
   };
 }

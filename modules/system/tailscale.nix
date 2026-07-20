@@ -2,10 +2,14 @@
   services.tailscale = {
     enable = true;
     openFirewall = true;
-    extraSetFlags = ["--accept-dns" "--accept-routes" "-ssh"];
+    extraSetFlags = [
+      "--accept-dns"
+      "--accept-routes"
+      "-ssh"
+    ];
   };
 
   networking.firewall = {
-    trustedInterfaces = ["tailscale0"];
+    trustedInterfaces = [ "tailscale0" ];
   };
 }

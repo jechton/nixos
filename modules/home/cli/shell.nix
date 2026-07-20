@@ -3,10 +3,12 @@
   lib,
   inputs,
   ...
-}: let
+}:
+let
   inherit (lib) getExe;
-in {
-  imports = [inputs.nix-index-database.homeModules.nix-index];
+in
+{
+  imports = [ inputs.nix-index-database.homeModules.nix-index ];
 
   home = {
     packages = [
@@ -117,7 +119,7 @@ in {
 
         help = {
           description = "Show command help with syntax highlighting";
-          argumentNames = ["cmd"];
+          argumentNames = [ "cmd" ];
           # fish
           body = ''
             if test -z "$cmd"
@@ -130,7 +132,7 @@ in {
 
         mkcd = {
           description = "Create directory and cd into it";
-          argumentNames = ["dir"];
+          argumentNames = [ "dir" ];
           # fish
           body = ''
             if test -z "$dir"
@@ -165,7 +167,7 @@ in {
 
         rg-fzf = {
           description = "Search with ripgrep and preview with fzf+bat";
-          argumentNames = ["pattern"];
+          argumentNames = [ "pattern" ];
           # fish
           body = ''
             if test -z "$pattern"
@@ -184,7 +186,7 @@ in {
     starship = {
       enable = true;
       enableTransience = true;
-      presets = ["pure-preset"];
+      presets = [ "pure-preset" ];
       settings = {
         character = {
           success_symbol = "[λ](purple)";
@@ -197,7 +199,10 @@ in {
     # keep-sorted start block=yes newline_separated=yes
     bat = {
       enable = true;
-      extraPackages = with pkgs.bat-extras; [batpipe batwatch];
+      extraPackages = with pkgs.bat-extras; [
+        batpipe
+        batwatch
+      ];
     };
 
     btop = {
@@ -226,13 +231,33 @@ in {
       enable = true;
       icons = "auto";
       git = true;
-      extraOptions = ["--group-directories-first"];
+      extraOptions = [ "--group-directories-first" ];
     };
 
     fd = {
       enable = true;
-      ignores = [".git/" "node_modules/" "dist/" "build/" "result/" ".next/" "__pycache__/" ".pytest_cache/" ".mypy_cache/" ".ruff_cache/" "*.pyc" ".venv/" "venv/" "*.swp" ".cache/" "*.cache"];
-      extraOptions = ["--follow" "--hyperlink=auto"];
+      ignores = [
+        ".git/"
+        "node_modules/"
+        "dist/"
+        "build/"
+        "result/"
+        ".next/"
+        "__pycache__/"
+        ".pytest_cache/"
+        ".mypy_cache/"
+        ".ruff_cache/"
+        "*.pyc"
+        ".venv/"
+        "venv/"
+        "*.swp"
+        ".cache/"
+        "*.cache"
+      ];
+      extraOptions = [
+        "--follow"
+        "--hyperlink=auto"
+      ];
     };
 
     fzf.enable = true;
@@ -251,7 +276,12 @@ in {
 
     ripgrep = {
       enable = true;
-      arguments = ["--smart-case" "--hidden" "--glob=!.git/*" "-z"];
+      arguments = [
+        "--smart-case"
+        "--hidden"
+        "--glob=!.git/*"
+        "-z"
+      ];
     };
 
     tealdeer = {
@@ -269,7 +299,7 @@ in {
 
     zoxide = {
       enable = true;
-      options = ["--cmd cd"];
+      options = [ "--cmd cd" ];
     };
     # keep-sorted end
   };

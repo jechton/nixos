@@ -3,9 +3,9 @@
   lib,
   config,
   ...
-}: let
-  inherit
-    (inputs.niri.lib.kdl)
+}:
+let
+  inherit (inputs.niri.lib.kdl)
     leaf
     plain
     ;
@@ -45,14 +45,17 @@
     inherit stiffness;
     epsilon = 0.0001;
   };
-in {
+in
+{
   programs.niri = {
-    config = lib.mkOptionDefault (lib.mkAfter [
-      (plain "layer-rule" [
-        (leaf "match" {namespace = "^noctalia-backdrop";})
-        (leaf "place-within-backdrop" true)
-      ])
-    ]);
+    config = lib.mkOptionDefault (
+      lib.mkAfter [
+        (plain "layer-rule" [
+          (leaf "match" { namespace = "^noctalia-backdrop"; })
+          (leaf "place-within-backdrop" true)
+        ])
+      ]
+    );
 
     settings = {
       animations = {
@@ -107,21 +110,24 @@ in {
           default-window-height.fixed = 720;
         }
         {
-          matches = [{app-id = "^zen$";} {app-id = "^zen-browser$";}];
+          matches = [
+            { app-id = "^zen$"; }
+            { app-id = "^zen-browser$"; }
+          ];
           draw-border-with-background = false;
         }
         {
           matches = [
-            {app-id = "^steam$";}
-            {app-id = "^Steam$";}
-            {app-id = "^com\\.heroicgameslauncher\\.hgl$";}
-            {app-id = "^net\\.lutris\\.Lutris$";}
+            { app-id = "^steam$"; }
+            { app-id = "^Steam$"; }
+            { app-id = "^com\\.heroicgameslauncher\\.hgl$"; }
+            { app-id = "^net\\.lutris\\.Lutris$"; }
           ];
           variable-refresh-rate = true;
         }
       ];
       prefer-no-csd = true;
-      debug.honor-xdg-activation-with-invalid-serial = [];
+      debug.honor-xdg-activation-with-invalid-serial = [ ];
 
       cursor = {
         theme = config.stylix.cursor.name;

@@ -1,1 +1,1 @@
-{programs.niri.settings.spawn-at-startup = [{command = ["noctalia"];}];}
+{ programs.niri.settings.spawn-at-startup = [ { command = [ "noctalia" ]; } ]; }

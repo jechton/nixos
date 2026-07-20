@@ -2,8 +2,9 @@
   inputs,
   config,
   ...
-}: {
-  imports = [inputs.noctalia.homeModules.default];
+}:
+{
+  imports = [ inputs.noctalia.homeModules.default ];
 
   programs.noctalia = {
     enable = true;
@@ -21,12 +22,30 @@
         radius = 0;
         shadow = false;
 
-        start = ["launcher" "workspaces" "media"];
-        end = ["tray" "notifications" "clipboard" "network" "bluetooth" "volume" "brightness" "battery" "session"];
+        start = [
+          "launcher"
+          "workspaces"
+          "media"
+        ];
+        end = [
+          "tray"
+          "notifications"
+          "clipboard"
+          "network"
+          "bluetooth"
+          "volume"
+          "brightness"
+          "battery"
+          "session"
+        ];
       };
 
       idle = {
-        behavior_order = ["lock" "screen-off" "lock-and-suspend"];
+        behavior_order = [
+          "lock"
+          "screen-off"
+          "lock-and-suspend"
+        ];
 
         behavior = {
           lock = {

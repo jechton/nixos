@@ -2,14 +2,14 @@
   pkgs,
   lib,
   ...
-}: {
+}:
+{
   # Required for dconf to work during home-manager activation (GTK theming via stylix)
   programs.dconf.enable = true;
 
   fonts = {
     packages = lib.attrValues {
-      inherit
-        (pkgs)
+      inherit (pkgs)
         # keep-sorted start
         atkinson-hyperlegible-next
         corefonts
@@ -45,7 +45,13 @@
     initrd.verbose = false;
 
     # silent boot
-    kernelParams = ["quiet" "splash" "boot.shell_on_fail" "udev.log_priority=3" "rd.system.show_status=auto"];
+    kernelParams = [
+      "quiet"
+      "splash"
+      "boot.shell_on_fail"
+      "udev.log_priority=3"
+      "rd.system.show_status=auto"
+    ];
 
     # hide os choice, still accessible by pressing any key during startup
     loader.timeout = 0;

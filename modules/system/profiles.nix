@@ -1,6 +1,8 @@
-{lib, ...}: let
+{ lib, ... }:
+let
   inherit (lib.options) mkEnableOption;
-in {
+in
+{
   options.burrow.profiles = {
     laptop.enable = mkEnableOption "Laptop";
   };

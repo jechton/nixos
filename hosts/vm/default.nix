@@ -3,7 +3,7 @@
 
   networking.hostName = "vm";
 
-  custom = {
+  burrow = {
     storage = {
       enable = true;
       luks = false;

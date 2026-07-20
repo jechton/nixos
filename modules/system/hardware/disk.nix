@@ -5,7 +5,7 @@
   ...
 }:
 let
-  cfg = config.custom.storage;
+  cfg = config.burrow.storage;
 
   btrfsContent = {
     type = "btrfs";
@@ -82,7 +82,7 @@ let
   };
 in
 {
-  options.custom.storage = {
+  options.burrow.storage = {
     enable = lib.mkEnableOption "Btrfs Impermanence storage layout";
 
     luks = lib.mkOption {
@@ -164,10 +164,7 @@ in
         };
       };
 
-      tmp = {
-        useTmpfs = true;
-        tmpfsSize = "25%";
-      };
+      tmp.useTmpfs = true;
     };
 
     services = {

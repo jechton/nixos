@@ -49,6 +49,13 @@ in
       package = oreo-gruvbox-cursor;
       size = 32;
     };
+
+    icons = {
+      enable = true;
+      package = pkgs.cosmic-icons;
+      dark = "Cosmic";
+      light = "Cosmic";
+    };
   };
 
   # Stylix's GTK target writes GNOME interface keys to dconf, which requires
@@ -56,4 +63,11 @@ in
   # Niri doesn't use GNOME so these settings aren't needed; GTK theming via
   # file-based settings.ini still works.
   dconf.settings = lib.mkForce { };
+
+  # stylix configures the cursor theme/size/icons above but leaves the
+  # top-level toggle off; x11 support is unneeded since niri is wayland-only
+  home.pointerCursor = {
+    enable = true;
+    x11.enable = lib.mkForce false;
+  };
 }

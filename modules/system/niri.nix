@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   inputs,
   ...
@@ -38,6 +39,18 @@
       xdg-desktop-portal-gnome
     ];
 
+    # xdg-desktop-portal-gnome's ScreenCast implementation needs actual
+    # Mutter/GNOME Shell to work, which niri doesn't provide; route
+    # screencast through the wlr portal instead, which niri does support
+    wlr = {
+      enable = true;
+      settings.screencast = {
+        max_fps = 60;
+        chooser_type = "simple";
+        chooser_cmd = "${lib.getExe pkgs.slurp} -f %o -or";
+      };
+    };
+
     config.niri = {
       default = [
         "gnome"
@@ -49,6 +62,7 @@
       "org.freedesktop.impl.portal.Access" = [ "gtk" ];
       "org.freedesktop.impl.portal.Notification" = [ "gtk" ];
       "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
+      "org.freedesktop.impl.portal.ScreenCast" = [ "wlr" ];
     };
   };
 

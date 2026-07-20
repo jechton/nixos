@@ -17,6 +17,8 @@
       experimental-features = [
         "nix-command"
         "flakes"
+        "auto-allocate-uids"
+        "cgroups"
       ];
       trusted-users = [
         "root"
@@ -62,6 +64,23 @@
 
       # use xdg base directories for all the nix things
       use-xdg-base-directories = true;
+
+      # defaults to false even with the experimental feature enabled; required
+      # alongside auto-allocate-uids on lix
+      # https://git.lix.systems/lix-project/lix/issues/1154
+      use-cgroups = true;
+      auto-allocate-uids = true;
+
+      # avoid building on a tmpfs /tmp
+      # https://github.com/NixOS/nixpkgs/issues/293114#issuecomment-2663470083
+      build-dir = "/var/tmp";
+    };
+
+    # auto-optimise-store above dedupes on every build; this periodic pass
+    # catches anything added before that was ever enabled
+    optimise = {
+      automatic = true;
+      dates = [ "04:00" ];
     };
   };
 

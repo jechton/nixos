@@ -1,6 +1,6 @@
 { config, ... }:
 let
-  inherit (config.custom.users) username;
+  inherit (config.burrow.users) username;
 in
 {
   services.greetd = {

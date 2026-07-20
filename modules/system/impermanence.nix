@@ -27,7 +27,7 @@
 
       btrfs subvolume list -o /mnt/root \
         | cut -f9 -d' ' \
-        | while read subvol; do
+        | while read -r subvol; do
             btrfs subvolume delete "/mnt/$subvol"
           done
 
@@ -36,7 +36,7 @@
 
       btrfs subvolume list -o /mnt/home \
         | cut -f9 -d' ' \
-        | while read subvol; do
+        | while read -r subvol; do
             btrfs subvolume delete "/mnt/$subvol"
           done
 

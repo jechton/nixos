@@ -10,7 +10,7 @@ _: {
       "Projects"
 
       ".ssh"
-      ".gnupg"
+      ".local/share/gnupg"
       ".config/gh"
       ".local/share/fish"
       ".local/share/keyrings"
@@ -20,17 +20,20 @@ _: {
 
       # Development tool configurations and caches
       ".docker"
-      ".npm"
-      ".pnpm"
       ".cache/uv"
+      ".cache/npm"
+      ".local/share/npm"
+      ".local/share/pnpm"
       ".vscode"
       ".config/Code/User/extensions"
       ".config/Code/User/globalStorage"
+      ".claude"
     ];
 
     files = [
       ".config/Code/User/settings.json"
       ".config/Code/User/keybindings.json"
+      ".claude.json"
     ];
   };
 }

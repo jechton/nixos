@@ -4,10 +4,10 @@
   ...
 }:
 let
-  cfg = config.custom.users;
+  cfg = config.burrow.users;
 in
 {
-  options.custom.users = {
+  options.burrow.users = {
     enable = lib.mkEnableOption "primary user account";
     username = lib.mkOption {
       type = lib.types.str;

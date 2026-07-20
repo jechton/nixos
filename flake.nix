@@ -155,9 +155,11 @@
                     useGlobalPkgs = true;
                     useUserPackages = true;
                     extraSpecialArgs = { inherit inputs; };
+                    verbose = true;
+                    backupFileExtension = "bak";
                   };
 
-                  custom.users = {
+                  burrow.users = {
                     enable = true;
                   }
                   // user;

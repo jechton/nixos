@@ -28,9 +28,9 @@
           # keep-sorted start
           inputs.agenix.packages.${system}.default
           pkgs.mkpasswd
-          pkgs.nurl
           #keep-sorted end
-        ];
+        ]
+        ++ builtins.attrValues config.treefmt.build.programs;
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
 

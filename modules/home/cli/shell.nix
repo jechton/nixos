@@ -2,6 +2,7 @@
   pkgs,
   lib,
   inputs,
+  config,
   ...
 }:
 let
@@ -86,7 +87,6 @@ in
         gs = "git switch";
         gst = "git status -s";
 
-        v = "nvim";
         q = "exit";
         c = "clear";
 
@@ -215,8 +215,12 @@ in
 
     direnv = {
       enable = true;
-      nix-direnv.enable = true;
       silent = true;
+
+      nix-direnv = {
+        enable = true;
+        package = pkgs.nix-direnv.override { nix = config.nix.package; };
+      };
 
       config = {
         global = {
@@ -225,6 +229,20 @@ in
           warn_timeout = "1m";
         };
       };
+
+      # store direnv layouts in cache instead of scattering .direnv/ in project dirs
+      # https://github.com/direnv/direnv/wiki/Customizing-cache-location#hashed-directories
+      stdlib = ''
+        : ''${XDG_CACHE_HOME:=$HOME/.cache}
+        declare -A direnv_layout_dirs
+
+        direnv_layout_dir() {
+          echo "''${direnv_layout_dirs[$PWD]:=$(
+            echo -n "$XDG_CACHE_HOME"/direnv/layouts/
+            echo -n "$PWD" | sha1sum | cut -d ' ' -f 1
+          )}"
+        }
+      '';
     };
 
     eza = {
@@ -260,13 +278,25 @@ in
       ];
     };
 
-    fzf.enable = true;
+    fzf = {
+      enable = true;
+      defaultCommand = "${getExe pkgs.fd} --type=f --hidden --exclude=.git";
+      defaultOptions = [
+        "--height=30%"
+        "--layout=reverse"
+        "--info=inline"
+      ];
+    };
 
     ghostty = {
       enable = true;
       settings = {
         cursor-invert-fg-bg = true;
         mouse-hide-while-typing = true;
+
+        # home-manager's ghostty module already sets up fish shell integration
+        shell-integration = "none";
+        shell-integration-features = "ssh-env";
       };
     };
 
@@ -281,6 +311,8 @@ in
         "--hidden"
         "--glob=!.git/*"
         "-z"
+        "--max-columns=150"
+        "--max-columns-preview"
       ];
     };
 

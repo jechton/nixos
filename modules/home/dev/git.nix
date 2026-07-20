@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   displayName,
   gitEmail,
@@ -32,6 +33,7 @@
         };
 
         # keep-sorted start block=yes
+
         alias = {
           # keep-sorted start
           a = "add --all";
@@ -61,12 +63,17 @@
           unstage = "reset --";
           # keep-sorted end
         };
+        branch = {
+          autosetupmerge = "true";
+          sort = "committerdate";
+        };
         color.ui = "auto";
         column.ui = "auto";
         commit.gpgSign = true;
         core = {
           compression = 9;
           preloadindex = true;
+          whitespace = "fix,-indent-with-non-tab,trailing-space,cr-at-eol";
         };
         diff = {
           algorithm = "histogram";
@@ -75,10 +82,12 @@
           renames = "copy";
           interHunkContext = 10;
         };
+        fetch.fsckObjects = true;
         help.autocorrect = "prompt";
         init.defaultBranch = "main";
         merge = {
           conflictstyle = "zdiff3";
+          tool = "meld";
         };
         pull.rebase = true;
         push = {
@@ -92,11 +101,18 @@
           missingCommitsCheck = "warn";
           updateRefs = true;
         };
+        receive.fsckObjects = true;
+        rerere = {
+          enabled = true;
+          autoupdate = true;
+        };
         status = {
           branch = true;
           showStash = true;
         };
         tag.sort = "version.refname";
+        # prevent data corruption
+        transfer.fsckObjects = true;
         #keep-sorted end
       };
     };
@@ -104,6 +120,20 @@
     gh = {
       enable = true;
       gitCredentialHelper.enable = true;
+      settings = {
+        git_protocol = "ssh";
+        prompt = "enabled";
+      };
+    };
+
+    delta = {
+      enable = true;
+      enableGitIntegration = true;
+      options = {
+        navigate = true;
+        side-by-side = true;
+        line-numbers = true;
+      };
     };
 
     mergiraf = {
@@ -114,10 +144,26 @@
     lazygit = {
       enable = true;
       settings = {
-        update.method = false;
+        update.method = "never";
         disableStartupPopups = true;
+
+        gui.nerdFontsVersion = "3";
+
+        git = {
+          # https://github.com/jesseduffield/lazygit/blob/68f3bcf53b0e19da3f7b1aaee19718605e339e8c/docs/Custom_Pagers.md#delta
+          pagers = lib.lists.singleton {
+            pager = lib.strings.escapeShellArgs [
+              "delta"
+              "--paging=never"
+              "--line-numbers"
+              "--hyperlinks"
+              "--hyperlinks-file-link-format=lazygit-edit://{path}:{line}"
+            ];
+          };
+        };
       };
     };
   };
+  home.packages = [ pkgs.meld ];
   home.shellAliases.lg = "lazygit";
 }

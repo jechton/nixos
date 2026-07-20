@@ -4,10 +4,10 @@
   ...
 }:
 let
-  cfg = config.custom.agenix;
+  cfg = config.burrow.agenix;
 in
 {
-  options.custom.agenix.enable = lib.mkEnableOption "agenix secret management";
+  options.burrow.agenix.enable = lib.mkEnableOption "agenix secret management";
 
   config = lib.mkIf cfg.enable {
     age.identityPaths = [ "/persist/age/key.txt" ];

@@ -17,7 +17,10 @@
         enable = true;
         configurationLimit = 10;
         editor = false;
+        consoleMode = "max";
+        bootCounting.enable = true;
       };
+      generationsDir.copyKernels = true;
       efi.canTouchEfiVariables = true;
     };
   };

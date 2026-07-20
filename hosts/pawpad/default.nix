@@ -3,7 +3,7 @@
 
   networking.hostName = "pawpad";
 
-  custom = {
+  burrow = {
     storage = {
       enable = true;
       luks = true;
@@ -11,6 +11,7 @@
       swapSize = "8G";
     };
     agenix.enable = true;
+    profiles.laptop.enable = true;
   };
 
   # Host-specific extras

@@ -103,6 +103,16 @@
 
   services.envfs.enable = true;
 
+  # envfs disables the normal activation-script creation of /usr/bin/env; on
+  # an impermanence root (wiped every boot) that leaves /usr unpopulated
+  # before envfs's own mount runs, and systemd refuses to boot an unpopulated
+  # /usr. Force it into place via tmpfiles, which runs earlier than envfs's
+  # mount unit, so systemd's early check is satisfied either way.
+  # https://github.com/NixOS/nixpkgs/issues/462556
+  systemd.tmpfiles.rules = [
+    "L+ /usr/bin/env - - - - ${pkgs.coreutils}/bin/env"
+  ];
+
   environment.variables = {
     FLAKE = "/etc/nixos";
     NH_FLAKE = "/etc/nixos";

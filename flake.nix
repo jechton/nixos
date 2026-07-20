@@ -183,8 +183,8 @@
             hostModule = ./hosts/vm;
           };
 
-          pawpad = mkHost {
-            hostModule = ./hosts/pawpad;
+          floptop = mkHost {
+            hostModule = ./hosts/floptop;
           };
         };
     };

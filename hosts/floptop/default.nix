@@ -1,7 +1,7 @@
 {
   hardware.facter.reportPath = ./facter.json;
 
-  networking.hostName = "pawpad";
+  networking.hostName = "floptop";
 
   burrow = {
     storage = {

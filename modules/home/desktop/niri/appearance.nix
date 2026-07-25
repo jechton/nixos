@@ -125,6 +125,15 @@ in
           ];
           variable-refresh-rate = true;
         }
+        {
+          matches = [
+            { app-id = "^Signal$"; }
+            { app-id = "^signal-desktop$"; }
+            { app-id = "^org\\.telegram\\.desktop$"; }
+            { app-id = "^telegram-desktop$"; }
+          ];
+          default-column-width.proportion = 0.33333;
+        }
       ];
       prefer-no-csd = true;
       debug.honor-xdg-activation-with-invalid-serial = [ ];

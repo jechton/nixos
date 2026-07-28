@@ -3,7 +3,6 @@
     allowUnfree = true;
     allowBroken = false;
     allowUnsupportedSystem = false;
-    allowAliases = false;
   };
 
   # /root is a read-only btrfs subvolume boundary after rollback; the nix

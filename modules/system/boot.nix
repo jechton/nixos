@@ -10,7 +10,11 @@
   ];
 
   boot = {
-    kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-bore;
+    kernelPackages =
+      if config.burrow.profiles.vm.enable then
+        pkgs.linuxPackages
+      else
+        pkgs.cachyosKernels.linuxPackages-cachyos-bore;
 
     initrd.systemd.enable = true;
     loader = {

@@ -7,4 +7,6 @@
     pkgs.telegram-desktop
     # keep-sorted end
   ];
+
+  programs.vesktop.enable = true;
 }

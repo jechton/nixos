@@ -24,8 +24,10 @@ in
 
       # keep-sorted start
       pkgs.file
+      pkgs.glow
       pkgs.gping
       pkgs.just
+      pkgs.ookla-speedtest
       pkgs.p7zip
       pkgs.pnpm
       pkgs.procs
@@ -300,6 +302,8 @@ in
       };
     };
 
+    lazydocker.enable = true;
+
     nix-index-database.comma.enable = true;
 
     nix-index.enable = true;
@@ -315,6 +319,8 @@ in
         "--max-columns-preview"
       ];
     };
+
+    superfile.enable = true;
 
     tealdeer = {
       enable = true;

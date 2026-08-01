@@ -1,10 +1,30 @@
 {
   inputs,
   config,
+  lib,
   ...
 }:
 {
   imports = [ inputs.noctalia.homeModules.default ];
+
+  # Hide launcher entries for background/tray tooling that shouldn't show up
+  # as user-facing apps: noctalia itself, and Qt theming helpers pulled in by
+  # stylix's qt target (qt5ct/qt6ct/kvantummanager).
+  xdg.dataFile =
+    lib.genAttrs
+      [
+        "applications/dev.noctalia.Noctalia.desktop"
+        "applications/qt5ct.desktop"
+        "applications/qt6ct.desktop"
+        "applications/kvantummanager.desktop"
+      ]
+      (_: {
+        text = ''
+          [Desktop Entry]
+          Type=Application
+          NoDisplay=true
+        '';
+      });
 
   programs.noctalia = {
     enable = true;

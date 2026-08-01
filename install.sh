@@ -34,6 +34,7 @@ usage() {
     "  --wifi-pass <pass>   WiFi password" \
     "  --cores     <n>      Nix 'cores' setting, for constrained builders" \
     "  --max-jobs  <n>      Nix 'max-jobs' setting, for constrained builders" \
+    "  --yes-wipe-all-disks Skip disko's interactive confirmation before wiping disks" \
     "  --help               Show this help"
   exit 0
 }
@@ -44,10 +45,11 @@ WIFI_SSID=""
 WIFI_PASS=""
 CORES=""
 MAX_JOBS=""
+YES_WIPE_ALL_DISKS=""
 
 PARSED=$(getopt \
   --options h \
-  --longoptions help,hostname:,age-key:,flake:,wifi-ssid:,wifi-pass:,cores:,max-jobs: \
+  --longoptions help,hostname:,age-key:,flake:,wifi-ssid:,wifi-pass:,cores:,max-jobs:,yes-wipe-all-disks \
   --name "install.sh" \
   -- "$@") || usage
 
@@ -55,16 +57,17 @@ eval set -- "$PARSED"
 
 while true; do
   case "$1" in
-    --hostname)  HOSTNAME="$2";     shift 2 ;;
-    --age-key)   AGE_KEY_FILE="$2"; shift 2 ;;
-    --flake)     FLAKE_DIR="$2";    shift 2 ;;
-    --wifi-ssid) WIFI_SSID="$2";    shift 2 ;;
-    --wifi-pass) WIFI_PASS="$2";    shift 2 ;;
-    --cores)     CORES="$2";        shift 2 ;;
-    --max-jobs)  MAX_JOBS="$2";     shift 2 ;;
-    -h|--help)   usage ;;
-    --)          shift; break ;;
-    *)           die "Unknown argument: $1" ;;
+    --hostname)           HOSTNAME="$2";        shift 2 ;;
+    --age-key)            AGE_KEY_FILE="$2";    shift 2 ;;
+    --flake)              FLAKE_DIR="$2";       shift 2 ;;
+    --wifi-ssid)          WIFI_SSID="$2";       shift 2 ;;
+    --wifi-pass)          WIFI_PASS="$2";       shift 2 ;;
+    --cores)              CORES="$2";           shift 2 ;;
+    --max-jobs)           MAX_JOBS="$2";        shift 2 ;;
+    --yes-wipe-all-disks) YES_WIPE_ALL_DISKS=1;  shift ;;
+    -h|--help)            usage ;;
+    --)                   shift; break ;;
+    *)                    die "Unknown argument: $1" ;;
   esac
 done
 
@@ -193,5 +196,6 @@ ARGS=(--hostname "$HOSTNAME" --age-key "$AGE_KEY_FILE" --flake "$FLAKE_DIR")
 [[ -n "$WIFI_PROFILE" ]] && ARGS+=(--wifi-profile "$WIFI_PROFILE")
 [[ -n "$CORES" ]]    && ARGS+=(--cores "$CORES")
 [[ -n "$MAX_JOBS" ]] && ARGS+=(--max-jobs "$MAX_JOBS")
+[[ -n "$YES_WIPE_ALL_DISKS" ]] && ARGS+=(--yes-wipe-all-disks)
 
 exec nix run "${FLAKE_DIR}#install" -- "${ARGS[@]}"

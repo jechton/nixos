@@ -41,6 +41,7 @@
               "                         installed system (written by install.sh)" \
               "  --cores        <n>     Nix 'cores' setting, for constrained builders" \
               "  --max-jobs     <n>     Nix 'max-jobs' setting, for constrained builders" \
+              "  --yes-wipe-all-disks   Skip disko's interactive confirmation before wiping disks" \
               "  --help               Show this help"
             exit 0
           }
@@ -51,10 +52,11 @@
           WIFI_PROFILE=""
           CORES=""
           MAX_JOBS=""
+          YES_WIPE_ALL_DISKS=""
 
           PARSED=$(getopt \
             --options h \
-            --longoptions help,hostname:,age-key:,flake:,wifi-profile:,cores:,max-jobs: \
+            --longoptions help,hostname:,age-key:,flake:,wifi-profile:,cores:,max-jobs:,yes-wipe-all-disks \
             --name "install" \
             -- "$@") || usage
 
@@ -62,15 +64,16 @@
 
           while true; do
             case "$1" in
-              --hostname)      HOSTNAME="$2";     shift 2 ;;
-              --age-key)       AGE_KEY_FILE="$2"; shift 2 ;;
-              --flake)         FLAKE_DIR="$2";    shift 2 ;;
-              --wifi-profile)  WIFI_PROFILE="$2"; shift 2 ;;
-              --cores)         CORES="$2";        shift 2 ;;
-              --max-jobs)      MAX_JOBS="$2";     shift 2 ;;
-              -h|--help)       usage ;;
-              --)              shift; break ;;
-              *)               die "Unknown argument: $1" ;;
+              --hostname)             HOSTNAME="$2";        shift 2 ;;
+              --age-key)              AGE_KEY_FILE="$2";    shift 2 ;;
+              --flake)                FLAKE_DIR="$2";       shift 2 ;;
+              --wifi-profile)         WIFI_PROFILE="$2";    shift 2 ;;
+              --cores)                CORES="$2";           shift 2 ;;
+              --max-jobs)             MAX_JOBS="$2";        shift 2 ;;
+              --yes-wipe-all-disks)   YES_WIPE_ALL_DISKS=1;  shift ;;
+              -h|--help)              usage ;;
+              --)                     shift; break ;;
+              *)                      die "Unknown argument: $1" ;;
             esac
           done
 
@@ -94,8 +97,11 @@
           ping -c1 -W2 1.1.1.1 &>/dev/null || die "No network connection. install.sh should have set this up."
 
           # Partition and format
+          # shellcheck disable=SC2054 # comma is disko's --mode value syntax, not an array separator
+          DISKO_ARGS=(--mode destroy,format,mount --flake "$FLAKE_DIR#$HOSTNAME")
+          [[ -n "$YES_WIPE_ALL_DISKS" ]] && DISKO_ARGS+=(--yes-wipe-all-disks)
           info "Running disko ($HOSTNAME) ..."
-          disko --mode destroy,format,mount --flake "$FLAKE_DIR#$HOSTNAME"
+          disko "''${DISKO_ARGS[@]}"
           ok "Disko complete."
 
           # agenix: copy age private key before first boot so secrets can be decrypted

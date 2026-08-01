@@ -184,17 +184,32 @@
             ok "facter.json saved → hosts/$HOSTNAME/"
           fi
 
-          # Copy flake so nixos-install can reference it
-          info "Copying flake to /mnt/etc/nixos ..."
-          mkdir -p /mnt/etc/nixos
-          cp -r "$FLAKE_DIR"/. /mnt/etc/nixos/
+          # Copy flake into /mnt/persist/etc/nixos so it survives the
+          # impermanence rollback on first boot (environment.persistence
+          # binds "/etc/nixos" from there, see modules/system/impermanence.nix;
+          # a plain /mnt/etc/nixos would be wiped by the rollback service
+          # before anyone ever saw it).
+          info "Copying flake to /mnt/persist/etc/nixos ..."
+          mkdir -p /mnt/persist/etc/nixos
+          cp -r "$FLAKE_DIR"/. /mnt/persist/etc/nixos/
           ok "Flake copied."
 
           # Install
-          info "Running nixos-install --flake /mnt/etc/nixos#$HOSTNAME ..."
+          info "Running nixos-install --flake /mnt/persist/etc/nixos#$HOSTNAME ..."
           nixos-install --no-root-passwd \
-            --flake "/mnt/etc/nixos#$HOSTNAME" \
+            --flake "/mnt/persist/etc/nixos#$HOSTNAME" \
             --option accept-flake-config true
+
+          # Hand ownership to the primary user so it can be edited without
+          # sudo once booted; nixos-install has written /mnt/etc/passwd by now.
+          PRIMARY_USER=$(awk -F: '$3>=1000 && $3<60000 {print $1; exit}' /mnt/etc/passwd)
+          if [[ -n "$PRIMARY_USER" ]]; then
+            info "Setting ownership of /mnt/persist/etc/nixos to $PRIMARY_USER ..."
+            chown -R "$PRIMARY_USER":users /mnt/persist/etc/nixos
+            ok "Ownership set."
+          else
+            warn "No normal user found in /mnt/etc/passwd, leaving /etc/nixos root-owned."
+          fi
 
           printf '\n'
           ok "============================================================"

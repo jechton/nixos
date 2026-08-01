@@ -13,6 +13,8 @@
     package = pkgs.lixPackageSets.stable.lix;
     channel.enable = false;
     settings = {
+      accept-flake-config = true;
+
       experimental-features = [
         "nix-command"
         "flakes"

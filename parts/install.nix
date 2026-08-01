@@ -134,12 +134,12 @@
 
           btrfs subvolume snapshot -r /mnt/root /mnt/root-blank
           btrfs subvolume list /mnt | grep -E "\broot-blank\b" \
-            || die "Snapshot verification failed — root-blank not found."
+            || die "Snapshot verification failed, root-blank not found."
           ok "root-blank created."
 
           btrfs subvolume snapshot -r /mnt/home /mnt/home-blank
           btrfs subvolume list /mnt | grep -E "\bhome-blank\b" \
-            || die "Snapshot verification failed — home-blank not found."
+            || die "Snapshot verification failed, home-blank not found."
           ok "home-blank created."
 
           umount /mnt
@@ -162,7 +162,7 @@
             trap 'swapoff "$INSTALL_SWAP" 2>/dev/null; rm -f "$INSTALL_SWAP"' EXIT
             ok "Temporary install swap active (4G)."
           else
-            warn "No /mnt/persist/swap subvolume found — skipping temporary install swap."
+            warn "No /mnt/persist/swap subvolume found, skipping temporary install swap."
           fi
 
           # Generate facter.json if the host profile is new

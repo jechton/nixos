@@ -3,3 +3,4 @@ locale = "en"
 
 [default.extend-words]
 facter = "facter"
+lazer = "lazer" # osu-lazer

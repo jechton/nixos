@@ -11,7 +11,7 @@
     home.packages = with pkgs; [
       # keep-sorted start
       bottles
-      osu-laser-bin
+      osu-lazer-bin
       # keep-sorted end
     ];
   };

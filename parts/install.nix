@@ -13,14 +13,10 @@
           btrfs-progs
           coreutils
           cryptsetup
-          gawk
           gnugrep
-          iputils
-          iw
           nixos-facter
           nixos-install-tools
           util-linux
-          wpa_supplicant
           # keep-sorted end
           inputs.disko.packages.${system}.disko
         ];
@@ -40,12 +36,11 @@
               "  --age-key   <path>   Path to age private key file (e.g. on a USB drive)" \
               "" \
               "Optional:" \
-              "  --flake     <path>   Path to flake directory (default: current directory)" \
-              "  --wifi-ssid <ssid>   WiFi network name (skip if Ethernet is already connected;" \
-              "                       otherwise you'll be prompted interactively)" \
-              "  --wifi-pass <pass>   WiFi password" \
-              "  --cores     <n>      Nix 'cores' setting, for constrained builders" \
-              "  --max-jobs  <n>      Nix 'max-jobs' setting, for constrained builders" \
+              "  --flake        <path>  Path to flake directory (default: current directory)" \
+              "  --wifi-profile <path>  NetworkManager .nmconnection file to carry into the" \
+              "                         installed system (written by install.sh)" \
+              "  --cores        <n>     Nix 'cores' setting, for constrained builders" \
+              "  --max-jobs     <n>     Nix 'max-jobs' setting, for constrained builders" \
               "  --help               Show this help"
             exit 0
           }
@@ -53,14 +48,13 @@
           HOSTNAME=""
           AGE_KEY_FILE=""
           FLAKE_DIR="$PWD"
-          WIFI_SSID=""
-          WIFI_PASS=""
+          WIFI_PROFILE=""
           CORES=""
           MAX_JOBS=""
 
           PARSED=$(getopt \
             --options h \
-            --longoptions help,hostname:,age-key:,flake:,wifi-ssid:,wifi-pass:,cores:,max-jobs: \
+            --longoptions help,hostname:,age-key:,flake:,wifi-profile:,cores:,max-jobs: \
             --name "install" \
             -- "$@") || usage
 
@@ -68,16 +62,15 @@
 
           while true; do
             case "$1" in
-              --hostname)  HOSTNAME="$2";     shift 2 ;;
-              --age-key)   AGE_KEY_FILE="$2"; shift 2 ;;
-              --flake)     FLAKE_DIR="$2";    shift 2 ;;
-              --wifi-ssid) WIFI_SSID="$2";    shift 2 ;;
-              --wifi-pass) WIFI_PASS="$2";    shift 2 ;;
-              --cores)     CORES="$2";        shift 2 ;;
-              --max-jobs)  MAX_JOBS="$2";     shift 2 ;;
-              -h|--help)   usage ;;
-              --)          shift; break ;;
-              *)           die "Unknown argument: $1" ;;
+              --hostname)      HOSTNAME="$2";     shift 2 ;;
+              --age-key)       AGE_KEY_FILE="$2"; shift 2 ;;
+              --flake)         FLAKE_DIR="$2";    shift 2 ;;
+              --wifi-profile)  WIFI_PROFILE="$2"; shift 2 ;;
+              --cores)         CORES="$2";        shift 2 ;;
+              --max-jobs)      MAX_JOBS="$2";     shift 2 ;;
+              -h|--help)       usage ;;
+              --)              shift; break ;;
+              *)               die "Unknown argument: $1" ;;
             esac
           done
 
@@ -89,10 +82,6 @@
           grep -q "^AGE-SECRET-KEY-" "$AGE_KEY_FILE" \
             || die "'$AGE_KEY_FILE' doesn't look like an age private key."
 
-          if [[ -n "$WIFI_SSID" && -z "$WIFI_PASS" ]]; then
-            die "--wifi-ssid given but --wifi-pass is missing."
-          fi
-
           NIX_CONFIG='experimental-features = nix-command flakes
           accept-flake-config = true'
           [[ -n "$CORES" ]] && NIX_CONFIG="$NIX_CONFIG
@@ -101,78 +90,8 @@
           max-jobs = $MAX_JOBS"
           export NIX_CONFIG
 
-          # Networking
-          connect_wifi() {
-            local ssid="$1" pass="$2"
-            info "Connecting to WiFi: $ssid"
-            systemctl start wpa_supplicant
-
-            WIFI_IFACE=$(iw dev 2>/dev/null | awk '/Interface/{print $2}' | head -1)
-            [[ -n "$WIFI_IFACE" ]] || die "No wireless interface found."
-            info "Wireless interface: $WIFI_IFACE"
-
-            wpa_passphrase "$ssid" "$pass" \
-              | tee "/etc/wpa_supplicant/wpa_supplicant-''${WIFI_IFACE}.conf" >/dev/null
-            systemctl restart "wpa_supplicant@''${WIFI_IFACE}.service"
-            sleep 3
-
-            info "Waiting for network..."
-            for _ in {1..20}; do
-              ping -c1 -W1 1.1.1.1 &>/dev/null && return 0
-              sleep 1
-            done
-            return 1
-          }
-
-          if [[ -n "$WIFI_SSID" ]]; then
-            connect_wifi "$WIFI_SSID" "$WIFI_PASS" \
-              || die "No network. Check --wifi-ssid / --wifi-pass."
-            ok "Network connected."
-          else
-            info "Checking for an existing network connection (e.g. Ethernet) ..."
-            if ping -c1 -W2 1.1.1.1 &>/dev/null; then
-              ok "Network already up."
-            else
-              warn "No network detected."
-
-              [[ -t 0 ]] || die "No network, and no --wifi-ssid given in a non-interactive session."
-
-              SCAN_IFACE=$(iw dev 2>/dev/null | awk '/Interface/{print $2}' | head -1)
-              [[ -n "$SCAN_IFACE" ]] \
-                || die "No network and no wireless interface found. Connect Ethernet and retry."
-
-              info "Scanning for WiFi networks on $SCAN_IFACE ..."
-              ip link set "$SCAN_IFACE" up
-              mapfile -t NETWORKS < <(
-                iw dev "$SCAN_IFACE" scan 2>/dev/null \
-                  | awk -F'SSID: ' '/SSID: /{print $2}' \
-                  | grep -v '^$' | sort -u
-              )
-
-              CHOSEN=""
-              if [[ ''${#NETWORKS[@]} -gt 0 ]]; then
-                echo "Available networks:"
-                select opt in "''${NETWORKS[@]}" "Enter manually"; do
-                  if [[ "$opt" == "Enter manually" || -z "$opt" ]]; then
-                    read -rp "SSID: " CHOSEN
-                  else
-                    CHOSEN="$opt"
-                  fi
-                  break
-                done
-              else
-                warn "No networks found in scan."
-                read -rp "SSID: " CHOSEN
-              fi
-              [[ -n "$CHOSEN" ]] || die "No SSID given."
-
-              read -rsp "Password for '$CHOSEN': " CHOSEN_PASS
-              echo
-
-              connect_wifi "$CHOSEN" "$CHOSEN_PASS" || die "WiFi connection failed."
-              ok "Network connected."
-            fi
-          fi
+          # Networking is brought up by install.sh before this runs.
+          ping -c1 -W2 1.1.1.1 &>/dev/null || die "No network connection. install.sh should have set this up."
 
           # Partition and format
           info "Running disko ($HOSTNAME) ..."
@@ -186,6 +105,17 @@
           cp "$AGE_KEY_FILE" /mnt/persist/age/key.txt
           chmod 400 /mnt/persist/age/key.txt
           ok "Age key installed."
+
+          # Carry forward the WiFi connection install.sh established, so the
+          # installed system is online on first boot (system-connections is
+          # persisted, see modules/system/impermanence.nix)
+          if [[ -n "$WIFI_PROFILE" ]]; then
+            info "Installing WiFi profile → /mnt/persist/etc/NetworkManager/system-connections/ ..."
+            mkdir -p /mnt/persist/etc/NetworkManager/system-connections
+            cp "$WIFI_PROFILE" /mnt/persist/etc/NetworkManager/system-connections/installer.nmconnection
+            chmod 600 /mnt/persist/etc/NetworkManager/system-connections/installer.nmconnection
+            ok "WiFi profile installed."
+          fi
 
           # Impermanence: take blank btrfs snapshots before any writes land
           info "Preparing blank btrfs snapshots for impermanence ..."

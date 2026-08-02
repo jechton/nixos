@@ -35,7 +35,7 @@ let
       text="$(tesseract "$image" stdout --psm 6 2>/dev/null | sed '/^[[:space:]]*$/d')"
       if [ -n "$text" ]; then
         printf '%s' "$text" | wl-copy
-        notify-send "OCR copied" "Recognized text is in the clipboard."
+        notify-send "OCR copied" "$text"
       else
         notify-send "OCR empty" "No text was recognized in the selected region."
       fi

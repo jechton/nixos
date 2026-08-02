@@ -97,7 +97,7 @@
       };
 
       plugins = {
-        enabled = [ "noctalia/bongocat" ];
+        enabled = [ ];
 
         source = [
           {

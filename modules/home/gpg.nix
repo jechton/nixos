@@ -24,4 +24,6 @@
   home.activation.importGpgKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     $DRY_RUN_CMD ${pkgs.gnupg}/bin/gpg --import /run/agenix/gpg-key
   '';
+
+  home.persistence."/persist".directories = [ ".local/share/gnupg" ];
 }

@@ -118,4 +118,6 @@
     FLAKE = "/etc/nixos";
     NH_FLAKE = "/etc/nixos";
   };
+
+  environment.persistence."/persist".directories = [ "/etc/nixos" ];
 }

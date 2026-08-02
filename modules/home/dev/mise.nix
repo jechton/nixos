@@ -26,4 +26,6 @@
       };
     };
   };
+
+  home.persistence."/persist".directories = [ ".cache/uv" ];
 }

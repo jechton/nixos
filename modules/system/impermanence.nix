@@ -50,19 +50,8 @@
   environment.persistence."/persist" = {
     hideMounts = true;
 
-    directories = [
-      "/etc/nixos"
-      "/etc/NetworkManager/system-connections"
-      "/age"
-    ];
-
-    files = [
-      "/etc/machine-id"
-      "/etc/ssh/ssh_host_rsa_key"
-      "/etc/ssh/ssh_host_rsa_key.pub"
-      "/etc/ssh/ssh_host_ed25519_key"
-      "/etc/ssh/ssh_host_ed25519_key.pub"
-    ];
+    # No owning module for this
+    files = [ "/etc/machine-id" ];
   };
 
   # /root is a read-only btrfs subvolume boundary in the blank snapshot.

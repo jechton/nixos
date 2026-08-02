@@ -74,4 +74,9 @@ in
   };
 
   stylix.targets.zen-browser.profileNames = [ "default" ];
+
+  home.persistence."/persist".directories = [
+    ".zen"
+    ".mozilla"
+  ];
 }

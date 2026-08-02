@@ -9,4 +9,10 @@
   ];
 
   programs.vesktop.enable = true;
+
+  home.persistence."/persist".directories = [
+    ".config/Signal"
+    ".config/Slack"
+    ".local/share/TelegramDesktop"
+  ];
 }

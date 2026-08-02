@@ -64,6 +64,16 @@ in
 
   services.resolved.enable = true;
 
+  environment.persistence."/persist" = {
+    directories = [ "/etc/NetworkManager/system-connections" ];
+    files = [
+      "/etc/ssh/ssh_host_rsa_key"
+      "/etc/ssh/ssh_host_rsa_key.pub"
+      "/etc/ssh/ssh_host_ed25519_key"
+      "/etc/ssh/ssh_host_ed25519_key.pub"
+    ];
+  };
+
   systemd = {
     # allow the system to boot without waiting for network interfaces to come online
     network.wait-online.enable = false;

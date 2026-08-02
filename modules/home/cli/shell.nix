@@ -341,4 +341,9 @@ in
     };
     # keep-sorted end
   };
+
+  home.persistence."/persist".directories = [
+    ".local/share/fish"
+    ".local/share/direnv"
+  ];
 }

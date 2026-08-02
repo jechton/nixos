@@ -68,6 +68,12 @@ in
 
   home.sessionPath = [ "${cfg.dataHome}/pnpm" ];
 
+  home.persistence."/persist".directories = [
+    ".cache/npm"
+    ".local/share/npm"
+    ".local/share/pnpm"
+  ];
+
   xdg.mimeApps = {
     enable = true;
     associations.added = {

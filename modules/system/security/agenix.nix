@@ -21,5 +21,7 @@ in
         owner = "jeremiah";
       };
     };
+
+    environment.persistence."/persist".directories = [ "/age" ];
   };
 }

@@ -9,31 +9,10 @@ _: {
       "Videos"
       "Projects"
 
+      # No owning module for these
       ".ssh"
-      ".local/share/gnupg"
-      ".config/gh"
-      ".local/share/fish"
       ".local/share/keyrings"
-      ".local/share/direnv"
-      ".mozilla"
-      ".zen"
-
-      # Development tool configurations and caches
       ".docker"
-      ".cache/uv"
-      ".cache/npm"
-      ".local/share/npm"
-      ".local/share/pnpm"
-      ".vscode"
-      ".config/Code/User/extensions"
-      ".config/Code/User/globalStorage"
-      ".claude"
-    ];
-
-    files = [
-      ".config/Code/User/settings.json"
-      ".config/Code/User/keybindings.json"
-      ".claude.json"
     ];
   };
 }

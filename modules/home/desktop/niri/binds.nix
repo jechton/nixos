@@ -101,6 +101,7 @@ in
       {
         "Mod+Return" = withTitle "Terminal" (spawn "ghostty");
         "Mod+B" = withTitle "Browser" (spawn "zen-twilight");
+        "Mod+E" = withTitle "Files" (spawn "nautilus");
 
         "Mod+Shift+Slash" = noArg "show-hotkey-overlay";
         "Mod+Space" = withTitle "Application Launcher" (

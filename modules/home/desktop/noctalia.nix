@@ -97,7 +97,7 @@
       };
 
       plugins = {
-        enabled = [ ];
+        enabled = [ "noctalia/wallhaven" ];
 
         source = [
           {

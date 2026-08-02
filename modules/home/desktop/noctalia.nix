@@ -122,6 +122,7 @@
         polkit_agent = true;
         avatar_path = "${config.home.homeDirectory}/.face";
         screenshot.directory = "~/Pictures/Screenshots";
+        font_family = lib.mkForce config.burrow.theme.fonts.monospace.name;
 
         launcher = {
           categories = false;

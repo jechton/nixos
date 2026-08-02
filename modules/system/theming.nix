@@ -44,6 +44,8 @@
     consoleLogLevel = 3;
     initrd.verbose = false;
 
+    plymouth.enable = true;
+
     # silent boot
     kernelParams = [
       "quiet"

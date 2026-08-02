@@ -139,7 +139,7 @@
 
       widget = {
         # keep-sorted start block=yes
-        clock.format = "%a %-m/%e %-I:%M %p";
+        clock.format = "%a %-m/%-d %-I:%M %p";
         media.hide_when_no_media = true;
         network.show_label = false;
         notifications.hide_when_no_unread = true;

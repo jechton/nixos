@@ -28,5 +28,19 @@ in
         HandlePowerKey = "suspend";
       };
     };
+
+    # noctalia doesn't lock automatically on suspend (its PrepareForSleep
+    # handler only manages idle-overlay/night-light/bluetooth), so lock
+    # explicitly before sleep.target - covers lid close too, since that
+    # also suspends via logind's default HandleLidSwitch.
+    systemd.user.services.lock-before-sleep = {
+      description = "Lock the session before suspending";
+      before = [ "sleep.target" ];
+      wantedBy = [ "sleep.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "noctalia msg session lock";
+      };
+    };
   };
 }

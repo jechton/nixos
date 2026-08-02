@@ -235,14 +235,14 @@ in
         right = "focus-column-right";
       })
 
-      (mkDirectionalBinds "Mod+Ctrl" {
+      (mkDirectionalBinds "Mod+Shift" {
         left = "move-column-left";
         down = "move-window-down";
         up = "move-window-up";
         right = "move-column-right";
       })
 
-      (mkDirectionalBinds "Mod+Shift" {
+      (mkDirectionalBinds "Mod+Ctrl" {
         left = "focus-monitor-left";
         down = "focus-monitor-down";
         up = "focus-monitor-up";
@@ -263,7 +263,7 @@ in
         down = "focus-workspace-down";
       })
 
-      (mkScrollBinds "Mod+Ctrl" {
+      (mkScrollBinds "Mod+Shift" {
         left = "move-column-left";
         right = "move-column-right";
         up = "move-column-to-workspace-up";

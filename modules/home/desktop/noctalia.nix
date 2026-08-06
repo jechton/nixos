@@ -61,6 +61,14 @@
         ];
       };
 
+      # hide tabs for hardware that isn't actually present, rather than
+      # keying off the vm profile: bluetooth.nix only flips hardware.bluetooth
+      # on when facter detected an adapter, and power.nix only enables upower
+      # when there's power management (i.e. battery) hardware to report on
+      control_center.hidden_tabs =
+        lib.optional (!osConfig.hardware.bluetooth.enable) "bluetooth"
+        ++ lib.optional (!osConfig.services.upower.enable) "power";
+
       idle = {
         behavior_order = [
           "lock"

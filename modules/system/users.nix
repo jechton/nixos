@@ -40,6 +40,7 @@ in
         "games"
         "power"
         "docker"
+        "ydotool"
       ];
       hashedPasswordFile = config.age.secrets.user-password.path;
     };

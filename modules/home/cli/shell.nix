@@ -23,6 +23,7 @@ in
       # keep-sorted end
 
       # keep-sorted start
+      pkgs.fastfetch
       pkgs.file
       pkgs.glow
       pkgs.gping

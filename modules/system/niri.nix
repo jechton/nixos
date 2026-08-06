@@ -28,7 +28,6 @@
       openFirewall = true;
     };
 
-    printing.enable = true;
     tumbler.enable = true;
   };
 

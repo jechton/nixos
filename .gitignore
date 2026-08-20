@@ -4,3 +4,4 @@ devenv.local.nix
 .pre-commit-config.yaml
 result
 .claude/settings.local.json
+*.iso

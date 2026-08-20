@@ -2,13 +2,9 @@
   inputs,
   config,
   lib,
-  pkgs,
   osConfig,
   ...
 }:
-let
-  hyprwhspr = pkgs.callPackage ../../../pkgs/hyprwhspr/package.nix { };
-in
 {
   imports = [ inputs.noctalia.homeModules.default ];
 
@@ -56,7 +52,6 @@ in
           "noctalia/bongocat:cat"
           "tray"
           "notifications"
-          "goodroot/noctwhspr:status"
           "clipboard"
           "network"
           "bluetooth"
@@ -110,15 +105,8 @@ in
         offset_y = 8;
       };
 
-      # the noctwhspr widget looks here first, before HYPRWHSPR_ROOT / its
-      # /usr/lib/hyprwhspr default, since we install to the nix store instead
-      plugin_settings."goodroot/noctwhspr".root = "${hyprwhspr}/lib/hyprwhspr";
-
       plugins = {
-        enabled = [
-          "goodroot/noctwhspr"
-          "noctalia/wallhaven"
-        ];
+        enabled = [ "noctalia/wallhaven" ];
 
         source = [
           {

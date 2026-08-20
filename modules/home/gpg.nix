@@ -19,7 +19,7 @@
   services.gpg-agent = {
     enable = true;
     enableSshSupport = true;
-    sshKeys = [ "CEB85009AE01B798C77C05B77CE95A716A952580" ];
+    sshKeys = [ "16C1B0800A772D63752B10A84C6127F387879305" ];
     pinentry.package = pkgs.pinentry-gnome3;
   };
 

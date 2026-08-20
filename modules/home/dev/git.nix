@@ -29,7 +29,7 @@
         user = {
           name = displayName;
           email = gitEmail;
-          signingKey = "4958433042447A9C2F8EE6B3A44C315F8322DC5A"; # gitleaks:allow - this is public key
+          signingKey = "FAE8977D92FD44FEFEBC41F7A77C4232604E70B9"; # gitleaks:allow - this is public key
         };
 
         # keep-sorted start block=yes

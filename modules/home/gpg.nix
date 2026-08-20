@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   lib,
   ...
@@ -6,6 +7,7 @@
 {
   programs.gpg = {
     enable = true;
+    homedir = "${config.xdg.dataHome}/gnupg";
     publicKeys = [
       {
         source = ../../keys/jeremiah.asc;

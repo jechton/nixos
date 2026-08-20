@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, ... }:
 let
   cfg = config.xdg;
 in
@@ -61,9 +61,6 @@ in
     ANDROID_HOME = "${cfg.dataHome}/android";
     ANDROID_USER_HOME = "${cfg.dataHome}/android";
     GRADLE_USER_HOME = "${cfg.dataHome}/gradle";
-
-    # programs.gpg (home/gpg.nix) sets this to the default ~/.gnupg itself
-    GNUPGHOME = lib.mkForce "${cfg.dataHome}/gnupg";
   };
 
   home.sessionPath = [ "${cfg.dataHome}/pnpm" ];

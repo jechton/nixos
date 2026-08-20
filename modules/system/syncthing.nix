@@ -6,6 +6,15 @@ in
 {
   # vm is disposable and doesn't participate in the sync mesh
   config = lib.mkIf (!config.burrow.profiles.vm.enable) {
+    environment.persistence."/persist".directories = [
+      {
+        directory = "/var/lib/syncthing";
+        user = username;
+        group = "users";
+        mode = "0700";
+      }
+    ];
+
     services.syncthing = {
       enable = true;
       user = username;

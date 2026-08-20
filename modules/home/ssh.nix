@@ -4,7 +4,7 @@
     hashKnownHosts = true;
     forwardAgent = false;
     matchBlocks = {
-      # keep-sorted start
+      # keep-sorted start block=yes
       bunpi = {
         hostname = "192.168.4.45";
         user = "jeremiah";

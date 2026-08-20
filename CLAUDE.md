@@ -38,6 +38,6 @@ Pre-commit hooks (git-hooks.nix, installed by the devshell) run `treefmt --fail-
 
 - No AI-isms: no filler, no hedging, no "as an AI". No em dashes, use a comma, colon, or period instead. Applies to code, comments, commit messages, and docs.
 - Prefer simple, readable code over clever or terse one-liners. DRY.
-- Sorted lists in Nix files use `# keep-sorted start` / `# keep-sorted end` markers (enforced by treefmt's keep-sorted formatter): keep entries alphabetical within those blocks and add new entries inside them, not appended after.
+- Sorted lists in Nix files are bounded by keep-sorted marker comments (see any module for the exact syntax; enforced by treefmt's keep-sorted formatter): keep entries alphabetical within those blocks and add new entries inside them, not appended after.
 - Colors in stylix-themed modules: use `config.lib.stylix.colors.withHashtag.baseXX` (already includes the `#` prefix).
 - Formatting/linting is entirely delegated to `nix fmt` (treefmt), don't hand-format Nix files.

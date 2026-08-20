@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # Self-contained installer entrypoint for the live ISO shell.
 #
-# `nix run .#install` needs network to fetch the flake's inputs and any
-# uncached packages, so WiFi has to be brought up *before* that call using
-# tools already present on the base NixOS installer image (iw, wpa_supplicant,
-# iputils, util-linux) rather than anything from this flake.
+# Networking uses nmcli, guaranteed present on NixOS installer images
+# (unlike iw/wpa_supplicant), since `nix run .#install` needs network first.
 set -euo pipefail
 
 if [[ $EUID -ne 0 ]]; then
@@ -79,13 +77,10 @@ if [[ -n "$WIFI_SSID" && -z "$WIFI_PASS" ]]; then
   die "--wifi-ssid given but --wifi-pass is missing."
 fi
 
-# Networking
 WIFI_PROFILE=""
 
-# Writes a NetworkManager keyfile connection profile so the installed system
-# (which persists /etc/NetworkManager/system-connections, see
-# modules/system/impermanence.nix) is online on first boot without retyping
-# the password. Same plaintext-at-rest model NetworkManager already uses.
+# Carried into the installed system's /etc/NetworkManager/system-connections
+# (see modules/system/impermanence.nix) so it's online on first boot.
 write_nm_profile() {
   local ssid="$1" pass="$2" uuid
   uuid=$(cat /proc/sys/kernel/random/uuid)
@@ -114,20 +109,18 @@ EOF
   chmod 600 "$WIFI_PROFILE"
 }
 
+has_wifi_device() {
+  nmcli -t -f TYPE device status 2>/dev/null | grep -q '^wifi$'
+}
+
 connect_wifi() {
   local ssid="$1" pass="$2"
   info "Connecting to WiFi: $ssid"
-  systemctl start wpa_supplicant
+  systemctl start NetworkManager
+  nmcli device wifi rescan &>/dev/null || true
+  sleep 2
 
-  local iface
-  iface=$(iw dev 2>/dev/null | awk '/Interface/{print $2}' | head -1)
-  [[ -n "$iface" ]] || die "No wireless interface found."
-  info "Wireless interface: $iface"
-
-  wpa_passphrase "$ssid" "$pass" \
-    | tee "/etc/wpa_supplicant/wpa_supplicant-${iface}.conf" >/dev/null
-  systemctl restart "wpa_supplicant@${iface}.service"
-  sleep 3
+  nmcli device wifi connect "$ssid" password "$pass" || return 1
 
   info "Waiting for network..."
   for _ in {1..20}; do
@@ -151,15 +144,15 @@ else
 
     [[ -t 0 ]] || die "No network, and no --wifi-ssid given in a non-interactive session."
 
-    SCAN_IFACE=$(iw dev 2>/dev/null | awk '/Interface/{print $2}' | head -1)
-    [[ -n "$SCAN_IFACE" ]] \
+    systemctl start NetworkManager
+    has_wifi_device \
       || die "No network and no wireless interface found. Connect Ethernet and retry."
 
-    info "Scanning for WiFi networks on $SCAN_IFACE ..."
-    ip link set "$SCAN_IFACE" up
+    info "Scanning for WiFi networks ..."
+    nmcli device wifi rescan &>/dev/null || true
+    sleep 2
     mapfile -t NETWORKS < <(
-      iw dev "$SCAN_IFACE" scan 2>/dev/null \
-        | awk -F'SSID: ' '/SSID: /{print $2}' \
+      nmcli -t -f SSID device wifi list 2>/dev/null \
         | grep -v '^$' | sort -u
     )
 

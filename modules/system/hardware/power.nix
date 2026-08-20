@@ -18,6 +18,7 @@ let
       lib.makeBinPath [
         pkgs.power-profiles-daemon
         pkgs.gnugrep
+        pkgs.coreutils
       ]
     }
 

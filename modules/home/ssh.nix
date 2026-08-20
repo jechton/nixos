@@ -1,21 +1,24 @@
 {
   programs.ssh = {
     enable = true;
-    hashKnownHosts = true;
-    forwardAgent = false;
-    matchBlocks = {
+    enableDefaultConfig = false;
+    settings = {
+      "*" = {
+        HashKnownHosts = true;
+        ForwardAgent = false;
+      };
       # keep-sorted start block=yes
       bunpi = {
-        hostname = "192.168.4.45";
-        user = "jeremiah";
+        HostName = "192.168.4.45";
+        User = "jeremiah";
       };
       opti = {
-        hostname = "opti";
-        user = "driftwood";
+        HostName = "opti";
+        User = "driftwood";
       };
       plex = {
-        hostname = "plex";
-        user = "driftwood";
+        HostName = "plex";
+        User = "driftwood";
       };
       # keep-sorted end
     };

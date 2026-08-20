@@ -165,7 +165,6 @@
     };
   };
   home.packages = [ pkgs.meld ];
-  home.shellAliases.lg = "lazygit";
 
   home.persistence."/persist".directories = [ ".config/gh" ];
 }

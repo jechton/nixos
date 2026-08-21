@@ -13,4 +13,11 @@
     [Desktop Entry]
     Hidden=true
   '';
+
+  # blueman's autostart .desktop has the same issue; noctalia's bluetooth
+  # widget already covers this, so hide the tray icon.
+  xdg.configFile."autostart/blueman.desktop".text = ''
+    [Desktop Entry]
+    Hidden=true
+  '';
 }

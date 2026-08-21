@@ -34,6 +34,13 @@
 
         # keep-sorted start block=yes
 
+        # lazygit's diff pane is too narrow for side-by-side; this feature is
+        # opted into via `delta --features=lazygit` in the lazygit pager below.
+        "delta \"lazygit\"" = {
+          side-by-side = false;
+          line-numbers = false;
+          hyperlinks = false;
+        };
         alias = {
           # keep-sorted start
           a = "add --all";
@@ -130,9 +137,16 @@
       enable = true;
       enableGitIntegration = true;
       options = {
+        # A raw [delta] option can't be overridden by --features, so
+        # side-by-side/line-numbers live in the "defaults" feature (activated
+        # here) instead, letting the lazygit pager below layer its own
+        # feature on top for its narrower diff pane.
         navigate = true;
-        side-by-side = true;
-        line-numbers = true;
+        features = "defaults";
+        defaults = {
+          side-by-side = true;
+          line-numbers = true;
+        };
       };
     };
 
@@ -151,13 +165,14 @@
 
         git = {
           # https://github.com/jesseduffield/lazygit/blob/68f3bcf53b0e19da3f7b1aaee19718605e339e8c/docs/Custom_Pagers.md#delta
+          # lazygit's diff pane is too narrow for side-by-side, so this
+          # overrides it (and the line-numbers/hyperlinks clutter) via the
+          # "lazygit" delta feature defined above instead of the global config.
           pagers = lib.lists.singleton {
             pager = lib.strings.escapeShellArgs [
               "delta"
               "--paging=never"
-              "--line-numbers"
-              "--hyperlinks"
-              "--hyperlinks-file-link-format=lazygit-edit://{path}:{line}"
+              "--features=defaults lazygit"
             ];
           };
         };

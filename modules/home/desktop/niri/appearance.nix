@@ -127,6 +127,7 @@ in
         }
         {
           matches = [
+            { app-id = "^signal$"; }
             { app-id = "^Signal$"; }
             { app-id = "^signal-desktop$"; }
             { app-id = "^org\\.telegram\\.desktop$"; }

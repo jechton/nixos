@@ -294,7 +294,9 @@ in
     ghostty = {
       enable = true;
       settings = {
+        copy-on-select = true;
         cursor-invert-fg-bg = true;
+        cursor-style = "bar";
         mouse-hide-while-typing = true;
 
         # home-manager's ghostty module already sets up fish shell integration

@@ -43,7 +43,23 @@ in
       ];
     };
 
-    firewall.enable = true;
+    firewall = {
+      enable = true;
+      # discovery broadcast + pairing/transfer, used by home-manager's
+      # services.kdeconnect (no openFirewall option of its own)
+      allowedTCPPortRanges = [
+        {
+          from = 1714;
+          to = 1764;
+        }
+      ];
+      allowedUDPPortRanges = [
+        {
+          from = 1714;
+          to = 1764;
+        }
+      ];
+    };
 
     nameservers = [
       # these are all quad9

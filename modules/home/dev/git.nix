@@ -175,6 +175,8 @@
               "--features=defaults lazygit"
             ];
           };
+
+          overrideGpg = true;
         };
       };
     };

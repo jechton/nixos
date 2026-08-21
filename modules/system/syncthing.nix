@@ -35,6 +35,7 @@ in
 
         folders = {
           "Driftwood Documents" = {
+            id = "gjjox-fpdkc";
             path = "${homeDir}/Documents/Driftwood";
             devices = [
               "bunpi"
@@ -42,6 +43,7 @@ in
             ];
           };
           "Electronic Arts" = {
+            id = "kdfjt-cfrzu";
             path = "${homeDir}/.local/share/bottles/bottles/Gaming/drive_c/users/steamuser/Documents/Electronic Arts";
             devices = [
               "bunpi"
@@ -49,6 +51,7 @@ in
             ];
           };
           "Ludusavi" = {
+            id = "mt53f-defrz";
             path = "${homeDir}/Games/Ludusavi";
             devices = [
               "bunpi"
@@ -56,6 +59,7 @@ in
             ];
           };
           "Obsidian" = {
+            id = "onzq2-jyftk";
             path = "${homeDir}/Documents/Obsidian";
             devices = [
               "S25 Ultra"

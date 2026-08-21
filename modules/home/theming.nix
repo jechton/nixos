@@ -82,9 +82,9 @@ in
 
       icons = {
         enable = true;
-        package = pkgs.cosmic-icons;
-        dark = "Cosmic";
-        light = "Cosmic";
+        package = pkgs.papirus-icon-theme;
+        dark = "Papirus-Dark";
+        light = "Papirus-Light";
       };
     };
 

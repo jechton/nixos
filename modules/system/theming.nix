@@ -11,12 +11,17 @@
   # needing a D-Bus session (unlike home-manager's dconf.settings, which is
   # forced off in modules/home/theming.nix for that reason). This is what
   # tells GTK apps and the xdg-desktop-portal Settings backend (which browsers
-  # query for their own dark/light mode) that the system prefers dark.
+  # query for their own dark/light mode) that the system prefers dark, and
+  # which GTK theme and icon theme GNOME-style apps (e.g. Nautilus, and
+  # Chromium/Electron's native file picker) should use, since they read
+  # gtk-theme/icon-theme from dconf rather than gtk-3.0/settings.ini.
   programs.dconf.profiles.user.databases = [
     {
       settings = {
         "org/gnome/desktop/interface" = {
           color-scheme = "prefer-dark";
+          gtk-theme = "adw-gtk3";
+          icon-theme = "Papirus-Dark";
         };
       };
     }

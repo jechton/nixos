@@ -12,6 +12,12 @@
 
   programs.dconf.enable = true;
 
+  # noctalia provides its own polkit agent (burrow.theme's shell.polkit_agent
+  # in modules/home/desktop/noctalia.nix); niri-flake's bundled
+  # polkit-kde-agent-1 would otherwise also register and fight it for the
+  # authentication prompt.
+  systemd.user.services.niri-flake-polkit.enable = false;
+
   environment.variables = {
     NIXOS_OZONE_WL = "1";
     GDK_BACKEND = "wayland,x11";

@@ -7,6 +7,21 @@
   # Required for dconf to work during home-manager activation (GTK theming via stylix)
   programs.dconf.enable = true;
 
+  # Compiled into the system dconf db at build time, so it applies without
+  # needing a D-Bus session (unlike home-manager's dconf.settings, which is
+  # forced off in modules/home/theming.nix for that reason). This is what
+  # tells GTK apps and the xdg-desktop-portal Settings backend (which browsers
+  # query for their own dark/light mode) that the system prefers dark.
+  programs.dconf.profiles.user.databases = [
+    {
+      settings = {
+        "org/gnome/desktop/interface" = {
+          color-scheme = "prefer-dark";
+        };
+      };
+    }
+  ];
+
   fonts = {
     packages = lib.attrValues {
       inherit (pkgs)

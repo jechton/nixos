@@ -17,4 +17,13 @@
     Type=Application
     NoDisplay=true
   '';
+
+  # The package's own XDG autostart entry has no OnlyShowIn restriction, so
+  # systemd-xdg-autostart-generator starts a second kdeconnectd alongside the
+  # one from services.kdeconnect's systemd unit above. Hide it so only one runs.
+  xdg.configFile."autostart/org.kde.kdeconnect.daemon.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Hidden=true
+  '';
 }

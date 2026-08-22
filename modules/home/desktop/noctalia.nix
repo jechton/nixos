@@ -38,6 +38,7 @@
       };
 
       bar.default = {
+        thickness = 24;
         margin_edge = 0;
         margin_ends = 0;
         radius = 0;
@@ -46,10 +47,10 @@
         start = [
           "launcher"
           "workspaces"
+          "taskbar"
           "media"
         ];
         end = [
-          "noctalia/bongocat:cat"
           "tray"
           "notifications"
           "clipboard"
@@ -60,6 +61,13 @@
           "battery"
           "session"
         ];
+      };
+
+      # account name must stay "personal_google" to match the OAuth token
+      # already stored in the (persisted) system keyring
+      calendar = {
+        enabled = true;
+        account.personal_google.type = "google";
       };
 
       # hide tabs for hardware that isn't actually present, rather than
@@ -137,6 +145,8 @@
           categories = false;
           compact = true;
         };
+
+        panel.open_near_click_control_center = true;
       };
 
       theme.templates = {
@@ -148,10 +158,19 @@
 
       widget = {
         # keep-sorted start block=yes
-        clock.format = "%a %-m/%-d %-I:%M %p";
+        clock = {
+          actions.right = "exec xdg-open https://calendar.google.com/calendar/u/0/r";
+          format = "%a %-m/%-d %-I:%M %p";
+        };
         media.hide_when_no_media = true;
         network.show_label = false;
         notifications.hide_when_no_unread = true;
+        taskbar = {
+          group_by_workspace = true;
+          group_single_icon_per_app = true;
+          hide_empty_workspaces = true;
+          show_workspace_label = false;
+        };
         volume.mute_color = "outline";
         workspaces.minimal = true;
         # keep-sorted end

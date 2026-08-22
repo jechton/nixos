@@ -10,7 +10,10 @@ _: {
       "Projects"
 
       # No owning module for these
-      ".ssh"
+      {
+        directory = ".ssh";
+        mode = "0700";
+      }
       ".local/share/keyrings"
       ".docker"
     ];

@@ -3,7 +3,7 @@
     { command = [ "noctalia" ]; }
     { command = [ "signal-desktop" ]; }
     { command = [ "telegram-desktop" ]; }
-    { command = [ "slack" ]; }
+    { command = [ "slack -u" ]; }
   ];
 
   # nm-applet's autostart .desktop only excludes KDE/GNOME/COSMIC, so it

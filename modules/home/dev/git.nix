@@ -81,12 +81,15 @@
         };
         diff = {
           algorithm = "histogram";
-          colorMoced = "plain";
+          colorMoved = "plain";
           mnemonixPrefix = true;
           renames = "copy";
           interHunkContext = 10;
         };
-        fetch.fsckObjects = true;
+        fetch = {
+          fsckObjects = true;
+          prune = true;
+        };
         help.autocorrect = "prompt";
         init.defaultBranch = "main";
         merge = {
@@ -144,6 +147,7 @@
           side-by-side = true;
           line-numbers = true;
         };
+        interactive.keep-plus-minus-markers = false;
       };
     };
 
@@ -160,21 +164,31 @@
 
         gui.nerdFontsVersion = "3";
 
-        git = {
-          # https://github.com/jesseduffield/lazygit/blob/68f3bcf53b0e19da3f7b1aaee19718605e339e8c/docs/Custom_Pagers.md#delta
-          # lazygit's diff pane is too narrow for side-by-side, so this
-          # overrides it (and the line-numbers/hyperlinks clutter) via the
-          # "lazygit" delta feature defined above instead of the global config.
-          diffRenderers = lib.lists.singleton {
-            command = lib.strings.escapeShellArgs [
-              "delta"
-              "--paging=never"
-              "--features=defaults lazygit"
-            ];
-          };
+        git =
+          let
+            logCmd = "git log --color=always";
+          in
+          {
+            # https://github.com/jesseduffield/lazygit/blob/68f3bcf53b0e19da3f7b1aaee19718605e339e8c/docs/Custom_Pagers.md#delta
+            # lazygit's diff pane is too narrow for side-by-side, so this
+            # overrides it (and the line-numbers/hyperlinks clutter) via the
+            # "lazygit" delta feature defined above instead of the global config.
+            diffRenderers = lib.lists.singleton {
+              command = lib.strings.escapeShellArgs [
+                "delta"
+                "--paging=never"
+                "--features=defaults lazygit"
+              ];
+            };
+            pagers = lib.lists.singleton {
+              colorArg = "always";
+              pager = "delta --paging=never --features=defaults lazygit";
+            };
+            branchLogCmd = "${logCmd} {{branchName}}";
+            allBranchesLogCmds = [ "${logCmd} --all" ];
 
-          overrideGpg = true;
-        };
+            overrideGpg = true;
+          };
       };
     };
   };

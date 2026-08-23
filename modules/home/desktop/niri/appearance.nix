@@ -66,6 +66,10 @@ let
       draw-border-with-background = false;
     }
     {
+      matches = [ { title = "^Extension: \\(Bitwarden Password Manager\\)"; } ];
+      open-floating = true;
+    }
+    {
       matches = [
         { app-id = "^steam$"; }
         { app-id = "^Steam$"; }
@@ -77,8 +81,6 @@ let
     {
       matches = [
         { app-id = "^signal$"; }
-        { app-id = "^Signal$"; }
-        { app-id = "^signal-desktop$"; }
         { app-id = "^org\\.telegram\\.desktop$"; }
         { app-id = "^telegram-desktop$"; }
       ];

@@ -16,9 +16,29 @@
       aseprite
       blender
       gimp
+      hunspell
+      hunspellDicts.en_US
       inkscape
+      languagetool
       libreoffice-stable
       # keep-sorted end
+    ];
+
+    xdg.mimeApps.defaultApplications =
+      let
+        officeSuite = "startcenter.desktop";
+      in
+      {
+        "application/msword" = "writer.desktop";
+        "application/vnd.ms-excel" = "calc.desktop";
+        "application/vnd.ms-powerpoint" = "impress.desktop";
+        "application/vnd.oasis.opendocument.*" = officeSuite;
+        "application/vnd.openxmlformats-officedocument.*" = officeSuite;
+      };
+
+    home.persistence."/persist".directories = [
+      ".config/LanguageTool"
+      ".config/libreoffice"
     ];
   };
 }

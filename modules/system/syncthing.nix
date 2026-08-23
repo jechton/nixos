@@ -4,7 +4,6 @@ let
   homeDir = "/home/${username}";
 in
 {
-  # vm is disposable and doesn't participate in the sync mesh
   config = lib.mkIf (!config.burrow.profiles.vm.enable) {
     environment.persistence."/persist".directories = [
       {
@@ -21,8 +20,6 @@ in
       group = "users";
       openDefaultPorts = true;
 
-      # devices/folders are pushed via the API on every activation, so GUI
-      # changes don't stick — this repo stays the source of truth
       settings = {
         devices = {
           bunpi = {

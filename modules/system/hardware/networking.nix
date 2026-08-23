@@ -7,6 +7,13 @@ let
   );
 in
 {
+  # mt7921e's PCIe ASPM negotiation is broken on resume: throughput craters
+  # after suspend and only a driver reload (or reboot) fixes it. Disabling
+  # ASPM for the driver sidesteps the bug entirely.
+  boot.extraModprobeConfig = lib.mkIf hasWifi ''
+    options mt7921e disable_aspm=1
+  '';
+
   networking = {
     networkmanager = {
       enable = true;

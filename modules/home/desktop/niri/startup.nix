@@ -1,9 +1,16 @@
+{ lib, ... }:
+let
+  inherit (import ./_lib.nix { inherit lib; }) mkNodes;
+in
 {
-  programs.niri.settings.spawn-at-startup = [
-    { command = [ "noctalia" ]; }
-    { command = [ "signal-desktop" ]; }
-    { command = [ "telegram-desktop" ]; }
-    { command = [ "slack -u" ]; }
+  wayland.windowManager.niri.settings._children = mkNodes "spawn-at-startup" [
+    [ "noctalia" ]
+    [ "signal-desktop" ]
+    [ "telegram-desktop" ]
+    [
+      "slack"
+      "-u"
+    ]
   ];
 
   # nm-applet's autostart .desktop only excludes KDE/GNOME/COSMIC, so it

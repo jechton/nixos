@@ -172,7 +172,7 @@
           show_workspace_label = false;
         };
         volume.mute_color = "outline";
-        workspaces.minimal = true;
+        workspaces.style = "minimal";
         # keep-sorted end
       };
       # keep-sorted end

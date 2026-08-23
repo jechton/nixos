@@ -1,30 +1,14 @@
 { lib, ... }:
 let
-  noArg = action: {
-    action.${action} = [ ];
-  };
-
-  withArg = action: value: {
-    action.${action} = value;
-  };
-
-  withTitle =
-    title: actionBlock:
-    actionBlock
-    // {
-      hotkey-overlay.title = title;
-    };
-
-  hidden =
-    actionBlock:
-    actionBlock
-    // {
-      hotkey-overlay.hidden = true;
-    };
-
-  spawn = command: {
-    action.spawn = command;
-  };
+  niriLib = import ./_lib.nix { inherit lib; };
+  inherit (niriLib)
+    withTitle
+    withProps
+    noArg
+    withArg
+    spawn
+    ;
+  hidden = niriLib.hiddenBind;
 
   mkDirectionalBinds =
     modifier: label:
@@ -66,13 +50,11 @@ let
       down,
     }:
     {
-      "${modifier}+WheelScrollDown" = withTitle "${label} Down" {
+      "${modifier}+WheelScrollDown" = withProps (withTitle "${label} Down" (noArg down)) {
         cooldown-ms = 150;
-        action.${down} = [ ];
       };
-      "${modifier}+WheelScrollUp" = withTitle "${label} Up" {
+      "${modifier}+WheelScrollUp" = withProps (withTitle "${label} Up" (noArg up)) {
         cooldown-ms = 150;
-        action.${up} = [ ];
       };
       "${modifier}+WheelScrollRight" = withTitle "${label} Right" (noArg right);
       "${modifier}+WheelScrollLeft" = withTitle "${label} Left" (noArg left);
@@ -87,16 +69,16 @@ let
     ++ command;
 in
 {
-  programs.niri.settings = {
-    hotkey-overlay.skip-at-startup = true;
+  wayland.windowManager.niri.settings = {
+    hotkey-overlay.skip-at-startup = { };
 
     input = {
-      focus-follows-mouse.enable = true;
-      keyboard.numlock = true;
+      focus-follows-mouse = { };
+      keyboard.numlock = { };
 
       touchpad = {
-        tap = true;
-        natural-scroll = true;
+        tap = { };
+        natural-scroll = { };
       };
     };
 
@@ -220,17 +202,15 @@ in
           noArg "switch-focus-between-floating-and-tiling"
         );
         "Mod+W" = withTitle "Toggle Tabbed Column" (noArg "toggle-column-tabbed-display");
-        "Mod+O" = withTitle "Workspace Overview" {
+        "Mod+O" = withProps (withTitle "Workspace Overview" (noArg "toggle-overview")) {
           repeat = false;
-          action.toggle-overview = [ ];
         };
         "Print" = withTitle "Screenshot" (noArg "screenshot");
         "Ctrl+Print" = withTitle "Screenshot Screen" (noArg "screenshot-screen");
         "Alt+Print" = withTitle "Screenshot Window" (noArg "screenshot-window");
-        "Mod+Escape" = withTitle "Toggle Keyboard Shortcuts Inhibit" {
-          allow-inhibiting = false;
-          action.toggle-keyboard-shortcuts-inhibit = [ ];
-        };
+        "Mod+Escape" = withProps (withTitle "Toggle Keyboard Shortcuts Inhibit" (
+          noArg "toggle-keyboard-shortcuts-inhibit"
+        )) { allow-inhibiting = false; };
         "Mod+Shift+E" = withTitle "Exit Niri" (noArg "quit");
         "Ctrl+Alt+Delete" = withTitle "Open Session Management" (
           spawn (noctalia [

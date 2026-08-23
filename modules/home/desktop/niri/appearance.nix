@@ -1,14 +1,6 @@
-{
-  inputs,
-  lib,
-  config,
-  ...
-}:
+{ config, lib, ... }:
 let
-  inherit (inputs.niri.lib.kdl)
-    leaf
-    plain
-    ;
+  inherit (import ./_lib.nix { inherit lib; }) mkNodes mkRule;
 
   windowOpenShader = ''
     vec4 open_color(vec3 coords_geo, vec3 size_geo) {
@@ -45,104 +37,100 @@ let
     inherit stiffness;
     epsilon = 0.0001;
   };
-in
-{
-  programs.niri = {
-    config = lib.mkOptionDefault (
-      lib.mkAfter [
-        (plain "layer-rule" [
-          (leaf "match" { namespace = "^noctalia-backdrop"; })
-          (leaf "place-within-backdrop" true)
-        ])
-      ]
-    );
 
-    settings = {
-      animations = {
-        workspace-switch.kind.spring = spring 1000;
-        horizontal-view-movement.kind.spring = spring 1000;
-        window-movement.kind.spring = spring 1000;
-        window-resize.kind.spring = spring 1000;
-        overview-open-close.kind.spring = spring 850;
-        window-open = {
-          kind.easing = {
-            duration-ms = 300;
-            curve = "ease-out-cubic";
-          };
-          custom-shader = windowOpenShader;
-        };
-        window-close = {
-          kind.easing = {
-            duration-ms = 200;
-            curve = "ease-out-quad";
-          };
-          custom-shader = windowCloseShader;
-        };
-        config-notification-open-close.kind.spring = {
-          damping-ratio = 0.95;
-          stiffness = 900;
-          epsilon = 0.001;
-        };
-        screenshot-ui-open.kind.easing = {
-          duration-ms = 200;
-          curve = "ease-out-quad";
-        };
-      };
-
-      window-rules = [
+  windowRules = [
+    {
+      geometry-corner-radius = [
+        0.0
+        0.0
+        0.0
+        0.0
+      ];
+      clip-to-geometry = true;
+    }
+    {
+      matches = [
         {
-          geometry-corner-radius = {
-            top-left = 0.0;
-            top-right = 0.0;
-            bottom-right = 0.0;
-            bottom-left = 0.0;
-          };
-          clip-to-geometry = true;
-        }
-        {
-          matches = [
-            {
-              title = "^(Open|Save|Save As|Open File|Choose File|Select File|File Upload|Preferences|Settings|Noctalia Settings)$";
-            }
-          ];
-          open-floating = true;
-          default-column-width.proportion = 0.5;
-          default-window-height.fixed = 720;
-        }
-        {
-          matches = [
-            { app-id = "^zen$"; }
-            { app-id = "^zen-browser$"; }
-          ];
-          draw-border-with-background = false;
-        }
-        {
-          matches = [
-            { app-id = "^steam$"; }
-            { app-id = "^Steam$"; }
-            { app-id = "^com\\.heroicgameslauncher\\.hgl$"; }
-            { app-id = "^net\\.lutris\\.Lutris$"; }
-          ];
-          variable-refresh-rate = true;
-        }
-        {
-          matches = [
-            { app-id = "^signal$"; }
-            { app-id = "^Signal$"; }
-            { app-id = "^signal-desktop$"; }
-            { app-id = "^org\\.telegram\\.desktop$"; }
-            { app-id = "^telegram-desktop$"; }
-          ];
-          default-column-width.proportion = 0.33333;
+          title = "^(Open|Save|Save As|Open File|Choose File|Select File|File Upload|Preferences|Settings|Noctalia Settings)$";
         }
       ];
-      prefer-no-csd = true;
-      debug.honor-xdg-activation-with-invalid-serial = [ ];
+      open-floating = true;
+      default-column-width.proportion = 0.5;
+      default-window-height.fixed = 720;
+    }
+    {
+      matches = [
+        { app-id = "^zen$"; }
+        { app-id = "^zen-browser$"; }
+      ];
+      draw-border-with-background = false;
+    }
+    {
+      matches = [
+        { app-id = "^steam$"; }
+        { app-id = "^Steam$"; }
+        { app-id = "^com\\.heroicgameslauncher\\.hgl$"; }
+        { app-id = "^net\\.lutris\\.Lutris$"; }
+      ];
+      variable-refresh-rate = true;
+    }
+    {
+      matches = [
+        { app-id = "^signal$"; }
+        { app-id = "^Signal$"; }
+        { app-id = "^signal-desktop$"; }
+        { app-id = "^org\\.telegram\\.desktop$"; }
+        { app-id = "^telegram-desktop$"; }
+      ];
+      default-column-width.proportion = 0.33333;
+    }
+  ];
 
-      cursor = {
-        theme = config.stylix.cursor.name;
-        size = config.stylix.cursor.size;
+  layerRules = [
+    {
+      matches = [ { namespace = "^noctalia-backdrop"; } ];
+      place-within-backdrop = true;
+    }
+  ];
+in
+{
+  wayland.windowManager.niri.settings = {
+    animations = {
+      workspace-switch.spring._props = spring 1000;
+      horizontal-view-movement.spring._props = spring 1000;
+      window-movement.spring._props = spring 1000;
+      window-resize.spring._props = spring 1000;
+      overview-open-close.spring._props = spring 850;
+      window-open = {
+        duration-ms = 300;
+        curve = "ease-out-cubic";
+        custom-shader = windowOpenShader;
+      };
+      window-close = {
+        duration-ms = 200;
+        curve = "ease-out-quad";
+        custom-shader = windowCloseShader;
+      };
+      config-notification-open-close.spring._props = {
+        damping-ratio = 0.95;
+        stiffness = 900;
+        epsilon = 0.001;
+      };
+      screenshot-ui-open = {
+        duration-ms = 200;
+        curve = "ease-out-quad";
       };
     };
+
+    prefer-no-csd = { };
+    debug.honor-xdg-activation-with-invalid-serial = { };
+
+    cursor = {
+      xcursor-theme = config.stylix.cursor.name;
+      xcursor-size = config.stylix.cursor.size;
+    };
+
+    _children =
+      (mkNodes "window-rule" (map mkRule windowRules)) ++ (mkNodes "layer-rule" (map mkRule layerRules));
   };
 }

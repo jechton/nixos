@@ -7,7 +7,7 @@
 let
   formatArgs =
     value:
-    if value == null then
+    if value == null || value == { } then
       ""
     else if builtins.isList value then
       lib.concatStringsSep " " (map toString value)
@@ -17,12 +17,14 @@ let
   bindLine =
     key: bind:
     let
-      hidden = bind.hotkey-overlay.hidden or false;
-      title = bind.hotkey-overlay.title or null;
-      actionName = builtins.head (builtins.attrNames bind.action);
-      argsStr = formatArgs bind.action.${actionName};
+      props = bind._props or { };
+      hasCustomTitle = props ? hotkey-overlay-title;
+      title = props.hotkey-overlay-title or null;
+      hidden = hasCustomTitle && title == null;
+      actionName = builtins.head (builtins.filter (name: name != "_props") (builtins.attrNames bind));
+      argsStr = formatArgs bind.${actionName};
       label =
-        if title != null then
+        if hasCustomTitle && title != null then
           title
         else if argsStr != "" then
           "${actionName} ${argsStr}"
@@ -31,7 +33,9 @@ let
     in
     if hidden then null else "${key}\t${label}";
 
-  lines = lib.filter (l: l != null) (lib.mapAttrsToList bindLine config.programs.niri.settings.binds);
+  lines = lib.filter (l: l != null) (
+    lib.mapAttrsToList bindLine config.wayland.windowManager.niri.settings.binds
+  );
 
   cheatsheetData = pkgs.writeText "niri-keybind-cheatsheet.tsv" (
     lib.concatStringsSep "\n" lines + "\n"

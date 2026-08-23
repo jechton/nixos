@@ -5,18 +5,9 @@
   ...
 }:
 {
-  programs.niri = {
-    enable = true;
-    package = inputs.niri.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
-  };
+  programs.niri.enable = true;
 
   programs.dconf.enable = true;
-
-  # noctalia provides its own polkit agent (burrow.theme's shell.polkit_agent
-  # in modules/home/desktop/noctalia.nix); niri-flake's bundled
-  # polkit-kde-agent-1 would otherwise also register and fight it for the
-  # authentication prompt.
-  systemd.user.services.niri-flake-polkit.enable = false;
 
   environment.variables = {
     NIXOS_OZONE_WL = "1";
@@ -56,19 +47,12 @@
       };
     };
 
-    config.niri = {
-      default = [
-        "gnome"
-        "gtk"
-      ];
-
-      "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
-
-      "org.freedesktop.impl.portal.Access" = [ "gtk" ];
-      "org.freedesktop.impl.portal.Notification" = [ "gtk" ];
-      "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
-      "org.freedesktop.impl.portal.ScreenCast" = [ "wlr" ];
-    };
+    # programs.niri.enable already configures xdg.portal.config.niri with
+    # sensible defaults (file chooser via Nautilus, etc); it just doesn't
+    # know about the wlr portal, so ScreenCast falls back to
+    # xdg-desktop-portal-gnome, which doesn't work without actual
+    # Mutter/GNOME Shell. Route it through wlr instead.
+    config.niri."org.freedesktop.impl.portal.ScreenCast" = [ "wlr" ];
   };
 
   environment.systemPackages = with pkgs; [

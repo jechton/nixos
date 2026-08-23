@@ -32,6 +32,7 @@ in
       pkgs.p7zip
       pkgs.pnpm
       pkgs.procs
+      pkgs.superfile
       pkgs.trash-cli
       pkgs.unzip
       # keep-sorted end
@@ -295,13 +296,23 @@ in
     ghostty = {
       enable = true;
       settings = {
+        # keep-sorted start block=yes
         copy-on-select = "clipboard";
         cursor-invert-fg-bg = true;
         cursor-style = "bar";
+        # Iosevka's default glyphs for ambiguous-width symbols are the WWID
+        # variant, sized for double-width CJK-adjacent cells; their ink overflows
+        # a single terminal cell and overlaps the next character. NWID selects the
+        # properly narrow glyphs.
+        font-feature = "+NWID";
         mouse-hide-while-typing = true;
-
+        quit-after-last-window-closed = true;
         # home-manager's ghostty module already sets up fish shell integration
         shell-integration-features = "ssh-env";
+        unfocused-split-opacity = 0.85;
+        window-inherit-working-directory = true;
+        window-padding-balance = true;
+        # keep-sorted end
       };
     };
 

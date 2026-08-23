@@ -8,6 +8,14 @@
 {
   imports = [ inputs.noctalia.homeModules.default ];
 
+  # Curated wallpapers checked into the repo. recursive=true keeps the
+  # directory itself writable, so wallhaven's plugin can still download new
+  # wallpapers alongside these without conflicting with the managed symlinks.
+  home.file."Pictures/Wallpapers" = {
+    source = ./wallpapers;
+    recursive = true;
+  };
+
   # Hide launcher entries for background/tray tooling that shouldn't show up
   # as user-facing apps: noctalia itself, and Qt theming helpers pulled in by
   # stylix's qt target (qt5ct/qt6ct/kvantummanager).
@@ -152,6 +160,18 @@
       theme.templates = {
         enable_builtin_templates = false;
         enable_community_templates = false;
+      };
+
+      wallpaper = {
+        enabled = true;
+        directory = "${config.home.homeDirectory}/Pictures/Wallpapers";
+
+        automation = {
+          enabled = true;
+          interval_seconds = 1800;
+          order = "random";
+          recursive = true;
+        };
       };
 
       weather.unit = "imperial";

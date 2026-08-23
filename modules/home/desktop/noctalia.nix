@@ -11,7 +11,12 @@
 
   # udiskie/udiskie-info binaries the aristides/udiskie plugin shells out to;
   # udisks2 itself is already enabled system-wide in modules/system/niri.nix.
-  home.packages = [ pkgs.udiskie ];
+  # glib provides gdbus, which the phone-connect plugin shells out to for all
+  # KDE Connect device queries.
+  home.packages = [
+    pkgs.glib
+    pkgs.udiskie
+  ];
 
   # Curated wallpapers checked into the repo. recursive=true keeps the
   # directory itself writable, so wallhaven's plugin can still download new
@@ -66,6 +71,7 @@
         end = [
           "tray"
           "udiskie"
+          "phone-connect"
           "notifications"
           "clipboard"
           "network"
@@ -127,9 +133,16 @@
         offset_y = 8;
       };
 
+      plugin_settings = {
+        "icefish/phone-connect" = {
+          battery_display = "hidden";
+        };
+      };
+
       plugins = {
         enabled = [
           "aristides/udiskie"
+          "icefish/phone-connect"
           "noctalia/wallhaven"
         ];
 
@@ -194,6 +207,9 @@
         media.hide_when_no_media = true;
         network.show_label = false;
         notifications.hide_when_no_unread = true;
+        phone-connect = {
+          type = "icefish/phone-connect:bar";
+        };
         taskbar = {
           group_by_workspace = true;
           group_single_icon_per_app = true;
@@ -207,7 +223,6 @@
         };
         volume.mute_color = "outline";
         workspaces.style = "minimal";
-
         # keep-sorted end
       };
       # keep-sorted end

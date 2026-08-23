@@ -1,8 +1,13 @@
+{ pkgs, ... }:
 {
   services.kdeconnect = {
     enable = true;
     indicator = false;
   };
+
+  # kdeconnectd shells out to kdialog for its file-transfer and "run
+  # command" prompts; without it those actions silently fail to open.
+  home.packages = [ pkgs.kdePackages.kdialog ];
 
   # Device pairing keys/trust live here; without persisting it, every
   # device has to be re-paired after each boot.

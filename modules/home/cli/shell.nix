@@ -62,6 +62,9 @@ in
     };
     sessionVariables = {
       PAGER = "bat";
+      # Designate Unicode Private Use Areas as printable so Nerd Font icon
+      # glyphs display properly instead of being hidden by less.
+      LESSUTFCHARDEF = "E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p";
     };
   };
 
@@ -366,6 +369,23 @@ in
     };
     # keep-sorted end
   };
+
+  # Markdown files piped through less/bat (e.g. via batpipe) render with glow
+  # instead of bat's plain syntax highlighting.
+  xdg.configFile."batpipe/viewers.d/markdown.sh".text = ''
+    BATPIPE_VIEWERS+=("glow")
+
+    viewer_glow_supports() {
+      case "$1" in
+        *.md) return 0 ;;
+      esac
+      return 1
+    }
+
+    viewer_glow_process() {
+      CLICOLOR_FORCE=1 ${getExe pkgs.glow} -- "$1"
+    }
+  '';
 
   home.persistence."/persist".directories = [
     ".local/share/fish"

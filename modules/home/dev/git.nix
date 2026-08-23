@@ -78,6 +78,10 @@
           compression = 9;
           preloadindex = true;
           whitespace = "fix,-indent-with-non-tab,trailing-space,cr-at-eol";
+          # explicit -F skips OpenSSH's strict default-config ownership check,
+          # which misfires under VSCode's FHS sandbox: it maps root (the owner
+          # of the home-manager-symlinked config in /nix/store) to nobody.
+          sshCommand = "ssh -F ~/.ssh/config";
         };
         diff = {
           algorithm = "histogram";

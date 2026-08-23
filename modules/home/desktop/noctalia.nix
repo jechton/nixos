@@ -71,6 +71,7 @@
         end = [
           "tray"
           "udiskie"
+          "voxtype"
           "phone-connect"
           "notifications"
           "clipboard"
@@ -142,8 +143,10 @@
       plugins = {
         enabled = [
           "aristides/udiskie"
+          "gabedunn/voxtype"
           "icefish/phone-connect"
           "noctalia/wallhaven"
+          "yuuto/calculator"
         ];
 
         source = [
@@ -222,6 +225,9 @@
           type = "aristides/udiskie:status";
         };
         volume.mute_color = "outline";
+        voxtype = {
+          type = "gabedunn/voxtype:status";
+        };
         workspaces.style = "minimal";
         # keep-sorted end
       };

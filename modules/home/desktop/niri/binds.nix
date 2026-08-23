@@ -159,6 +159,24 @@ in
         );
         "Mod+Ctrl+N" = withTitle "Toggle DND" (spawn (noctalia [ "notification-dnd-toggle" ]));
         "Mod+Slash" = withTitle "Keybind Cheatsheet" (spawn "niri-keybind-cheatsheet");
+        "Mod+Ctrl+Q" = withTitle "Calculator" (
+          spawn (noctalia [
+            "panel-toggle"
+            "yuuto/calculator:panel"
+          ])
+        );
+        "Mod+Ctrl+E" = withTitle "Emoji Picker" (
+          spawn (noctalia [
+            "panel-toggle"
+            "launcher"
+            "/emo"
+          ])
+        );
+        "Mod+Ctrl+X" = withTitle "Toggle Dictation" (spawn [
+          "voxtype"
+          "record"
+          "toggle"
+        ]);
 
         "XF86AudioRaiseVolume" = hidden (spawn (noctalia [ "volume-up" ]));
         "XF86AudioLowerVolume" = hidden (spawn (noctalia [ "volume-down" ]));

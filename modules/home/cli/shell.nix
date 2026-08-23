@@ -58,6 +58,9 @@ in
       md = "mkdir";
       rd = "rmdir";
       rg = getExe pkgs.bat-extras.batgrep;
+      # tealdeer's pager setting runs pages through $PAGER; override the global
+      # "bat" pager here so line numbers don't clutter tldr's own formatting.
+      tldr = "env PAGER='bat --plain' tldr";
       # keep-sorted end
     };
     sessionVariables = {
@@ -391,5 +394,6 @@ in
     ".local/share/fish"
     ".local/share/direnv"
     ".local/share/zoxide"
+    ".cache/tealdeer"
   ];
 }

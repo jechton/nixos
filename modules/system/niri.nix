@@ -47,12 +47,17 @@
       };
     };
 
-    # programs.niri.enable already configures xdg.portal.config.niri with
-    # sensible defaults (file chooser via Nautilus, etc); it just doesn't
-    # know about the wlr portal, so ScreenCast falls back to
-    # xdg-desktop-portal-gnome, which doesn't work without actual
-    # Mutter/GNOME Shell. Route it through wlr instead.
-    config.niri."org.freedesktop.impl.portal.ScreenCast" = [ "wlr" ];
+    # programs.niri.enable's default xdg.portal.config.niri prefers
+    # gnome before gtk with no per-interface override. xdg-desktop-portal-gnome
+    # only implements FileChooser under real Mutter/GNOME Shell; under niri it
+    # logs "Non-compatible display server, exposing settings only" and the
+    # call fails outright instead of falling back to gtk. Route FileChooser
+    # through gtk explicitly. Same story for ScreenCast, which needs actual
+    # Mutter/GNOME Shell and doesn't work there either; route it through wlr.
+    config.niri = {
+      "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+      "org.freedesktop.impl.portal.ScreenCast" = [ "wlr" ];
+    };
   };
 
   environment.systemPackages = with pkgs; [

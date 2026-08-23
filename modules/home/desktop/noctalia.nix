@@ -3,10 +3,15 @@
   config,
   lib,
   osConfig,
+  pkgs,
   ...
 }:
 {
   imports = [ inputs.noctalia.homeModules.default ];
+
+  # udiskie/udiskie-info binaries the aristides/udiskie plugin shells out to;
+  # udisks2 itself is already enabled system-wide in modules/system/niri.nix.
+  home.packages = [ pkgs.udiskie ];
 
   # Curated wallpapers checked into the repo. recursive=true keeps the
   # directory itself writable, so wallhaven's plugin can still download new
@@ -60,6 +65,7 @@
         ];
         end = [
           "tray"
+          "udiskie"
           "notifications"
           "clipboard"
           "network"
@@ -122,7 +128,10 @@
       };
 
       plugins = {
-        enabled = [ "noctalia/wallhaven" ];
+        enabled = [
+          "aristides/udiskie"
+          "noctalia/wallhaven"
+        ];
 
         source = [
           {
@@ -192,8 +201,13 @@
           show_workspace_label = false;
           show_active_indicator = false;
         };
+        udiskie = {
+          hide_when_empty = true;
+          type = "aristides/udiskie:status";
+        };
         volume.mute_color = "outline";
         workspaces.style = "minimal";
+
         # keep-sorted end
       };
       # keep-sorted end

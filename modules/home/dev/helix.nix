@@ -15,6 +15,7 @@
         cursorcolumn = true;
         cursorline = true;
         indent-guides.render = true;
+        line-number = "relative";
         lsp.display-messages = true;
         soft-wrap.enable = true;
         # keep-sorted end

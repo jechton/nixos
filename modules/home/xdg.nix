@@ -76,12 +76,12 @@ in
     associations.added = {
       "video/*" = "mpv.desktop";
       "audio/*" = "mpv.desktop";
-      "image/*" = "mpv.desktop";
+      "image/*" = "imv.desktop";
     };
     defaultApplications = {
       "video/*" = "mpv.desktop";
       "audio/*" = "mpv.desktop";
-      "image/*" = "mpv.desktop";
+      "image/*" = "imv.desktop";
       "application/toml" = "Helix.desktop";
       "application/x-yaml" = "Helix.desktop";
       "text/*" = "Helix.desktop";

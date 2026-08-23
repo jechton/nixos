@@ -52,7 +52,13 @@ in
     profiles.default = {
       isDefault = true;
 
-      search.default = "ddg";
+      # Zen rewrites search.json.mozlz4 as a real file on every launch,
+      # replacing home-manager's symlink; without force, each subsequent
+      # switch collides with the stale .bak from the last one.
+      search = {
+        force = true;
+        default = "ddg";
+      };
     };
   };
 

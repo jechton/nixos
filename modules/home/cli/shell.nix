@@ -85,7 +85,8 @@ in
 
         lg = "lazygit";
         gp = "git push";
-        gpf = "git push --force";
+        gpf = "git push --force-with-lease";
+        "gpf!" = "git push --force";
         gu = "git pull";
         gs = "git switch";
         gst = "git status -s";
@@ -294,13 +295,12 @@ in
     ghostty = {
       enable = true;
       settings = {
-        copy-on-select = true;
+        copy-on-select = "clipboard";
         cursor-invert-fg-bg = true;
         cursor-style = "bar";
         mouse-hide-while-typing = true;
 
         # home-manager's ghostty module already sets up fish shell integration
-        shell-integration = "none";
         shell-integration-features = "ssh-env";
       };
     };

@@ -53,9 +53,6 @@
           f = "fetch";
           fp = "fetch --prune";
           l = "log";
-          pl = "pull";
-          ps = "push";
-          psf = "push --force-with-lease";
           r = "rebase";
           rmf = "rm -f";
           rmr = "rm -r";

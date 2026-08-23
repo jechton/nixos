@@ -70,6 +70,9 @@ in
       # Don't complain about version mismatch, since stylix updates slower than nixpkgs
       enableReleaseChecks = false;
       autoEnable = true;
+      # Left unset this defaults to "either", which some targets treat as "follow
+      # system" instead of forcing dark, even with an unambiguously dark scheme.
+      polarity = "dark";
       base16Scheme = "${inputs.stylix.inputs.tinted-schemes}/base16/${cfg.colorScheme}.yaml";
 
       inherit (cfg) fonts;

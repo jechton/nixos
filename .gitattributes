@@ -1,5 +1,8 @@
-# noisy diffs
-flake.lock -diffs
+# Treat secrets files as binaries, don't try to automerge
+*.age binary -diff -merge
+*.asc binary -diff -merge
 
-# treat age files as binarys
-*.age -text -diff
+flake.lock linguist-generated=true
+
+*.png binary
+*.jpg binary

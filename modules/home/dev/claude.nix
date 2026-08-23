@@ -265,11 +265,16 @@ in
       preferredNotifChannel = "notifications_disabled";
       statusLine = {
         type = "command";
-        command = "${statusline}/bin/claude-statusline";
+        command = "$HOME/.claude/claude-statusline";
         padding = 0;
       };
       # keep-sorted end
     };
+  };
+
+  home.file.".claude/claude-statusline" = {
+    source = "${statusline}/bin/claude-statusline";
+    executable = true;
   };
 
   home.persistence."/persist" = {

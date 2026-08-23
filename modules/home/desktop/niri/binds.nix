@@ -207,6 +207,7 @@ in
         "Mod+Return" = withTitle "Terminal" (spawn "ghostty");
         "Mod+B" = withTitle "Browser" (spawn "zen-twilight");
         "Mod+E" = withTitle "Files" (spawn "nautilus");
+        "Mod+Shift+G" = withTitle "Signal" (spawn "focus-or-spawn-signal");
         "Mod+Space" = withTitle "Application Launcher" (
           spawn (noctalia [
             "panel-toggle"

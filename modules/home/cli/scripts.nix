@@ -5,6 +5,24 @@
 }:
 let
   # keep-sorted start block=yes newline_separated=yes
+  focusOrSpawnSignal = pkgs.writeShellApplication {
+    name = "focus-or-spawn-signal";
+    runtimeInputs = with pkgs; [
+      jq
+      niri
+      signal-desktop
+    ];
+    text = ''
+      id="$(niri msg -j windows | jq 'map(select(.app_id == "signal")) | first | .id')"
+      if [ "$id" != "null" ]; then
+        niri msg action focus-window --id "$id"
+      else
+        signal-desktop &
+        disown
+      fi
+    '';
+  };
+
   ns = pkgs.writeShellApplication {
     name = "ns";
     runtimeInputs = [
@@ -49,6 +67,7 @@ in
   home = {
     packages = [
       # keep-sorted start
+      focusOrSpawnSignal
       ns
       ocrRegion
       # keep-sorted end

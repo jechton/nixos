@@ -17,7 +17,7 @@
       blender
       gimp
       inkscape
-      libreoffice-fresh
+      libreoffice-stable
       # keep-sorted end
     ];
   };

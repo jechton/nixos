@@ -135,7 +135,7 @@
       shell = {
         corner_radius_scale = 0.0;
         setup_wizard_enabled = false;
-        time_format = "%-I:%M %p";
+        time_format = "%-I:%M %P";
         polkit_agent = true;
         avatar_path = "${config.home.homeDirectory}/.face";
         screenshot.directory = "~/Pictures/Screenshots";
@@ -160,7 +160,7 @@
         # keep-sorted start block=yes
         clock = {
           actions.right = "exec xdg-open https://calendar.google.com/calendar/u/0/r";
-          format = "%a %-m/%-d %-I:%M %p";
+          format = "%a %-m/%-d %-I:%M %P";
         };
         media.hide_when_no_media = true;
         network.show_label = false;
@@ -170,6 +170,7 @@
           group_single_icon_per_app = true;
           hide_empty_workspaces = true;
           show_workspace_label = false;
+          show_active_indicator = false;
         };
         volume.mute_color = "outline";
         workspaces.style = "minimal";

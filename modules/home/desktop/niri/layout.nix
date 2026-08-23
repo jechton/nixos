@@ -6,8 +6,6 @@ in
   wayland.windowManager.niri.settings = {
     layout = {
       gaps = 10;
-      border.off = { };
-      focus-ring.width = 2;
       preset-column-widths._children = mkNodes "proportion" [
         0.33333
         0.5

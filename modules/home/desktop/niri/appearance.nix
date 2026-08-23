@@ -132,6 +132,15 @@ in
       xcursor-size = config.stylix.cursor.size;
     };
 
+    layout = {
+      focus-ring.off = { };
+      border = with config.lib.stylix.colors.withHashtag; {
+        width = 2;
+        active-color = base0D;
+        inactive-color = base03;
+      };
+    };
+
     _children =
       (mkNodes "window-rule" (map mkRule windowRules)) ++ (mkNodes "layer-rule" (map mkRule layerRules));
   };

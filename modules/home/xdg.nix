@@ -82,6 +82,9 @@ in
       "video/*" = "mpv.desktop";
       "audio/*" = "mpv.desktop";
       "image/*" = "mpv.desktop";
+      "application/toml" = "Helix.desktop";
+      "application/x-yaml" = "Helix.desktop";
+      "text/*" = "Helix.desktop";
     };
   };
 }

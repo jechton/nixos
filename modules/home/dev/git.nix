@@ -139,7 +139,7 @@
       options = {
         # A raw [delta] option can't be overridden by --features, so
         # side-by-side/line-numbers live in the "defaults" feature (activated
-        # here) instead, letting the lazygit pager below layer its own
+        # here) instead, letting the lazygit diff renderer below layer its own
         # feature on top for its narrower diff pane.
         navigate = true;
         features = "defaults";
@@ -168,8 +168,8 @@
           # lazygit's diff pane is too narrow for side-by-side, so this
           # overrides it (and the line-numbers/hyperlinks clutter) via the
           # "lazygit" delta feature defined above instead of the global config.
-          pagers = lib.lists.singleton {
-            pager = lib.strings.escapeShellArgs [
+          diffRenderers = lib.lists.singleton {
+            command = lib.strings.escapeShellArgs [
               "delta"
               "--paging=never"
               "--features=defaults lazygit"

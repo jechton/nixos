@@ -99,10 +99,10 @@ let
 
       if [ -n "$cwd" ] && git -C "$cwd" --no-optional-locks -c core.useBuiltinFSMonitor=false rev-parse --git-dir >/dev/null 2>&1; then
         G=(git -C "$cwd" --no-optional-locks -c core.useBuiltinFSMonitor=false)
-        br=$("''${G[@]}" symbolic-ref --short HEAD 2>/dev/null || "''${G[@]}" rev-parse --short HEAD 2>/dev/null)
-        stats=$("''${G[@]}" diff --shortstat HEAD 2>/dev/null)
-        ins=$(printf '%s' "$stats" | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+')
-        del=$(printf '%s' "$stats" | grep -oE '[0-9]+ deletion' | grep -oE '[0-9]+')
+        br=$("''${G[@]}" symbolic-ref --short HEAD 2>/dev/null || "''${G[@]}" rev-parse --short HEAD 2>/dev/null || true)
+        stats=$("''${G[@]}" diff --shortstat HEAD 2>/dev/null || true)
+        ins=$(printf '%s' "$stats" | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || true)
+        del=$(printf '%s' "$stats" | grep -oE '[0-9]+ deletion' | grep -oE '[0-9]+' || true)
         if [ -n "$br" ]; then
           line1+=" ''${GITC}''${br}''${RESET}"
           if [ -n "$ins" ] || [ -n "$del" ]; then

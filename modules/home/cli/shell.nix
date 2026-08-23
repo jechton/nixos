@@ -348,5 +348,6 @@ in
   home.persistence."/persist".directories = [
     ".local/share/fish"
     ".local/share/direnv"
+    ".local/share/zoxide"
   ];
 }

@@ -56,6 +56,28 @@
       enable = true;
       hinting.enable = true;
       antialias = true;
+      # Nerd Font icon glyphs live in the Private Use Area, which fontconfig's
+      # charset-based fallback doesn't reach on its own, so apps (browsers
+      # included) render tofu instead of falling back to the symbols font.
+      # Append it explicitly as a fallback for the generic families.
+      localConf = ''
+        <?xml version="1.0"?>
+        <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+        <fontconfig>
+          <alias>
+            <family>monospace</family>
+            <prefer><family>Symbols Nerd Font Mono</family></prefer>
+          </alias>
+          <alias>
+            <family>sans-serif</family>
+            <prefer><family>Symbols Nerd Font</family></prefer>
+          </alias>
+          <alias>
+            <family>serif</family>
+            <prefer><family>Symbols Nerd Font</family></prefer>
+          </alias>
+        </fontconfig>
+      '';
     };
     fontDir.decompressFonts = true;
   };

@@ -305,6 +305,17 @@ in
         # a single terminal cell and overlaps the next character. NWID selects the
         # properly narrow glyphs.
         font-feature = "+NWID";
+        keybind = [
+          "alt+enter=new_split:right"
+          "alt+shift+enter=new_split:down"
+          "alt+w=close_surface"
+          "alt+shift+left=goto_split:left"
+          "alt+shift+right=goto_split:right"
+          "alt+up=goto_split:top"
+          "alt+down=goto_split:bottom"
+          "alt+shift+z=toggle_split_zoom"
+          "alt+shift+equal=equalize_splits"
+        ];
         mouse-hide-while-typing = true;
         quit-after-last-window-closed = true;
         # home-manager's ghostty module already sets up fish shell integration

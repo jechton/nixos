@@ -46,7 +46,7 @@ in
 
     fonts = {
       monospace = mkFontOption {
-        name = "Iosevka Nerd Font";
+        name = "Iosevka Nerd Font Mono";
         package = pkgs.nerd-fonts.iosevka;
       };
       sansSerif = mkFontOption {

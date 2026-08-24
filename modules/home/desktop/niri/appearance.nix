@@ -62,6 +62,7 @@ let
       matches = [
         { app-id = "^zen$"; }
         { app-id = "^zen-browser$"; }
+        { app-id = "^zen-twilight$"; }
       ];
       draw-border-with-background = false;
     }

@@ -391,9 +391,11 @@ in
   '';
 
   home.persistence."/persist".directories = [
-    ".local/share/fish"
-    ".local/share/direnv"
-    ".local/share/zoxide"
+    ".cache/direnv"
+    ".cache/nix"
     ".cache/tealdeer"
+    ".local/share/direnv"
+    ".local/share/fish"
+    ".local/share/zoxide"
   ];
 }

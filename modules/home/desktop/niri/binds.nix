@@ -79,6 +79,7 @@ in
       touchpad = {
         tap = { };
         natural-scroll = { };
+        dwt = { }; # disable-when-typing
       };
     };
 

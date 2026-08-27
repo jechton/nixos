@@ -98,6 +98,8 @@ in
         gs = "git switch";
         gst = "git status -s";
 
+        mr = "mise run";
+
         q = "exit";
         c = "clear";
 

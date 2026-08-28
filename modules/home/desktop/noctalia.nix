@@ -6,6 +6,37 @@
   pkgs,
   ...
 }:
+let
+  # Everything noctalia writes at runtime (theme tweaks, dock/bar overrides,
+  # enabled plugins, ...) must reset to the declarative config on every boot
+  # like the rest of impermanence, except the wallpaper: cache just that one
+  # value outside noctalia's own state dir and reapply it after the state
+  # dir gets wiped, rather than persisting the whole (non-declarative)
+  # settings.toml overlay noctalia writes runtime overrides into.
+  noctaliaBin = lib.getExe config.programs.noctalia.package;
+  wallpaperCacheFile = "${config.xdg.stateHome}/noctalia-wallpaper-cache";
+  wallpaperSettingsFile = "${config.xdg.stateHome}/noctalia/settings.toml";
+
+  wallpaperRestoreScript = pkgs.writeShellScript "noctalia-wallpaper-restore" ''
+    [ -s "${wallpaperCacheFile}" ] || exit 0
+
+    sock="$XDG_RUNTIME_DIR/noctalia-''${WAYLAND_DISPLAY:-wayland-0}.sock"
+    for _ in $(seq 1 50); do
+      [ -S "$sock" ] && break
+      sleep 0.2
+    done
+    [ -S "$sock" ] || exit 0
+
+    exec ${noctaliaBin} msg wallpaper-set "$(cat "${wallpaperCacheFile}")"
+  '';
+
+  wallpaperCacheScript = pkgs.writeShellScript "noctalia-wallpaper-cache" ''
+    path=$(${noctaliaBin} msg wallpaper-get 2>/dev/null) || exit 0
+    [ -n "$path" ] || exit 0
+    mkdir -p "$(dirname "${wallpaperCacheFile}")"
+    printf '%s' "$path" > "${wallpaperCacheFile}"
+  '';
+in
 {
   imports = [ inputs.noctalia.homeModules.default ];
 
@@ -237,4 +268,38 @@
       # keep-sorted end
     };
   };
+
+  # noctalia is spawned by niri's spawn-at-startup (see startup.nix), not a
+  # home-manager systemd user service, so there's no noctalia unit to order
+  # against here; wait for its IPC socket instead.
+  systemd.user.services.noctalia-wallpaper-restore = {
+    Unit = {
+      Description = "Reapply the last-picked noctalia wallpaper";
+      PartOf = [ config.wayland.systemd.target ];
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${wallpaperRestoreScript}";
+    };
+    Install.WantedBy = [ config.wayland.systemd.target ];
+  };
+
+  # Triggers noctalia-wallpaper-cache.service on every write, including the
+  # one from wallpaperRestoreScript's own wallpaper-set call and noctalia's
+  # random wallpaper automation, not just picker use.
+  systemd.user.paths.noctalia-wallpaper-cache = {
+    Unit.Description = "Watch noctalia's wallpaper selection to cache it across boots";
+    Path.PathModified = wallpaperSettingsFile;
+    Install.WantedBy = [ config.wayland.systemd.target ];
+  };
+
+  systemd.user.services.noctalia-wallpaper-cache = {
+    Unit.Description = "Cache the current noctalia wallpaper across boots";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${wallpaperCacheScript}";
+    };
+  };
+
+  home.persistence."/persist".files = [ ".local/state/noctalia-wallpaper-cache" ];
 }

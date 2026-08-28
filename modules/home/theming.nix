@@ -89,6 +89,12 @@ in
         dark = "Papirus-Dark";
         light = "Papirus-Light";
       };
+
+      # `home-manager.useGlobalPkgs` forbids `nixpkgs.overlays` in home scope,
+      # which stylix's nixos-icons and gtksourceview targets would otherwise
+      # register. The nixos-icons logo is still themed by the system stylix
+      # module; gtksourceview only affects GtkSourceView apps, we don't have any.
+      overlays.enable = false;
     };
 
     # Stylix's GTK target writes GNOME interface keys to dconf, which requires

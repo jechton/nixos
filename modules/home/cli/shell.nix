@@ -32,9 +32,11 @@ in
       pkgs.p7zip
       pkgs.pnpm
       pkgs.procs
+      pkgs.qsv
       pkgs.superfile
       pkgs.trash-cli
       pkgs.unzip
+      pkgs.xan
       # keep-sorted end
 
       # Nix tools
@@ -389,6 +391,30 @@ in
 
     viewer_glow_process() {
       CLICOLOR_FORCE=1 ${getExe pkgs.glow} -- "$1"
+    }
+  '';
+
+  # Spreadsheets piped through less/bat render as aligned tables, one section
+  # per sheet, instead of bat reporting a binary file.
+  xdg.configFile."batpipe/viewers.d/xlsx.sh".text = ''
+    BATPIPE_VIEWERS+=("xlsx")
+
+    viewer_xlsx_supports() {
+      case "$1" in
+        *.xlsx | *.xls | *.ods) return 0 ;;
+      esac
+      return 1
+    }
+
+    viewer_xlsx_process() {
+      local file="$1" index name rest
+      ${getExe pkgs.qsv} excel --metadata short "$file" 2>/dev/null \
+        | tail -n +2 \
+        | while IFS=, read -r index name rest; do
+            printf '\n## %s\n\n' "$name"
+            ${getExe pkgs.qsv} excel --sheet "$index" "$file" 2>/dev/null \
+              | ${getExe pkgs.xan} view --color=always --hide-index --repeat-headers never - 2>/dev/null
+          done
     }
   '';
 

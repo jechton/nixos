@@ -7,6 +7,16 @@
     {
       name = "nix";
       language-servers = [ "nixd" ];
+      auto-format = true;
+      formatter = {
+        command = "nix";
+        args = [
+          "fmt"
+          "--"
+          "--stdin"
+          "source.nix"
+        ];
+      };
     }
   ];
 }

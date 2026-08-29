@@ -74,6 +74,9 @@
       keys = {
         normal = {
           "C-s" = ":write";
+          "y" = "yank_to_clipboard";
+          "p" = "paste_clipboard_after";
+          "P" = "paste_clipboard_before";
           "A-up" = [
             "extend_to_line_bounds"
             "delete_selection"
@@ -91,6 +94,11 @@
           ":write"
         ];
         select = {
+          "y" = [
+            "yank_to_clipboard"
+            "normal_mode"
+          ];
+          "p" = "replace_selections_with_clipboard";
           "A-up" = [
             "extend_to_line_bounds"
             "delete_selection"

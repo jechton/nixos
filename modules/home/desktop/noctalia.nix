@@ -6,6 +6,39 @@
   pkgs,
   ...
 }:
+let
+  voxtypeEnabled = config.burrow.desktop.voxtype.enable;
+  widgets = {
+    # keep-sorted start block=yes
+    clock = {
+      actions.right = "exec xdg-open https://calendar.google.com/calendar/u/0/r";
+      format = "%a %-m/%-d %-I:%M %P";
+    };
+    media.hide_when_no_media = true;
+    network.show_label = false;
+    notifications.hide_when_no_unread = true;
+    phone-connect = {
+      type = "icefish/phone-connect:bar";
+    };
+    taskbar = {
+      group_by_workspace = true;
+      group_single_icon_per_app = true;
+      hide_empty_workspaces = true;
+      show_workspace_label = false;
+      show_active_indicator = false;
+    };
+    udiskie = {
+      hide_when_empty = true;
+      type = "aristides/udiskie:status";
+    };
+    volume.mute_color = "outline";
+    workspaces.style = "minimal";
+    # keep-sorted end
+  }
+  // lib.optionalAttrs voxtypeEnabled {
+    voxtype.type = "gabedunn/voxtype:status";
+  };
+in
 {
   imports = [ inputs.noctalia.homeModules.default ];
 
@@ -71,7 +104,9 @@
         end = [
           "tray"
           "udiskie"
-          "voxtype"
+        ]
+        ++ lib.optional voxtypeEnabled "voxtype"
+        ++ [
           "phone-connect"
           "notifications"
           "clipboard"
@@ -146,11 +181,11 @@
       plugins = {
         enabled = [
           "aristides/udiskie"
-          "gabedunn/voxtype"
           "icefish/phone-connect"
           "noctalia/wallhaven"
           "yuuto/calculator"
-        ];
+        ]
+        ++ lib.optional voxtypeEnabled "gabedunn/voxtype";
 
         source = [
           {
@@ -204,36 +239,7 @@
 
       weather.unit = "imperial";
 
-      widget = {
-        # keep-sorted start block=yes
-        clock = {
-          actions.right = "exec xdg-open https://calendar.google.com/calendar/u/0/r";
-          format = "%a %-m/%-d %-I:%M %P";
-        };
-        media.hide_when_no_media = true;
-        network.show_label = false;
-        notifications.hide_when_no_unread = true;
-        phone-connect = {
-          type = "icefish/phone-connect:bar";
-        };
-        taskbar = {
-          group_by_workspace = true;
-          group_single_icon_per_app = true;
-          hide_empty_workspaces = true;
-          show_workspace_label = false;
-          show_active_indicator = false;
-        };
-        udiskie = {
-          hide_when_empty = true;
-          type = "aristides/udiskie:status";
-        };
-        volume.mute_color = "outline";
-        voxtype = {
-          type = "gabedunn/voxtype:status";
-        };
-        workspaces.style = "minimal";
-        # keep-sorted end
-      };
+      widget = widgets;
       # keep-sorted end
     };
   };

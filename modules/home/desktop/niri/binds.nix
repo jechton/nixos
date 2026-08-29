@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, ... }:
 let
   niriLib = import ./_lib.nix { inherit lib; };
   inherit (niriLib)
@@ -173,12 +173,6 @@ in
             "/emo"
           ])
         );
-        "Mod+Ctrl+X" = withTitle "Toggle Dictation" (spawn [
-          "voxtype"
-          "record"
-          "toggle"
-        ]);
-
         "XF86AudioRaiseVolume" = hidden (spawn (noctalia [ "volume-up" ]));
         "XF86AudioLowerVolume" = hidden (spawn (noctalia [ "volume-down" ]));
         "XF86AudioMute" = hidden (spawn (noctalia [ "volume-mute" ]));
@@ -202,6 +196,14 @@ in
           "next"
         ]);
       }
+
+      (lib.optionalAttrs config.burrow.desktop.voxtype.enable {
+        "Mod+Ctrl+X" = withTitle "Toggle Dictation" (spawn [
+          "voxtype"
+          "record"
+          "toggle"
+        ]);
+      })
 
       # Launching apps
       {

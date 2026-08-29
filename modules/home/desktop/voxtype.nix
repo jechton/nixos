@@ -5,6 +5,8 @@
   ...
 }:
 let
+  cfg = config.burrow.desktop.voxtype;
+
   # voxtype requires every field in the config, it doesn't fall back to
   # defaults for a partial file, so merge our overrides onto its own
   # shipped defaults rather than writing a bare partial one
@@ -20,45 +22,49 @@ let
   );
 in
 {
-  home.packages = [ pkgs.voxtype ];
+  options.burrow.desktop.voxtype.enable = lib.mkEnableOption "VoxType push-to-talk voice-to-text";
 
-  # voxtype rewrites its own config.toml (e.g. `voxtype setup --download`
-  # resolves model names to absolute paths), so it can't be a read-only
-  # symlink into the store: seed it once on first activation and leave it
-  # alone after that, same as any other self-configuring app.
-  home.activation.voxtypeConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if [[ ! -e "${config.xdg.configHome}/voxtype/config.toml" ]]; then
-      $DRY_RUN_CMD mkdir -p "${config.xdg.configHome}/voxtype"
-      $DRY_RUN_CMD install -m644 "${defaultConfig}" "${config.xdg.configHome}/voxtype/config.toml"
-    fi
-  '';
+  config = lib.mkIf cfg.enable {
+    home.packages = [ pkgs.voxtype ];
 
-  systemd.user.services.voxtype = {
-    Unit = {
-      Description = "VoxType push-to-talk voice-to-text daemon";
-      PartOf = [ "graphical-session.target" ];
-      After = [
-        "graphical-session.target"
-        "pipewire.service"
-        "pipewire-pulse.service"
-      ];
+    # voxtype rewrites its own config.toml (e.g. `voxtype setup --download`
+    # resolves model names to absolute paths), so it can't be a read-only
+    # symlink into the store: seed it once on first activation and leave it
+    # alone after that, same as any other self-configuring app.
+    home.activation.voxtypeConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      if [[ ! -e "${config.xdg.configHome}/voxtype/config.toml" ]]; then
+        $DRY_RUN_CMD mkdir -p "${config.xdg.configHome}/voxtype"
+        $DRY_RUN_CMD install -m644 "${defaultConfig}" "${config.xdg.configHome}/voxtype/config.toml"
+      fi
+    '';
+
+    systemd.user.services.voxtype = {
+      Unit = {
+        Description = "VoxType push-to-talk voice-to-text daemon";
+        PartOf = [ "graphical-session.target" ];
+        After = [
+          "graphical-session.target"
+          "pipewire.service"
+          "pipewire-pulse.service"
+        ];
+      };
+
+      Service = {
+        Type = "simple";
+        ExecStart = "${pkgs.voxtype}/bin/voxtype daemon";
+        Restart = "on-failure";
+        RestartSec = 5;
+      };
+
+      Install.WantedBy = [ "graphical-session.target" ];
     };
 
-    Service = {
-      Type = "simple";
-      ExecStart = "${pkgs.voxtype}/bin/voxtype daemon";
-      Restart = "on-failure";
-      RestartSec = 5;
-    };
-
-    Install.WantedBy = [ "graphical-session.target" ];
+    # ".local/share/voxtype" holds the downloaded whisper model (fetched with
+    # `voxtype setup --download`); ".config/voxtype" is the seeded config.toml,
+    # which voxtype then edits in place
+    home.persistence."/persist".directories = [
+      ".config/voxtype"
+      ".local/share/voxtype"
+    ];
   };
-
-  # ".local/share/voxtype" holds the downloaded whisper model (fetched with
-  # `voxtype setup --download`); ".config/voxtype" is the seeded config.toml,
-  # which voxtype then edits in place
-  home.persistence."/persist".directories = [
-    ".config/voxtype"
-    ".local/share/voxtype"
-  ];
 }

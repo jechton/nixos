@@ -1,0 +1,101 @@
+id = "jeremiah/phone-media"
+name = "Phone Media"
+version = "1.0.0"
+plugin_api = 24
+author = "jeremiah"
+license = "MIT"
+
+dependencies = ["playerctl"]
+
+icon = "disc"
+
+description = "Now-playing bar widget. Mirrors the builtin media widget, and scrolling over it changes the phone volume when the active MPRIS player is KDE Connect (any other player: laptop volume)."
+
+tags = ["bar", "media", "music", "kdeconnect"]
+
+[[widget]]
+id = "bar"
+entry = "bar.luau"
+
+# Same pointer gestures as the builtin media widget, minus scroll (scroll is
+# volume, handled in bar.luau so it can target the phone vs the laptop).
+[widget.actions]
+left = "panel-toggle control-center media"
+right = "media toggle"
+back = "media previous"
+forward = "media next"
+
+# The builtin media widget's settings, with this setup's preferred defaults.
+[[widget.setting]]
+key = "hide_artist"
+type = "bool"
+label_key = "settings.hide_artist.label"
+description_key = "settings.hide_artist.description"
+default = true
+
+[[widget.setting]]
+key = "artist_first"
+type = "bool"
+label_key = "settings.artist_first.label"
+description_key = "settings.artist_first.description"
+default = false
+
+[[widget.setting]]
+key = "album_art_only"
+type = "bool"
+label_key = "settings.album_art_only.label"
+description_key = "settings.album_art_only.description"
+default = false
+
+[[widget.setting]]
+key = "hide_album_art"
+type = "bool"
+label_key = "settings.hide_album_art.label"
+description_key = "settings.hide_album_art.description"
+default = false
+
+[[widget.setting]]
+key = "show_progress"
+type = "bool"
+label_key = "settings.show_progress.label"
+description_key = "settings.show_progress.description"
+default = false
+
+[[widget.setting]]
+key = "hide_when_no_media"
+type = "bool"
+label_key = "settings.hide_when_no_media.label"
+description_key = "settings.hide_when_no_media.description"
+default = true
+
+[[widget.setting]]
+key = "title_scroll"
+type = "select"
+label_key = "settings.title_scroll.label"
+description_key = "settings.title_scroll.description"
+default = "on_hover"
+options = [
+  { value = "none", label_key = "settings.title_scroll.none" },
+  { value = "always", label_key = "settings.title_scroll.always" },
+  { value = "on_hover", label_key = "settings.title_scroll.on_hover" },
+]
+
+[[widget.setting]]
+key = "max_length"
+type = "int"
+label_key = "settings.max_length.label"
+description_key = "settings.max_length.description"
+default = 300
+min = 40
+max = 800
+step = 1
+
+[[widget.setting]]
+key = "art_size"
+type = "int"
+label_key = "settings.art_size.label"
+description_key = "settings.art_size.description"
+default = 16
+min = 8
+max = 96
+step = 1

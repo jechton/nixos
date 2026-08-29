@@ -14,12 +14,15 @@ let
       actions.right = "exec xdg-open https://calendar.google.com/calendar/u/0/r";
       format = "%a %-m/%-d %-I:%M %P";
     };
-    media.hide_when_no_media = true;
     network.show_label = false;
     notifications.hide_when_no_unread = true;
+    obsidian.type = "davemhammer/obsidian:status";
     phone-connect = {
       type = "icefish/phone-connect:bar";
     };
+    # replaces the builtin "media" widget: same now-playing display, plus
+    # scroll-to-change-phone-volume when the active player is KDE Connect
+    phone-media.type = "jeremiah/phone-media:bar";
     taskbar = {
       group_by_workspace = true;
       group_single_icon_per_app = true;
@@ -99,10 +102,11 @@ in
           "launcher"
           "workspaces"
           "taskbar"
-          "media"
+          "phone-media"
         ];
         end = [
           "tray"
+          "obsidian"
           "udiskie"
         ]
         ++ lib.optional voxtypeEnabled "voxtype"
@@ -185,7 +189,9 @@ in
       plugins = {
         enabled = [
           "aristides/udiskie"
+          "davemhammer/obsidian"
           "icefish/phone-connect"
+          "jeremiah/phone-media"
           "noctalia/wallhaven"
           "yuuto/calculator"
         ]
@@ -202,6 +208,12 @@ in
             name = "community";
             kind = "path";
             location = toString inputs.noctalia-community-plugins;
+            auto_update = false;
+          }
+          {
+            name = "local";
+            kind = "path";
+            location = toString ./plugins;
             auto_update = false;
           }
         ];

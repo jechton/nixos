@@ -1,0 +1,45 @@
+{
+  "plugin_name": "Phone Media",
+  "plugin_description": "Now-playing widget that mirrors the builtin media widget and scrolls the phone volume over KDE Connect.",
+  "settings": {
+    "hide_artist": {
+      "label": "Hide artist",
+      "description": "Show only the track title, not the artist."
+    },
+    "artist_first": {
+      "label": "Artist first",
+      "description": "Order the label as artist then title."
+    },
+    "album_art_only": {
+      "label": "Album art only",
+      "description": "Collapse to just the cover, hiding the title and controls."
+    },
+    "hide_album_art": {
+      "label": "Hide album art",
+      "description": "Drop the cover and show the title and controls only."
+    },
+    "show_progress": {
+      "label": "Show progress",
+      "description": "Draw a thin playback progress bar under the widget."
+    },
+    "hide_when_no_media": {
+      "label": "Hide when no media",
+      "description": "Remove the widget from the bar when nothing is playing."
+    },
+    "title_scroll": {
+      "label": "Title scroll",
+      "description": "When to marquee a title too long to fit.",
+      "none": "Never",
+      "always": "Always",
+      "on_hover": "On hover"
+    },
+    "max_length": {
+      "label": "Max length",
+      "description": "Widest the title area is allowed to grow, in pixels."
+    },
+    "art_size": {
+      "label": "Art size",
+      "description": "Cover art edge length, in pixels."
+    }
+  }
+}

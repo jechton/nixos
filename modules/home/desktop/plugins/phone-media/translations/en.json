@@ -1,49 +1,138 @@
 {
   "plugin_name": "Phone Media",
-  "plugin_description": "Now-playing widget that mirrors the builtin media widget and scrolls the phone volume over KDE Connect.",
+  "plugin_description": "Now-playing bar widget and popup replacing the builtin ones; scrolls phone volume over KDE Connect.",
   "settings": {
+    "lyrics_offset_ms": {
+      "label": "Lyrics sync offset (ms)",
+      "description": "Shift synced lyrics earlier (negative) or later (positive) to match playback. Applies everywhere lyrics show."
+    },
+
+    "hide_when_no_media": {
+      "label": "Hide when nothing is playing",
+      "description": "Remove the widget from the bar when no player has media."
+    },
+    "hide_album_art": {
+      "label": "Hide album art",
+      "description": "Show the title and controls only, no cover."
+    },
+    "album_art_only": {
+      "label": "Album art only",
+      "description": "Collapse to just the cover, hiding the title."
+    },
     "hide_artist": {
       "label": "Hide artist",
       "description": "Show only the track title, not the artist."
     },
     "artist_first": {
-      "label": "Artist first",
-      "description": "Order the label as artist then title."
-    },
-    "album_art_only": {
-      "label": "Album art only",
-      "description": "Collapse to just the cover, hiding the title and controls."
-    },
-    "hide_album_art": {
-      "label": "Hide album art",
-      "description": "Drop the cover and show the title and controls only."
-    },
-    "show_progress": {
-      "label": "Show progress",
-      "description": "Draw a thin playback progress bar under the widget."
-    },
-    "hide_when_no_media": {
-      "label": "Hide when no media",
-      "description": "Remove the widget from the bar when nothing is playing."
+      "label": "Artist before title",
+      "description": "Order the label as artist then title instead of title then artist."
     },
     "title_scroll": {
-      "label": "Title scroll",
+      "label": "Scroll long titles",
       "description": "When to marquee a title too long to fit.",
       "none": "Never",
       "always": "Always",
       "on_hover": "On hover"
     },
-    "max_length": {
-      "label": "Max length",
-      "description": "Widest the title area is allowed to grow, in pixels."
+    "show_progress": {
+      "label": "Show progress bar",
+      "description": "Draw a thin playback progress bar under the widget."
     },
     "art_size": {
-      "label": "Art size",
+      "label": "Album art size",
       "description": "Cover art edge length, in pixels."
     },
     "art_radius": {
-      "label": "Art corner radius",
+      "label": "Album art corner radius",
       "description": "Cover art corner radius in pixels; 0 is square, high values round to a circle."
+    },
+    "max_length": {
+      "label": "Max width",
+      "description": "Widest the title area is allowed to grow, in pixels."
+    },
+
+    "panel_show_album_art": {
+      "label": "Show album art",
+      "description": "Show the cover art at the top of the card."
+    },
+    "panel_album_art_size": {
+      "label": "Album art size",
+      "description": "Cover art edge length in the card, in pixels."
+    },
+    "panel_album_art_radius": {
+      "label": "Album art corner radius",
+      "description": "Cover art corner radius in the card, in pixels; 0 is square, high values round to a circle."
+    },
+    "panel_show_album": {
+      "label": "Show album name",
+      "description": "Show the album name under the track title."
+    },
+    "panel_show_source_label": {
+      "label": "Show source",
+      "description": "Show which player is playing, e.g. the phone, under the track info."
+    },
+    "panel_show_progress": {
+      "label": "Show progress bar",
+      "description": "Show a draggable seek bar for the current track."
+    },
+    "panel_show_time_labels": {
+      "label": "Show time labels",
+      "description": "Show elapsed and total time under the seek bar."
+    },
+    "panel_show_playback_controls": {
+      "label": "Show playback controls",
+      "description": "Show the previous, play/pause, and next buttons."
+    },
+    "panel_show_shuffle_repeat": {
+      "label": "Show shuffle and repeat",
+      "description": "Show the shuffle and repeat toggle buttons."
+    },
+    "panel_show_lyrics": {
+      "label": "Show lyrics",
+      "description": "Show a few lines of synced lyrics, centered on the current one, with a link to the full lyrics popup."
+    },
+    "panel_lyrics_context_lines": {
+      "label": "Lyric lines each side",
+      "description": "Lines to show before and after the current one."
+    },
+    "panel_show_player_switcher": {
+      "label": "Show player switcher",
+      "description": "Show a dropdown to pick the active player when more than one has media."
+    },
+
+    "lyrics_bar_hide_when_no_lyrics": {
+      "label": "Hide when no lyrics",
+      "description": "Remove the widget from the bar when there's no current line to show."
+    },
+    "lyrics_bar_show_current_line": {
+      "label": "Show current line",
+      "description": "Show the current synced lyric line next to the icon."
+    },
+    "lyrics_bar_max_length": {
+      "label": "Max width",
+      "description": "Widest the lyric line area is allowed to grow, in pixels."
+    },
+
+    "lyrics_panel_show_track_info": {
+      "label": "Show track info",
+      "description": "Show the track title and artist above the lyrics."
+    },
+    "lyrics_panel_text_align": {
+      "label": "Text alignment",
+      "description": "How lyric lines are aligned.",
+      "center": "Center",
+      "left": "Left"
     }
+  },
+  "ui": {
+    "now_playing": "Now Playing",
+    "nothing_playing": "Nothing is playing",
+    "via_phone": "Phone",
+    "lyrics": "Lyrics",
+    "full_lyrics": "Full lyrics",
+    "lyrics_loading": "Searching for lyrics…",
+    "lyrics_not_found": "No lyrics found for this track",
+    "lyrics_not_synced": "Lyrics found, but not synced",
+    "lyrics_waiting": "♪"
   }
 }

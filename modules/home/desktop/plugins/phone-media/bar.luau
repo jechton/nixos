@@ -43,8 +43,12 @@ local METADATA_TICKS = 4
 local VOLUME_STEP = "0.05"
 
 local SEP = string.char(31)
+-- playerInstance, not playerName: KDE Connect reports every phone app as the
+-- same playerName ("kdeconnect"), so a later `playerctl --player=kdeconnect`
+-- (position, play-pause, volume) would hit an arbitrary one of them. The
+-- instance name (kdeconnect.mpris_<id>) is unique per app.
 local FORMAT = table.concat({
-  "{{playerName}}",
+  "{{playerInstance}}",
   "{{status}}",
   "{{title}}",
   "{{artist}}",
@@ -154,21 +158,31 @@ end
 
 -- ── player selection ─────────────────────────────────────────────────────────
 
+-- KDE Connect leaves an MPRIS player on the bus for every media-capable app on
+-- the phone, whether or not it has anything queued. Those idle players report
+-- Paused/Stopped with no title, so a real "now playing" needs either active
+-- playback or actual track metadata.
+local function hasMedia(row)
+  return row.status == "Playing" or (row.title ~= "" and row.title ~= row.name)
+end
+
 local function pick(rows)
-  local kdePlaying, playing, kde, first
+  local kdePlaying, playing, kdeMedia, anyMedia
   for _, r in ipairs(rows) do
-    first = first or r
     if r.status == "Playing" then
       playing = playing or r
       if isKde(r.name) then
         kdePlaying = kdePlaying or r
       end
     end
-    if isKde(r.name) then
-      kde = kde or r
+    if hasMedia(r) then
+      anyMedia = anyMedia or r
+      if isKde(r.name) then
+        kdeMedia = kdeMedia or r
+      end
     end
   end
-  return kdePlaying or playing or kde or first
+  return kdePlaying or playing or kdeMedia or anyMedia
 end
 
 local function refreshPosition()

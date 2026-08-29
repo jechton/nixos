@@ -20,8 +20,13 @@ let
     phone-connect = {
       type = "icefish/phone-connect:bar";
     };
-    # replaces the builtin "media" widget: same now-playing display, plus
-    # scroll-to-change-phone-volume when the active player is KDE Connect
+    # opens jeremiah/phone-media's standalone synced-lyrics popup; the
+    # now-playing popup below also embeds a compact version of the same view
+    phone-lyrics.type = "jeremiah/phone-media:lyrics_bar";
+    # replaces the builtin "media" widget and its control-center popup: same
+    # now-playing display, plus scroll-to-change-phone-volume when the active
+    # player is KDE Connect, minus the popup's spectrum visualizer, which
+    # never shows anything for a KDE Connect player
     phone-media.type = "jeremiah/phone-media:bar";
     taskbar = {
       group_by_workspace = true;
@@ -103,6 +108,7 @@ in
           "workspaces"
           "taskbar"
           "phone-media"
+          "phone-lyrics"
         ];
         end = [
           "tray"

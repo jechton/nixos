@@ -176,6 +176,10 @@ in
         "icefish/phone-connect" = {
           battery_display = "hidden";
         };
+        "yuuto/calculator" = {
+          panel_placement = "floating";
+          panel_position = "center";
+        };
       };
 
       plugins = {

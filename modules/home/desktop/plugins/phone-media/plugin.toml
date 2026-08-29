@@ -99,3 +99,13 @@ default = 16
 min = 8
 max = 96
 step = 1
+
+[[widget.setting]]
+key = "art_radius"
+type = "int"
+label_key = "settings.art_radius.label"
+description_key = "settings.art_radius.description"
+default = 999
+min = 0
+max = 999
+step = 1

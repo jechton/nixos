@@ -40,6 +40,10 @@
     "art_size": {
       "label": "Art size",
       "description": "Cover art edge length, in pixels."
+    },
+    "art_radius": {
+      "label": "Art corner radius",
+      "description": "Cover art corner radius in pixels; 0 is square, high values round to a circle."
     }
   }
 }

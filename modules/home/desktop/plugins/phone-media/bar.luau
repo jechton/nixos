@@ -29,7 +29,11 @@ local HIDE_WHEN_NO_MEDIA = noctalia.getConfig("hide_when_no_media") ~= false
 local TITLE_SCROLL = noctalia.getConfig("title_scroll") or "on_hover"
 local MAX_LENGTH = tonumber(noctalia.getConfig("max_length")) or 300
 local ART_SIZE = tonumber(noctalia.getConfig("art_size")) or 16
+-- Clamped to a circle; the default is intentionally huge so the art is round
+-- unless the user dials it down.
+local ART_RADIUS = math.min(tonumber(noctalia.getConfig("art_radius")) or 999, ART_SIZE / 2)
 
+local PROGRESS_HEIGHT = 2
 local ART_SLOT = (ALBUM_ART_ONLY or HIDE_ALBUM_ART) and 0 or (ART_SIZE + 6)
 local TITLE_WIDTH = math.max(40, MAX_LENGTH - ART_SLOT)
 local TITLE_CHARS = math.max(6, math.floor(TITLE_WIDTH / 7))
@@ -262,7 +266,7 @@ function render()
         path = artPath,
         width = ART_SIZE,
         height = ART_SIZE,
-        radius = ART_SIZE / 2,
+        radius = ART_RADIUS,
         fit = "cover",
       })
     else
@@ -295,12 +299,15 @@ function render()
   local row = ui.row({ key = "content", gap = 6, align = "center" }, children)
 
   if SHOW_PROGRESS and (current.lengthUs or 0) > 0 then
-    barWidget.render(ui.column({ key = "root", gap = 1, align = "stretch" }, {
+    -- Balance the progress bar with an equal spacer above the row, so toggling
+    -- the setting keeps the text vertically centered instead of nudging it up.
+    barWidget.render(ui.column({ key = "root", gap = 0, align = "stretch" }, {
+      ui.spacer({ key = "progress-balance", height = PROGRESS_HEIGHT }),
       row,
       ui.progress({
         key = "progress",
         progress = progressFraction,
-        height = 2,
+        height = PROGRESS_HEIGHT,
         radius = 1,
         fill = "primary",
       }),

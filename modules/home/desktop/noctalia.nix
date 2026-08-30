@@ -16,7 +16,6 @@ let
     };
     network.show_label = false;
     notifications.hide_when_no_unread = true;
-    obsidian.type = "davemhammer/obsidian:status";
     phone-connect = {
       type = "icefish/phone-connect:bar";
     };
@@ -112,7 +111,6 @@ in
         ];
         end = [
           "tray"
-          "obsidian"
           "udiskie"
         ]
         ++ lib.optional voxtypeEnabled "voxtype"
@@ -195,7 +193,6 @@ in
       plugins = {
         enabled = [
           "aristides/udiskie"
-          "davemhammer/obsidian"
           "icefish/phone-connect"
           "jeremiah/phone-media"
           "noctalia/wallhaven"

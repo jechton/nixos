@@ -27,6 +27,7 @@ let
     # player is KDE Connect, minus the popup's spectrum visualizer, which
     # never shows anything for a KDE Connect player
     phone-media.type = "jeremiah/phone-media:bar";
+    screen-toolkit.type = "alexander/screen-toolkit:widget";
     taskbar = {
       group_by_workspace = true;
       group_single_icon_per_app = true;
@@ -53,9 +54,22 @@ in
   # udisks2 itself is already enabled system-wide in modules/system/niri.nix.
   # glib provides gdbus, which the phone-connect plugin shells out to for all
   # KDE Connect device queries.
+  # grim/slurp/swappy are already on PATH from modules/system/niri.nix. The rest
+  # are the alexander/screen-toolkit plugin's runtime dependencies for OCR,
+  # colour picking, QR decoding, palette extraction, translation and recording.
   home.packages = [
+    pkgs.bc
+    pkgs.ffmpeg
     pkgs.glib
+    pkgs.gpu-screen-recorder
+    pkgs.hyprpicker
+    pkgs.imagemagick
+    pkgs.jq
+    pkgs.satty
+    pkgs.tesseract
+    pkgs.translate-shell
     pkgs.udiskie
+    pkgs.zbar
   ];
 
   # Curated wallpapers checked into the repo. recursive=true keeps the
@@ -112,6 +126,7 @@ in
         end = [
           "tray"
           "udiskie"
+          "screen-toolkit"
         ]
         ++ lib.optional voxtypeEnabled "voxtype"
         ++ [
@@ -192,6 +207,7 @@ in
 
       plugins = {
         enabled = [
+          "alexander/screen-toolkit"
           "aristides/udiskie"
           "icefish/phone-connect"
           "jeremiah/phone-media"

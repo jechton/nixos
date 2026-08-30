@@ -101,6 +101,14 @@ in
 
   programs.noctalia = {
     enable = true;
+
+    # The build-time config validator runs in the Nix sandbox, where it can't
+    # load the local path plugin source (jeremiah/phone-media), so it warns that
+    # this plugin's widget types are "unrecognized". The config is fine: it
+    # validates cleanly outside the sandbox and the plugin loads at runtime.
+    # nix flake check plus noctalia's own startup validation still cover us.
+    checkConfig = false;
+
     settings = {
       # keep-sorted start block=yes newline_separated=yes
       backdrop = {
@@ -216,24 +224,25 @@ in
         ]
         ++ lib.optional voxtypeEnabled "gabedunn/voxtype";
 
+        # Every source is pinned by Nix (flake inputs or this repo), so noctalia
+        # must never try to update them itself.
+        auto_update = "none";
+
         source = [
           {
             name = "official";
             kind = "path";
             location = toString inputs.noctalia-official-plugins;
-            auto_update = false;
           }
           {
             name = "community";
             kind = "path";
             location = toString inputs.noctalia-community-plugins;
-            auto_update = false;
           }
           {
             name = "local";
             kind = "path";
             location = toString ./plugins;
-            auto_update = false;
           }
         ];
       };

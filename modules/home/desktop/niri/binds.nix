@@ -237,6 +237,14 @@ in
         "Mod+Shift+S" = withTitle "Screenshot Region" (spawn (noctalia [ "screenshot-region" ]));
         "Mod+Ctrl+Shift+S" = withTitle "Screenshot Screen" (spawn (noctalia [ "screenshot-fullscreen" ]));
         "Mod+Ctrl+Print" = withTitle "OCR Region" (spawn "ocr-region");
+        "Mod+P" = withTitle "Screen Toolkit" (
+          spawn (noctalia [
+            "plugin"
+            "alexander/screen-toolkit:service"
+            "all"
+            "toggle"
+          ])
+        );
       }
 
       (mkDirectionalBinds "Mod" "Focus" {

@@ -60,7 +60,7 @@
       # charset-based fallback doesn't reach on its own, so apps (browsers
       # included) render tofu instead of falling back to the symbols font.
       # Append it explicitly as a fallback for the generic families.
-      localConf = ''
+      localConf = /* xml */ ''
         <?xml version="1.0"?>
         <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
         <fontconfig>

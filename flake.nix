@@ -54,6 +54,10 @@
       url = "github:Mic92/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixcord = {
+      url = "github:4evy/nixcord";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     noctalia-community-plugins = {
       url = "github:noctalia-dev/community-plugins";
       flake = false;

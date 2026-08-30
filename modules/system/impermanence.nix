@@ -21,7 +21,7 @@
       pkgs.coreutils
       pkgs.util-linux
     ];
-    script = ''
+    script = /* bash */ ''
       mkdir -p /mnt
       mount -t btrfs /dev/disk/by-label/nixos /mnt
 

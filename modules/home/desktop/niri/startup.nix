@@ -1,10 +1,8 @@
-{ lib, ... }:
+{ lib, config, ... }:
 let
   inherit (import ./_lib.nix { inherit lib; }) mkNodes;
-in
-{
-  wayland.windowManager.niri.settings._children = mkNodes "spawn-at-startup" [
-    [ "noctalia" ]
+  chatApps = lib.optionals (!config.burrow.profiles.vm.enable) [
+    [ "equibop" ]
     [ "signal-desktop" ]
     [ "telegram-desktop" ]
     [
@@ -12,6 +10,11 @@ in
       "-u"
     ]
   ];
+in
+{
+  wayland.windowManager.niri.settings._children = mkNodes "spawn-at-startup" (
+    [ [ "noctalia" ] ] ++ chatApps
+  );
 
   # nm-applet's autostart .desktop only excludes KDE/GNOME/COSMIC, so it
   # launches its own tray icon under niri too; hide it since noctalia's

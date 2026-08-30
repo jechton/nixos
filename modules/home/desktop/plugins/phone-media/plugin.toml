@@ -30,14 +30,16 @@ step = 100
 id = "bar"
 entry = "bar.luau"
 
-# Same pointer gestures as the builtin media widget, minus scroll (scroll is
-# volume, handled in bar.luau so it can target the phone vs the laptop) and
-# left, which opens this plugin's own panel instead of control-center's.
+# Left opens this plugin's own panel. right is handled in bar.luau (onRightClick)
+# so it targets the exact player the widget picked. back/forward can't reach the
+# script (the plugin's input area doesn't take those buttons), so they shell out
+# to a picker that prefers a playing KDE Connect player, matching the widget,
+# rather than noctalia's builtin `media` action which hits whatever player
+# noctalia considers active. Scroll is volume, also handled in bar.luau.
 [widget.actions]
 left = "panel-toggle jeremiah/phone-media:panel"
-right = "media toggle"
-back = "media previous"
-forward = "media next"
+back = "exec sh -c 'for p in $(playerctl --list-all 2>/dev/null); do case $p in kdeconnect*) [ \"$(playerctl -p $p status 2>/dev/null)\" = Playing ] && exec playerctl -p $p previous;; esac; done; playerctl --player=kdeconnect,%any previous'"
+forward = "exec sh -c 'for p in $(playerctl --list-all 2>/dev/null); do case $p in kdeconnect*) [ \"$(playerctl -p $p status 2>/dev/null)\" = Playing ] && exec playerctl -p $p next;; esac; done; playerctl --player=kdeconnect,%any next'"
 
 # Settings, top to bottom: whether the widget shows at all, then what it shows
 # (art, text), then how it behaves, then fine sizing under "advanced". Mirrors
@@ -101,6 +103,14 @@ type = "bool"
 label_key = "settings.show_progress.label"
 description_key = "settings.show_progress.description"
 default = false
+
+[[widget.setting]]
+key = "progress_above"
+type = "bool"
+label_key = "settings.progress_above.label"
+description_key = "settings.progress_above.description"
+default = false
+visible_when = { key = "show_progress", values = ["true"] }
 
 [[widget.setting]]
 key = "art_size"
@@ -196,15 +206,6 @@ description_key = "settings.hide_artist.description"
 default = false
 
 [[panel.setting]]
-key = "artist_first"
-type = "bool"
-label_key = "settings.artist_first.label"
-description_key = "settings.artist_first.description"
-default = false
-advanced = true
-visible_when = { key = "hide_artist", values = ["false"] }
-
-[[panel.setting]]
 key = "show_album"
 type = "bool"
 label_key = "settings.panel_show_album.label"
@@ -241,13 +242,6 @@ description_key = "settings.panel_show_playback_controls.description"
 default = true
 
 [[panel.setting]]
-key = "show_shuffle_repeat"
-type = "bool"
-label_key = "settings.panel_show_shuffle_repeat.label"
-description_key = "settings.panel_show_shuffle_repeat.description"
-default = true
-
-[[panel.setting]]
 key = "show_lyrics"
 type = "bool"
 label_key = "settings.panel_show_lyrics.label"
@@ -263,6 +257,14 @@ default = 1
 min = 0
 max = 4
 step = 1
+visible_when = { key = "show_lyrics", values = ["true"] }
+
+[[panel.setting]]
+key = "show_full_lyrics_button"
+type = "bool"
+label_key = "settings.panel_show_full_lyrics_button.label"
+description_key = "settings.panel_show_full_lyrics_button.description"
+default = true
 visible_when = { key = "show_lyrics", values = ["true"] }
 
 [[panel.setting]]

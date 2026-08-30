@@ -40,6 +40,8 @@ local metadataInFlight = false
 local positionInFlight = false
 
 local positionUs = 0
+local positionAtMs = 0 -- noctalia.nowMs() when positionUs was last sampled
+local frameAccumMs = 0
 local tick = 0
 
 local lyricsKey = ""
@@ -102,8 +104,20 @@ end
 
 -- ── data refresh ─────────────────────────────────────────────────────────────
 
+-- Position is polled about once a second; extrapolate from the last sample with
+-- the wall clock so the highlight tracks lines that are less than a second
+-- apart instead of jumping several at once.
+local function livePositionUs()
+  if current ~= nil and current.status == "Playing" and positionAtMs > 0 then
+    return positionUs + math.max(0, noctalia.nowMs() - positionAtMs) * 1000
+  end
+  return positionUs
+end
+
+-- The highlight only needs a playback position, not a track length, so this
+-- keeps polling even when a KDE Connect player omits mpris:length.
 local function refreshPosition()
-  if positionInFlight or current == nil or (current.lengthUs or 0) <= 0 then
+  if positionInFlight or current == nil then
     return
   end
   positionInFlight = true
@@ -118,6 +132,7 @@ local function refreshPosition()
       return
     end
     positionUs = math.floor(seconds * 1000000)
+    positionAtMs = noctalia.nowMs()
     render()
   end)
 end
@@ -165,7 +180,7 @@ local function refreshMetadata()
     local trackChanged = current == nil or current.name ~= chosen.name or current.title ~= chosen.title
     current = chosen
     if trackChanged then
-      positionUs = 0
+      positionUs, positionAtMs = 0, noctalia.nowMs()
     end
 
     local key = lyrics.trackKey(chosen)
@@ -231,7 +246,7 @@ function render()
     -- activeLineIndex returns nil and nothing is highlighted.
     local activeIndex = nil
     if lyricsSource == "synced" then
-      activeIndex = lyrics.activeLineIndex(lyricsLines, math.floor(positionUs / 1000) + LYRICS_OFFSET_MS)
+      activeIndex = lyrics.activeLineIndex(lyricsLines, math.floor(livePositionUs() / 1000) + LYRICS_OFFSET_MS)
     end
     local rendered = {}
     for i, line in ipairs(lyricsLines) do
@@ -244,7 +259,7 @@ function render()
         textAlign = TEXT_ALIGN,
       })
     end
-    body[#body + 1] = ui.scroll({ flexGrow = 1, gap = 8, align = "stretch" }, rendered)
+    body[#body + 1] = ui.scroll({ key = "lyrics", flexGrow = 1, gap = 8, align = "stretch" }, rendered)
   end
 
   panel.render(ui.column({ flexGrow = 1, gap = 12, align = "stretch" }, {
@@ -258,6 +273,9 @@ end
 function onOpen(_context)
   isOpen = true
   panel.setWantsSecondTicks(true)
+  -- Frame ticks redraw the highlight between the once-a-second polls; render()
+  -- is throttled in onFrameTick.
+  panel.setNeedsFrameTick(true)
   refreshMetadata()
   render()
 end
@@ -265,6 +283,7 @@ end
 function onClose()
   isOpen = false
   panel.setWantsSecondTicks(false)
+  panel.setNeedsFrameTick(false)
 end
 
 function update()
@@ -272,6 +291,14 @@ function update()
   refreshPosition()
   if tick % 3 == 0 then
     refreshMetadata()
+  end
+end
+
+function onFrameTick(deltaMs)
+  frameAccumMs = frameAccumMs + (tonumber(deltaMs) or 16)
+  if frameAccumMs >= 100 then
+    frameAccumMs = 0
+    render()
   end
 end
 

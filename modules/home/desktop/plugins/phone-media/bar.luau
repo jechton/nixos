@@ -9,14 +9,15 @@
 --
 -- The builtin media widget is compiled C++ with no scroll hook, and the plugin
 -- API exposes no MPRIS state, so player data comes from `playerctl`:
---   * one `playerctl -a metadata` snapshot per metadata tick
---   * an extra `playerctl position` per tick only while show_progress is on
+--   * one `playerctl -a metadata` snapshot a second
+--   * one `playerctl position` a second while show_progress is on; the bar
+--     advances locally between those polls
 --   * the marquee/redraw runs on the fast update tick
 --
--- The widget renders no clickable elements of its own, so every pointer gesture
--- (left = open control-center media, right = play/pause, back/forward = skip)
--- goes to noctalia's dispatcher via plugin.toml [widget.actions], identical to
--- the builtin media widget. Only scroll is handled here.
+-- The widget renders no clickable elements of its own. Left opens this plugin's
+-- panel; right/back/forward run playerctl directly (see plugin.toml
+-- [widget.actions]) so they act on the phone rather than noctalia's idea of the
+-- active player; scroll is handled here as a volume control.
 
 -- ── settings ─────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,7 @@ local ARTIST_FIRST = noctalia.getConfig("artist_first") == true
 local ALBUM_ART_ONLY = noctalia.getConfig("album_art_only") == true
 local HIDE_ALBUM_ART = noctalia.getConfig("hide_album_art") == true
 local SHOW_PROGRESS = noctalia.getConfig("show_progress") == true
+local PROGRESS_ABOVE = noctalia.getConfig("progress_above") == true
 local HIDE_WHEN_NO_MEDIA = noctalia.getConfig("hide_when_no_media") ~= false
 local TITLE_SCROLL = noctalia.getConfig("title_scroll") or "on_hover"
 local MAX_LENGTH = tonumber(noctalia.getConfig("max_length")) or 300
@@ -40,6 +42,9 @@ local TITLE_CHARS = math.max(6, math.floor(TITLE_WIDTH / 7))
 
 local MARQUEE_TICKS = 2
 local METADATA_TICKS = 4
+-- One playerctl position call a second; between them the bar advances locally
+-- (see advanceProgress) so a moving progress bar costs no extra subprocesses.
+local POSITION_TICKS = 4
 local VOLUME_STEP = "0.05"
 
 local SEP = string.char(31)
@@ -57,6 +62,11 @@ local FORMAT = table.concat({
 }, SEP)
 
 local dataDir = noctalia.pluginDataDir()
+-- Per-VM token so two of this widget (e.g. one bar per monitor) writing into the
+-- shared plugin data dir don't clobber each other's cover cache files. The table
+-- address is unique per Luau VM, unlike a time-seeded random which collides when
+-- two widgets start in the same second.
+local COVER_TAG = (tostring({}):match("0x0*(%x+)") or "0") .. ""
 
 -- ── state ────────────────────────────────────────────────────────────────────
 
@@ -147,7 +157,7 @@ local function updateArtwork(url)
 
   coverRevision = coverRevision + 1
   local revision = coverRevision
-  local destination = dataDir .. "/cover-" .. tostring(revision % 2) .. ".jpg"
+  local destination = dataDir .. "/cover-" .. COVER_TAG .. "-" .. tostring(revision % 2) .. ".jpg"
   noctalia.download(url, destination, function(ok)
     if ok and revision == coverRevision then
       artPath = destination
@@ -206,6 +216,17 @@ local function refreshPosition()
   end)
 end
 
+-- Nudge the bar forward between position polls so it moves at frame rate
+-- without a playerctl call each tick.
+local function advanceProgress()
+  if not SHOW_PROGRESS or current == nil or current.status ~= "Playing" or (current.lengthUs or 0) <= 0 then
+    return
+  end
+  local perTick = 0.25 / (current.lengthUs / 1000000)
+  progressFraction = math.min(1, progressFraction + perTick)
+  render()
+end
+
 local function refreshMetadata()
   if requestInFlight then
     return
@@ -248,8 +269,12 @@ local function refreshMetadata()
       return
     end
 
+    local trackChanged = current == nil or current.name ~= chosen.name or current.title ~= chosen.title
     available = true
     current = chosen
+    if trackChanged then
+      progressFraction = 0
+    end
     barWidget.setVisible(true)
     updateArtwork(chosen.art)
     render()
@@ -258,13 +283,29 @@ end
 
 -- ── rendering ────────────────────────────────────────────────────────────────
 
--- Nothing here registers an onClick, so left/right/back/forward/scroll all fall
--- through to the gesture dispatcher (plugin.toml [widget.actions] + onScroll),
--- exactly like the builtin media widget: left opens control-center media.
+-- Builtin bar widgets carry a small horizontal inset; plugin widgets render
+-- flush unless they add their own. Wrap every emit so this widget keeps a gap
+-- from its neighbours without widening the bar-wide widget_spacing.
+local WIDGET_PAD_H = 6
+
+local function emit(node, stretch)
+  local props = { key = "pad", align = stretch and "stretch" or "center" }
+  if barWidget.isVertical() then
+    props.paddingV = WIDGET_PAD_H
+    barWidget.render(ui.column(props, { node }))
+  else
+    props.paddingH = WIDGET_PAD_H
+    barWidget.render(ui.row(props, { node }))
+  end
+end
+
+-- Nothing here registers an onClick, so left/right/back/forward fall through to
+-- plugin.toml [widget.actions] (left opens this plugin's panel, the rest run
+-- playerctl); scroll is handled by onScroll below.
 function render()
   if not available or current == nil then
     if not HIDE_WHEN_NO_MEDIA then
-      barWidget.render(ui.glyph({ key = "idle", name = "disc-filled", size = 16, color = "on_surface_variant" }))
+      emit(ui.glyph({ key = "idle", name = "disc-filled", size = 16, color = "on_surface_variant" }))
     end
     return
   end
@@ -294,7 +335,7 @@ function render()
   end
 
   if ALBUM_ART_ONLY or vertical then
-    barWidget.render(cover or ui.glyph({ key = "cover-glyph", name = "disc-filled", size = 16, color = "on_surface_variant" }))
+    emit(cover or ui.glyph({ key = "cover-glyph", name = "disc-filled", size = 16, color = "on_surface_variant" }))
     return
   end
 
@@ -313,21 +354,26 @@ function render()
   local row = ui.row({ key = "content", gap = 6, align = "center" }, children)
 
   if SHOW_PROGRESS and (current.lengthUs or 0) > 0 then
-    -- Balance the progress bar with an equal spacer above the row, so toggling
-    -- the setting keeps the text vertically centered instead of nudging it up.
-    barWidget.render(ui.column({ key = "root", gap = 0, align = "stretch" }, {
-      ui.spacer({ key = "progress-balance", height = PROGRESS_HEIGHT }),
-      row,
-      ui.progress({
-        key = "progress",
-        progress = progressFraction,
-        height = PROGRESS_HEIGHT,
-        radius = 1,
-        fill = "primary",
-      }),
-    }))
+    -- width = 0: ui.progress and ui.spacer are bare nodes that measure at their
+    -- last laid-out size, so in a stretch column they would ratchet the widget
+    -- wider on every longer title and never shrink back. Zeroing their measured
+    -- width lets the title row alone set the column width; align = "stretch"
+    -- still paints the bar across that full width.
+    local progress = ui.progress({
+      key = "progress",
+      progress = progressFraction,
+      width = 0,
+      height = PROGRESS_HEIGHT,
+      radius = 1,
+      fill = "primary",
+    })
+    -- Balance the progress bar with an equal spacer on the row's other edge, so
+    -- toggling the setting keeps the text vertically centered instead of shifting.
+    local balance = ui.spacer({ key = "progress-balance", width = 0, height = PROGRESS_HEIGHT })
+    local stack = PROGRESS_ABOVE and { progress, row, balance } or { balance, row, progress }
+    emit(ui.column({ key = "root", gap = 0, align = "stretch" }, stack), true)
   else
-    barWidget.render(row)
+    emit(row)
   end
 end
 
@@ -349,7 +395,11 @@ function update()
   if tick % METADATA_TICKS == 0 then
     refreshMetadata()
   end
-  refreshPosition()
+  if tick % POSITION_TICKS == 0 then
+    refreshPosition()
+  else
+    advanceProgress()
+  end
 end
 
 function onHover(entered)
@@ -358,6 +408,13 @@ function onHover(entered)
     marqueeOffset = 1
   end
   render()
+end
+
+-- BTN_RIGHT stays with this widget (plugin.toml binds only left/back/forward),
+-- so play-pause can target the exact player the widget is showing.
+function onRightClick()
+  local name = current ~= nil and current.name or "kdeconnect,%any"
+  noctalia.runAsync({ "playerctl", "--player=" .. name, "play-pause" })
 end
 
 function onScroll(axis, steps)

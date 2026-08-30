@@ -28,15 +28,14 @@ local SHOW_ALBUM_ART = noctalia.getConfig("show_album_art") ~= false
 local ALBUM_ART_SIZE = tonumber(noctalia.getConfig("album_art_size")) or 160
 local ALBUM_ART_RADIUS = math.min(tonumber(noctalia.getConfig("album_art_radius")) or 16, ALBUM_ART_SIZE / 2)
 local HIDE_ARTIST = noctalia.getConfig("hide_artist") == true
-local ARTIST_FIRST = noctalia.getConfig("artist_first") == true
 local SHOW_ALBUM = noctalia.getConfig("show_album") ~= false
 local SHOW_PROGRESS = noctalia.getConfig("show_progress") ~= false
 local SHOW_TIME_LABELS = noctalia.getConfig("show_time_labels") ~= false
 local SHOW_PLAYBACK_CONTROLS = noctalia.getConfig("show_playback_controls") ~= false
-local SHOW_SHUFFLE_REPEAT = noctalia.getConfig("show_shuffle_repeat") ~= false
 local SHOW_PLAYER_SWITCHER = noctalia.getConfig("show_player_switcher") ~= false
 local SHOW_SOURCE_LABEL = noctalia.getConfig("show_source_label") ~= false
 local SHOW_LYRICS = noctalia.getConfig("show_lyrics") ~= false
+local SHOW_FULL_LYRICS_BUTTON = noctalia.getConfig("show_full_lyrics_button") ~= false
 local LYRICS_CONTEXT_LINES = math.max(0, math.floor(tonumber(noctalia.getConfig("lyrics_context_lines")) or 1))
 local LYRICS_OFFSET_MS = tonumber(noctalia.getConfig("lyrics_offset_ms")) or 0
 
@@ -67,18 +66,17 @@ local pinnedBusName = nil
 
 local metadataInFlight = false
 local positionInFlight = false
-local extrasInFlight = false
 
 local artUrl = ""
 local artPath = nil
 local coverRevision = 0
 
 local positionUs = 0
+local positionAtMs = 0 -- noctalia.nowMs() when positionUs was last sampled
 local seeking = false
+local seekIdleTicks = 0
 local pendingSeekUs = nil
-
-local loopStatus = "None"
-local shuffleOn = false
+local frameAccumMs = 0
 
 local lyricsKey = ""
 local lyricsFetchToken = 0
@@ -94,19 +92,6 @@ local function isKde(name)
   return name ~= nil and string.find(name, "kdeconnect", 1, true) ~= nil
 end
 
-local function displayText(row)
-  if row == nil then
-    return ""
-  end
-  if HIDE_ARTIST or row.artist == "" then
-    return row.title
-  end
-  if ARTIST_FIRST then
-    return row.artist .. " - " .. row.title
-  end
-  return row.title .. " - " .. row.artist
-end
-
 local function formatTime(seconds)
   seconds = math.max(0, math.floor(seconds or 0))
   local m = math.floor(seconds / 60)
@@ -118,6 +103,20 @@ local function withCurrent(fn)
   if current ~= nil then
     fn(current.name)
   end
+end
+
+-- Position advances continuously; playerctl is only polled about once a second.
+-- Extrapolate from the last sample with the wall clock so the progress bar and
+-- (especially) the lyric highlight stay accurate between polls, even for tracks
+-- with lines less than a second apart.
+local function livePositionUs()
+  if seeking and pendingSeekUs ~= nil then
+    return pendingSeekUs
+  end
+  if current ~= nil and current.status == "Playing" and positionAtMs > 0 then
+    return positionUs + math.max(0, noctalia.nowMs() - positionAtMs) * 1000
+  end
+  return positionUs
 end
 
 -- ── artwork (same download/cache path as bar.luau, separate cache files) ───
@@ -210,31 +209,15 @@ end
 
 -- ── data refresh ─────────────────────────────────────────────────────────────
 
-local function refreshExtras()
-  if not SHOW_SHUFFLE_REPEAT or extrasInFlight or current == nil then
+-- Position drives both the progress bar and the synced-lyrics highlight, so
+-- poll it whenever either is shown, not just when the progress bar is on. The
+-- bar needs a track length to scale against; the lyrics highlight does not.
+local function refreshPosition()
+  if seeking or positionInFlight or current == nil then
     return
   end
-  extrasInFlight = true
-  local name = current.name
-  noctalia.runAsync({ "playerctl", "--player=" .. name, "loop" }, function(loopResult)
-    noctalia.runAsync({ "playerctl", "--player=" .. name, "shuffle" }, function(shuffleResult)
-      extrasInFlight = false
-      if current == nil or current.name ~= name then
-        return
-      end
-      if loopResult.exitCode == 0 then
-        loopStatus = (loopResult.stdout or ""):match("%S+") or "None"
-      end
-      if shuffleResult.exitCode == 0 then
-        shuffleOn = (shuffleResult.stdout or ""):match("%S+") == "On"
-      end
-      render()
-    end)
-  end)
-end
-
-local function refreshPosition()
-  if not SHOW_PROGRESS or seeking or positionInFlight or current == nil or (current.lengthUs or 0) <= 0 then
+  local wantForProgress = SHOW_PROGRESS and (current.lengthUs or 0) > 0
+  if not wantForProgress and not SHOW_LYRICS then
     return
   end
   positionInFlight = true
@@ -249,6 +232,7 @@ local function refreshPosition()
       return
     end
     positionUs = math.floor(seconds * 1000000)
+    positionAtMs = noctalia.nowMs()
     render()
   end)
 end
@@ -313,7 +297,7 @@ local function refreshMetadata()
     local trackChanged = current == nil or current.name ~= chosen.name or current.title ~= chosen.title
     current = chosen
     if trackChanged then
-      positionUs, seeking, pendingSeekUs = 0, false, nil
+      positionUs, positionAtMs, seeking, pendingSeekUs = 0, noctalia.nowMs(), false, nil
     end
     updateArtwork(chosen.art)
 
@@ -324,7 +308,6 @@ local function refreshMetadata()
     end
 
     render()
-    refreshExtras()
   end)
 end
 
@@ -335,7 +318,7 @@ local function commitSeek(valueSeconds)
   withCurrent(function(name)
     noctalia.runAsync({ "playerctl", "--player=" .. name, "position", tostring(target) })
   end)
-  positionUs, seeking, pendingSeekUs = target * 1000000, false, nil
+  positionUs, positionAtMs, seeking, pendingSeekUs = target * 1000000, noctalia.nowMs(), false, nil
   render()
 end
 
@@ -394,7 +377,7 @@ function render()
 
   local textLines = {
     ui.label({
-      text = displayText(current),
+      text = current.title,
       fontSize = 16,
       fontWeight = "bold",
       color = "on_surface",
@@ -402,9 +385,21 @@ function render()
       textAlign = "center",
     }),
   }
+  -- Artist and album share one secondary line, both the same weight.
+  local secondary = {}
+  if not HIDE_ARTIST and current.artist ~= "" then
+    secondary[#secondary + 1] = current.artist
+  end
   if SHOW_ALBUM and current.album ~= "" then
-    textLines[#textLines + 1] =
-      ui.label({ text = current.album, fontSize = 12, color = "on_surface_variant", textAlign = "center" })
+    secondary[#secondary + 1] = current.album
+  end
+  if #secondary > 0 then
+    textLines[#textLines + 1] = ui.label({
+      text = table.concat(secondary, "  \u{2022}  "),
+      fontSize = 12,
+      color = "on_surface_variant",
+      textAlign = "center",
+    })
   end
   if SHOW_SOURCE_LABEL then
     textLines[#textLines + 1] = ui.label({
@@ -414,11 +409,14 @@ function render()
       textAlign = "center",
     })
   end
-  body[#body + 1] = ui.column({ gap = 4, align = "stretch" }, textLines)
+  -- Title, seek bar, and transport controls form one block with tight internal
+  -- spacing; the slider's own control height already pads it from its
+  -- neighbours, so the scroll's 12px gap between them would read as too much.
+  local nowPlaying = { ui.column({ gap = 4, align = "stretch" }, textLines) }
 
   if SHOW_PROGRESS and (current.lengthUs or 0) > 0 then
     local lengthSeconds = current.lengthUs / 1000000
-    local displaySeconds = math.min((pendingSeekUs or positionUs) / 1000000, lengthSeconds)
+    local displaySeconds = math.min(livePositionUs() / 1000000, lengthSeconds)
     local progressLines = {
       ui.slider({
         min = 0,
@@ -435,33 +433,22 @@ function render()
         ui.label({ text = formatTime(lengthSeconds), fontSize = 11, color = "on_surface_variant" }),
       })
     end
-    body[#body + 1] = ui.column({ gap = 4, align = "stretch" }, progressLines)
+    nowPlaying[#nowPlaying + 1] = ui.column({ gap = 2, align = "stretch" }, progressLines)
   end
 
-  if SHOW_PLAYBACK_CONTROLS or SHOW_SHUFFLE_REPEAT then
-    local buttons = {}
-    if SHOW_SHUFFLE_REPEAT then
-      buttons[#buttons + 1] = ui.button({
-        glyph = loopStatus == "Track" and "repeat-once" or "repeat",
-        variant = loopStatus ~= "None" and "primary" or "ghost",
-        onClick = "onRepeat",
-      })
-    end
-    if SHOW_PLAYBACK_CONTROLS then
-      buttons[#buttons + 1] = ui.button({ glyph = "media-prev", variant = "ghost", onClick = "onPrevious" })
-      buttons[#buttons + 1] = ui.button({
+  if SHOW_PLAYBACK_CONTROLS then
+    nowPlaying[#nowPlaying + 1] = ui.row({ justify = "center", gap = 8 }, {
+      ui.button({ glyph = "media-prev", variant = "ghost", onClick = "onPrevious" }),
+      ui.button({
         glyph = current.status == "Playing" and "media-pause" or "media-play",
         variant = "primary",
         onClick = "onPlayPause",
-      })
-      buttons[#buttons + 1] = ui.button({ glyph = "media-next", variant = "ghost", onClick = "onNext" })
-    end
-    if SHOW_SHUFFLE_REPEAT then
-      buttons[#buttons + 1] =
-        ui.button({ glyph = "shuffle", variant = shuffleOn and "primary" or "ghost", onClick = "onShuffle" })
-    end
-    body[#body + 1] = ui.row({ justify = "center", gap = 8 }, buttons)
+      }),
+      ui.button({ glyph = "media-next", variant = "ghost", onClick = "onNext" }),
+    })
   end
+
+  body[#body + 1] = ui.column({ gap = 4, align = "stretch" }, nowPlaying)
 
   if SHOW_LYRICS then
     local lyricsSection = {}
@@ -487,7 +474,7 @@ function render()
         textAlign = "center",
       })
     else
-      local displayPositionMs = math.floor((pendingSeekUs or positionUs) / 1000) + LYRICS_OFFSET_MS
+      local displayPositionMs = math.floor(livePositionUs() / 1000) + LYRICS_OFFSET_MS
       local activeIndex = lyrics.activeLineIndex(lyricsLines, displayPositionMs) or 0
       for i = activeIndex - LYRICS_CONTEXT_LINES, activeIndex + LYRICS_CONTEXT_LINES do
         local ln = lyricsLines[i]
@@ -504,9 +491,11 @@ function render()
         end
       end
     end
-    lyricsSection[#lyricsSection + 1] = ui.row({ justify = "center" }, {
-      ui.button({ text = noctalia.tr("ui.full_lyrics"), variant = "ghost", onClick = "onOpenLyricsPanel" }),
-    })
+    if SHOW_FULL_LYRICS_BUTTON then
+      lyricsSection[#lyricsSection + 1] = ui.row({ justify = "center" }, {
+        ui.button({ text = noctalia.tr("ui.full_lyrics"), variant = "ghost", onClick = "onOpenLyricsPanel" }),
+      })
+    end
     body[#body + 1] = ui.column({ gap = 6, align = "stretch" }, lyricsSection)
   end
 
@@ -524,17 +513,23 @@ function render()
   end
 
   if SHOW_PLAYER_SWITCHER and #switcherRows > 1 then
-    local options, selectedIndex = {}, 0
+    -- Index 0 is "Auto" (follow pick()); indices 1.. map to switcherRows. The
+    -- bullet marks whichever player is currently playing, in either mode.
+    local options = { noctalia.tr("ui.auto") }
+    local selectedIndex = 0
     for i, p in ipairs(switcherRows) do
       local label = isKde(p.name) and noctalia.tr("ui.via_phone") or p.name
       -- Several apps on the phone all report as "phone"; tell them apart by track.
       if isKde(p.name) and kdeShown > 1 and p.title ~= "" and p.title ~= p.name then
         label = label .. " - " .. p.title
       end
-      options[i] = p.name == current.name and ("\u{2022} " .. label) or label
       if p.name == current.name then
-        selectedIndex = i - 1
+        label = "\u{2022} " .. label
+        if pinnedBusName ~= nil then
+          selectedIndex = i
+        end
       end
+      options[i + 1] = label
     end
     body[#body + 1] = ui.select({ options = options, selectedIndex = selectedIndex, onChange = "onPlayerSelected" })
   end
@@ -550,6 +545,9 @@ end
 function onOpen(_context)
   isOpen = true
   panel.setWantsSecondTicks(true)
+  -- Frame ticks let the seek bar and lyric highlight redraw between the
+  -- once-a-second polls; render() itself is throttled in onFrameTick.
+  panel.setNeedsFrameTick(true)
   refreshMetadata()
   render()
 end
@@ -557,10 +555,27 @@ end
 function onClose()
   isOpen = false
   panel.setWantsSecondTicks(false)
+  panel.setNeedsFrameTick(false)
+end
+
+function onFrameTick(deltaMs)
+  frameAccumMs = frameAccumMs + (tonumber(deltaMs) or 16)
+  if frameAccumMs >= 100 then
+    frameAccumMs = 0
+    render()
+  end
 end
 
 function update()
   tick = tick + 1
+  -- Guard against a drag whose end event never arrives (pointer released off
+  -- the slider): without this `seeking` would pin the bar and lyrics forever.
+  if seeking then
+    seekIdleTicks = seekIdleTicks + 1
+    if seekIdleTicks >= 8 then
+      seeking, pendingSeekUs, seekIdleTicks = false, nil, 0
+    end
+  end
   refreshPosition()
   if tick % 3 == 0 then
     refreshMetadata()
@@ -572,18 +587,35 @@ function onCloseClicked()
 end
 
 function onOpenLyricsPanel()
-  noctalia.togglePanel("jeremiah/phone-media:lyrics")
+  -- panel-open, not togglePanel: this button should always open the full lyrics,
+  -- never close it if it happens to be open already.
+  noctalia.runAsync({ "noctalia", "msg", "panel-open", "jeremiah/phone-media:lyrics" })
 end
 
 function onSeekChange(value)
-  seeking = true
-  pendingSeekUs = math.floor((tonumber(value) or 0) * 1000000)
+  value = tonumber(value) or 0
+  local targetUs = math.floor(value * 1000000)
+  -- The host pushes our own rendered value back into the slider on every redraw,
+  -- which re-fires onChange. Ignore that echo so it neither starts a phantom
+  -- seek nor (mid-drag) keeps resetting the stuck-drag watchdog in update().
+  if seeking then
+    if pendingSeekUs == nil or math.abs(targetUs - pendingSeekUs) < 500000 then
+      return
+    end
+  elseif math.abs(value - livePositionUs() / 1000000) < 1.5 then
+    return
+  end
+  seeking, seekIdleTicks = true, 0
+  pendingSeekUs = targetUs
   render()
 end
 
 function onSeekEnd()
   if pendingSeekUs ~= nil then
     commitSeek(pendingSeekUs / 1000000)
+  else
+    seeking = false
+    render()
   end
 end
 
@@ -605,29 +637,15 @@ function onNext()
   end)
 end
 
-function onRepeat()
-  local nextStatus = loopStatus == "None" and "Playlist" or (loopStatus == "Playlist" and "Track" or "None")
-  withCurrent(function(name)
-    noctalia.runAsync({ "playerctl", "--player=" .. name, "loop", nextStatus })
-  end)
-  loopStatus = nextStatus
-  render()
-end
-
-function onShuffle()
-  local nextState = shuffleOn and "Off" or "On"
-  withCurrent(function(name)
-    noctalia.runAsync({ "playerctl", "--player=" .. name, "shuffle", nextState })
-  end)
-  shuffleOn = not shuffleOn
-  render()
-end
-
 function onPlayerSelected(index)
-  local i = (tonumber(index) or 0) + 1
-  local chosen = switcherRows[i]
-  if chosen ~= nil then
-    pinnedBusName = chosen.name
-    refreshMetadata()
+  local i = tonumber(index) or 0
+  if i <= 0 then
+    pinnedBusName = nil -- back to automatic selection
+  else
+    local chosen = switcherRows[i]
+    if chosen ~= nil then
+      pinnedBusName = chosen.name
+    end
   end
+  refreshMetadata()
 end

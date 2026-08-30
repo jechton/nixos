@@ -11,6 +11,39 @@ local M = {}
 local BASE_URL = "https://lrclib.net/api"
 local HEADERS = { "User-Agent: noctalia-phone-media-plugin (https://github.com/jechton/nixos)" }
 
+-- Per-VM result cache, keyed by trackKey. Each consumer (bar widget, popup,
+-- lyrics panel) runs its own Luau VM so they cannot share this, but it still
+-- spares a network round trip every time playback returns to a recent track,
+-- including the empty result for a track with no lyrics on file.
+local CACHE_MAX = 24
+local cache = {} -- key -> { lines = <array|false>, source = <string|false> }
+local cacheOrder = {} -- keys, oldest first
+
+local function cacheGet(key)
+  local hit = cache[key]
+  if hit == nil then
+    return nil
+  end
+  return {
+    lines = hit.lines or nil,
+    source = hit.source or nil,
+  }
+end
+
+local function cachePut(key, lines, source)
+  if key == "" then
+    return
+  end
+  if cache[key] == nil then
+    cacheOrder[#cacheOrder + 1] = key
+    if #cacheOrder > CACHE_MAX then
+      local evicted = table.remove(cacheOrder, 1)
+      cache[evicted] = nil
+    end
+  end
+  cache[key] = { lines = lines or false, source = source or false }
+end
+
 -- Parses `[mm:ss.xx]lyric text` lines into a time-sorted array of
 -- { timeMs, text }. A line may carry more than one timestamp (a repeated
 -- chorus), which expands to one entry per timestamp. Returns nil if nothing
@@ -110,10 +143,34 @@ local function statusOk(res)
   return res ~= nil and res.ok == true and res.status ~= nil and res.status >= 200 and res.status < 300
 end
 
+-- Of the search hits, prefer the one whose duration is closest to the playing
+-- track (within 5s), so a "live" or extended cut whose timestamps wouldn't line
+-- up doesn't win just for being first. Falls back to the first hit.
+local function bestByDuration(hits, durationSeconds)
+  if durationSeconds <= 0 then
+    return hits[1]
+  end
+  local best, bestDelta = nil, nil
+  for _, hit in ipairs(hits) do
+    local d = tonumber(hit.duration)
+    if d ~= nil then
+      local delta = math.abs(d - durationSeconds)
+      if bestDelta == nil or delta < bestDelta then
+        best, bestDelta = hit, delta
+      end
+    end
+  end
+  if best ~= nil and bestDelta <= 5 then
+    return best
+  end
+  return hits[1]
+end
+
 local function searchFallback(track, callback)
   local query = "track_name=" .. noctalia.string.urlEncode(track.title) .. "&artist_name=" .. noctalia.string.urlEncode(
     track.artist or ""
   )
+  local durationSeconds = math.floor((track.lengthUs or 0) / 1000000)
   local started = noctalia.http({ url = BASE_URL .. "/search?" .. query, headers = HEADERS }, function(res)
     if not statusOk(res) or res.body == nil or res.body == "" then
       callback(nil, nil)
@@ -124,7 +181,7 @@ local function searchFallback(track, callback)
       callback(nil, nil)
       return
     end
-    local lines, source = extractLines(data[1])
+    local lines, source = extractLines(bestByDuration(data, durationSeconds))
     callback(lines, source)
   end)
   if not started then
@@ -138,6 +195,18 @@ function M.fetchLyrics(track, callback)
   if track == nil or track.title == nil or track.title == "" then
     callback(nil, nil)
     return
+  end
+
+  local cacheKey = M.trackKey(track)
+  local cached = cacheGet(cacheKey)
+  if cached ~= nil then
+    callback(cached.lines, cached.source)
+    return
+  end
+
+  local function finish(lines, source)
+    cachePut(cacheKey, lines, source)
+    callback(lines, source)
   end
 
   local query = "track_name=" .. noctalia.string.urlEncode(track.title) .. "&artist_name=" .. noctalia.string.urlEncode(
@@ -156,16 +225,16 @@ function M.fetchLyrics(track, callback)
       local data = noctalia.json.decode(res.body)
       local lines, source = extractLines(data)
       if lines ~= nil then
-        callback(lines, source)
+        finish(lines, source)
         return
       end
     end
     -- No exact match (404) or an exact match with no lyrics on file: a fuzzy
     -- search still turns up the right song often enough to be worth trying.
-    searchFallback(track, callback)
+    searchFallback(track, finish)
   end)
   if not started then
-    callback(nil, nil)
+    finish(nil, nil)
   end
 end
 

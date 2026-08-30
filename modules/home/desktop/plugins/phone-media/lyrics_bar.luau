@@ -34,10 +34,12 @@ local current = nil -- { name, status, title, artist, album, lengthUs }
 local metadataInFlight = false
 local positionInFlight = false
 local positionUs = 0
+local positionAtMs = 0 -- noctalia.nowMs() when positionUs was last sampled
 local tick = 0
 
 local lyricsKey = ""
 local lyricsFetchToken = 0
+local lyricsLoading = false
 local lyricsLines = nil
 local lyricsSource = nil
 local currentLineText = ""
@@ -83,21 +85,30 @@ local function fetchLyricsForCurrent()
   end
   lyricsFetchToken = lyricsFetchToken + 1
   local token = lyricsFetchToken
-  lyricsLines, lyricsSource, currentLineText = nil, nil, ""
+  lyricsLoading, lyricsLines, lyricsSource, currentLineText = true, nil, nil, ""
   render()
   lyrics.fetchLyrics(current, function(lines, source)
     if token ~= lyricsFetchToken then
       return
     end
-    lyricsLines, lyricsSource = lines, source
+    lyricsLoading, lyricsLines, lyricsSource = false, lines, source
     render()
   end)
 end
 
 -- ── data refresh ─────────────────────────────────────────────────────────────
 
+-- playerctl is polled about once a second; extrapolate with the wall clock so
+-- the previewed line keeps up with fast, closely-spaced lyrics.
+local function livePositionUs()
+  if current ~= nil and current.status == "Playing" and positionAtMs > 0 then
+    return positionUs + math.max(0, noctalia.nowMs() - positionAtMs) * 1000
+  end
+  return positionUs
+end
+
 local function refreshPosition()
-  if not SHOW_CURRENT_LINE or positionInFlight or current == nil or (current.lengthUs or 0) <= 0 then
+  if not SHOW_CURRENT_LINE or positionInFlight or current == nil then
     return
   end
   positionInFlight = true
@@ -112,6 +123,7 @@ local function refreshPosition()
       return
     end
     positionUs = math.floor(seconds * 1000000)
+    positionAtMs = noctalia.nowMs()
     render()
   end)
 end
@@ -127,7 +139,7 @@ local function refreshMetadata()
 
     if result.exitCode ~= 0 then
       current, positionUs = nil, 0
-      lyricsKey, lyricsLines, lyricsSource = "", nil, nil
+      lyricsKey, lyricsLoading, lyricsLines, lyricsSource = "", false, nil, nil
       render()
       return
     end
@@ -151,11 +163,14 @@ local function refreshMetadata()
     local chosen = pick(rows)
     if chosen == nil then
       current, positionUs = nil, 0
-      lyricsKey, lyricsLines, lyricsSource = "", nil, nil
+      lyricsKey, lyricsLoading, lyricsLines, lyricsSource = "", false, nil, nil
       render()
       return
     end
 
+    if current == nil or current.name ~= chosen.name or current.title ~= chosen.title then
+      positionUs, positionAtMs = 0, noctalia.nowMs()
+    end
     current = chosen
 
     if not SHOW_CURRENT_LINE then
@@ -179,37 +194,59 @@ local function glyph()
   return ui.glyph({ key = "glyph", name = "microphone-2", size = 16, color = "on_surface_variant" })
 end
 
+-- Builtin bar widgets carry a small inset; plugin widgets render flush unless
+-- they add their own. Wrap every emit so this widget keeps a gap from its
+-- neighbours without widening the bar-wide widget_spacing.
+local WIDGET_PAD = 6
+
+local function emit(node)
+  local props = { key = "pad", align = "center" }
+  if barWidget.isVertical() then
+    props.paddingV = WIDGET_PAD
+    barWidget.render(ui.column(props, { node }))
+  else
+    props.paddingH = WIDGET_PAD
+    barWidget.render(ui.row(props, { node }))
+  end
+end
+
+-- Hide the widget entirely (only honoured when hide_when_no_lyrics is set).
+local function hideOrIdle()
+  barWidget.setVisible(not HIDE_WHEN_NO_LYRICS)
+  if not HIDE_WHEN_NO_LYRICS then
+    emit(ui.glyph({ key = "idle", name = "music-off", size = 16, color = "on_surface_variant" }))
+  end
+end
+
 function render()
   if not SHOW_CURRENT_LINE then
     -- Plain launcher icon: always visible regardless of playback state.
     barWidget.setVisible(true)
-    barWidget.render(glyph())
+    emit(glyph())
     return
   end
 
-  if current == nil then
-    barWidget.setVisible(not HIDE_WHEN_NO_LYRICS)
-    if not HIDE_WHEN_NO_LYRICS then
-      barWidget.render(ui.glyph({ key = "idle", name = "music-off", size = 16, color = "on_surface_variant" }))
-    end
+  -- Nothing playing, or a track with no lyrics on file at all: hide.
+  if current == nil or (not lyricsLoading and lyricsLines == nil) then
+    hideOrIdle()
     return
   end
 
-  currentLineText = ""
-  if lyricsSource == "synced" and lyricsLines ~= nil then
-    local displayPositionMs = math.floor(positionUs / 1000) + LYRICS_OFFSET_MS
-    local activeIndex = lyrics.activeLineIndex(lyricsLines, displayPositionMs)
-    local line = activeIndex ~= nil and lyricsLines[activeIndex] or nil
-    currentLineText = line ~= nil and line.text or ""
-  end
-
-  if HIDE_WHEN_NO_LYRICS and currentLineText == "" then
-    barWidget.setVisible(false)
+  -- Lyrics exist but aren't synced (or we're still looking): show just the
+  -- icon, still clickable to open the full lyrics panel, no line preview.
+  if lyricsLoading or lyricsSource ~= "synced" then
+    barWidget.setVisible(true)
+    emit(glyph())
     return
   end
+
+  local displayPositionMs = math.floor(livePositionUs() / 1000) + LYRICS_OFFSET_MS
+  local activeIndex = lyrics.activeLineIndex(lyricsLines, displayPositionMs)
+  local line = activeIndex ~= nil and lyricsLines[activeIndex] or nil
+  currentLineText = line ~= nil and line.text or ""
+
   barWidget.setVisible(true)
-
-  barWidget.render(ui.row({ key = "content", gap = 6, align = "center" }, {
+  emit(ui.row({ key = "content", gap = 6, align = "center" }, {
     glyph(),
     ui.label({
       key = "line",
@@ -224,11 +261,19 @@ end
 -- ── wiring ───────────────────────────────────────────────────────────────────
 
 function update()
-  noctalia.setUpdateInterval(1000)
+  -- Redraw 4x a second (so the extrapolated line keeps up with fast lyrics) but
+  -- only actually poll playerctl once a second.
+  noctalia.setUpdateInterval(250)
+  -- Icon-only mode needs no player data at all.
+  if not SHOW_CURRENT_LINE then
+    return
+  end
   tick = tick + 1
-  refreshPosition()
-  if tick % 3 == 0 then
+  if tick % 4 == 0 then
+    refreshPosition()
     refreshMetadata()
+  else
+    render()
   end
 end
 
@@ -236,4 +281,8 @@ function onClick()
   noctalia.togglePanel("jeremiah/phone-media:lyrics")
 end
 
-refreshMetadata()
+if SHOW_CURRENT_LINE then
+  refreshMetadata()
+else
+  render()
+end

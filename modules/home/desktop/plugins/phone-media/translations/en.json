@@ -36,7 +36,11 @@
     },
     "show_progress": {
       "label": "Show progress bar",
-      "description": "Draw a thin playback progress bar under the widget."
+      "description": "Draw a thin playback progress bar along the widget."
+    },
+    "progress_above": {
+      "label": "Progress bar on top",
+      "description": "Put the progress bar above the title instead of below it."
     },
     "art_size": {
       "label": "Album art size",
@@ -83,10 +87,6 @@
       "label": "Show playback controls",
       "description": "Show the previous, play/pause, and next buttons."
     },
-    "panel_show_shuffle_repeat": {
-      "label": "Show shuffle and repeat",
-      "description": "Show the shuffle and repeat toggle buttons."
-    },
     "panel_show_lyrics": {
       "label": "Show lyrics",
       "description": "Show a few lines of synced lyrics, centered on the current one, with a link to the full lyrics popup."
@@ -94,6 +94,10 @@
     "panel_lyrics_context_lines": {
       "label": "Lyric lines each side",
       "description": "Lines to show before and after the current one."
+    },
+    "panel_show_full_lyrics_button": {
+      "label": "Show \"Full lyrics\" button",
+      "description": "Show the button under the lyrics that opens the full lyrics popup."
     },
     "panel_show_player_switcher": {
       "label": "Show player switcher",
@@ -128,6 +132,7 @@
     "now_playing": "Now Playing",
     "nothing_playing": "Nothing is playing",
     "via_phone": "Phone",
+    "auto": "Auto",
     "lyrics": "Lyrics",
     "full_lyrics": "Full lyrics",
     "lyrics_loading": "Searching for lyrics…",

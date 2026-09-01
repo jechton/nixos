@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
   statusline = pkgs.writeShellApplication {
     name = "claude-statusline";
@@ -27,6 +27,22 @@ in
                 msg=$(sed -n 's/.*"message":"\([^"]*\)".*/\1/p')
                 ${pkgs.libnotify}/bin/notify-send "Claude Code" "''${msg:-Permission requested}" 2>/dev/null || true
               '';
+            }
+          ];
+        }
+      ];
+      # RTK (Rust Token Killer): rewrites Bash commands to filtered `rtk`
+      # equivalents before they run, cutting command output noise from the
+      # context window. `rtk hook claude` is the native PreToolUse processor,
+      # so no wrapper script is needed. Replaces `rtk init`, which would patch
+      # settings.json that home-manager owns.
+      hooks.PreToolUse = [
+        {
+          matcher = "Bash";
+          hooks = [
+            {
+              type = "command";
+              command = "${lib.getExe pkgs.rtk} hook claude";
             }
           ];
         }
@@ -81,7 +97,30 @@ in
       };
       # keep-sorted end
     };
+
+    # Equivalent of the RTK.md that `rtk init` drops into ~/.claude and
+    # references from CLAUDE.md: files under rules/ are auto-loaded as memory,
+    # so no @import line is needed. Tells the model which rtk subcommands to
+    # call directly (the Bash hook only rewrites everything else).
+    rules.rtk = ''
+      # RTK (Rust Token Killer)
+
+      Token-optimized CLI proxy: filters up to 90% of bash output. A PreToolUse
+      hook transparently rewrites Bash commands (`git status` becomes
+      `rtk git status`), so run normal commands as usual.
+
+      Call these rtk subcommands directly, they are not rewritten:
+
+      ```bash
+      rtk gain              # token savings analytics
+      rtk gain --history    # per-command usage and savings
+      rtk discover          # scan history for missed opportunities
+      rtk proxy <cmd>       # run a command unfiltered (debugging)
+      ```
+    '';
   };
+
+  home.packages = [ pkgs.rtk ];
 
   home.file.".claude/claude-statusline" = {
     source = "${statusline}/bin/claude-statusline";

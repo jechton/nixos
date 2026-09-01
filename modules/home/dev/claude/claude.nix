@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  inputs,
+  ...
+}:
 let
   statusline = pkgs.writeShellApplication {
     name = "claude-statusline";
@@ -7,12 +12,15 @@ let
       gawk
       git
     ];
-    text = builtins.readFile ./claude-statusline.sh;
+    text = builtins.readFile ./statusline.sh;
   };
 in
 {
   programs.claude-code = {
     enable = true;
+    # numtide's llm-agents.nix rebuilds claude-code daily; nixpkgs-unstable
+    # lags upstream by a week or more.
+    package = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.claude-code;
     settings = {
       # keep-sorted start block=yes
       autoUpdates = false;
@@ -98,29 +106,24 @@ in
       # keep-sorted end
     };
 
-    # Equivalent of the RTK.md that `rtk init` drops into ~/.claude and
-    # references from CLAUDE.md: files under rules/ are auto-loaded as memory,
-    # so no @import line is needed. Tells the model which rtk subcommands to
-    # call directly (the Bash hook only rewrites everything else).
-    rules.rtk = ''
-      # RTK (Rust Token Killer)
+    # Loaded on demand instead of always in context: tool-selection guide for
+    # the structural search/rewrite tools plus the rtk meta commands. Covers
+    # what `rtk init` puts in RTK.md, and more.
+    skills.cli-tools = ./cli-tools-skill.md;
 
-      Token-optimized CLI proxy: filters up to 90% of bash output. A PreToolUse
-      hook transparently rewrites Bash commands (`git status` becomes
-      `rtk git status`), so run normal commands as usual.
-
-      Call these rtk subcommands directly, they are not rewritten:
-
-      ```bash
-      rtk gain              # token savings analytics
-      rtk gain --history    # per-command usage and savings
-      rtk discover          # scan history for missed opportunities
-      rtk proxy <cmd>       # run a command unfiltered (debugging)
-      ```
-    '';
+    # Anthropic's /commit and /commit-and-push slash commands, linked out of
+    # the claude-code repo's plugins/ directory.
+    plugins.commit-commands = "${inputs.claude-code}/plugins/commit-commands";
   };
 
-  home.packages = [ pkgs.rtk ];
+  home.packages = [
+    # keep-sorted start
+    pkgs.ast-grep
+    pkgs.fastmod
+    pkgs.rtk
+    pkgs.semgrep
+    # keep-sorted end
+  ];
 
   home.file.".claude/claude-statusline" = {
     source = "${statusline}/bin/claude-statusline";

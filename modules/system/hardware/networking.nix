@@ -18,6 +18,14 @@ in
     networkmanager = {
       enable = true;
       dns = "systemd-resolved";
+
+      # ignore DHCP-supplied resolvers, DNS goes
+      # to the global Quad9 servers below, or tailscale's MagicDNS when up
+      connectionConfig = {
+        "ipv4.ignore-auto-dns" = true;
+        "ipv6.ignore-auto-dns" = true;
+      };
+
       unmanaged = [
         "interface-name:tailscale*"
         "interface-name:docker*"
@@ -25,20 +33,9 @@ in
       ];
 
       wifi = lib.mkIf hasWifi {
-        backend = "iwd";
+        backend = "wpa_supplicant";
         powersave = config.burrow.profiles.laptop.enable;
         scanRandMacAddress = true;
-      };
-    };
-
-    # networkmanager's iwd backend still runs the real iwd daemon underneath it,
-    # so iwd's own settings are honored even though NetworkManager owns the connection
-    wireless.iwd.settings = lib.mkIf hasWifi {
-      Settings.AutoConnect = true;
-
-      General = {
-        EnableNetworkConfiguration = true;
-        RoamRetryInterval = 15;
       };
     };
 

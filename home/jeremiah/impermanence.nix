@@ -17,5 +17,9 @@ _: {
       ".local/share/keyrings"
       ".docker"
     ];
+    files = [
+      # Obsidian's known-vaults registry
+      ".config/obsidian/obsidian.json"
+    ];
   };
 }

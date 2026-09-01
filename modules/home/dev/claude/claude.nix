@@ -106,6 +106,13 @@ in
       # keep-sorted end
     };
 
+    # Written to ~/.claude/CLAUDE.md, loaded into every session: compaction
+    # guidance (Claude Code reads the "Compact instructions" heading to steer
+    # auto-compact and /compact) plus a distilled lazy-senior-dev rule set
+    # adapted from github:DietrichGebert/ponytail (.agents/rules/ponytail.md,
+    # MIT), inlined instead of running that plugin's per-session hook injection.
+    context = ./context.md;
+
     # Loaded on demand instead of always in context: tool-selection guide for
     # the structural search/rewrite tools plus the rtk meta commands. Covers
     # what `rtk init` puts in RTK.md, and more.

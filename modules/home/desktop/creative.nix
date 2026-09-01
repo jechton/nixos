@@ -19,7 +19,6 @@
       hunspell
       hunspellDicts.en_US
       inkscape
-      languagetool
       libreoffice-stable
       # keep-sorted end
     ];
@@ -37,7 +36,6 @@
       };
 
     home.persistence."/persist".directories = [
-      ".config/LanguageTool"
       ".config/libreoffice"
     ];
   };

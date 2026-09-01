@@ -133,8 +133,8 @@
         inputs.pre-commit-hooks.flakeModule
         inputs.treefmt-nix.flakeModule
         # keep-sorted end
-      ]
-      ++ (import-tree ./parts).imports;
+        (import-tree ./parts)
+      ];
 
       flake.nixosConfigurations =
         let
@@ -175,8 +175,8 @@
                 }
 
                 hostModule
-              ]
-              ++ (import-tree ./modules/system).imports;
+                (import-tree ./modules/system)
+              ];
             };
         in
         {

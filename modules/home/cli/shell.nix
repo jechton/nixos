@@ -17,7 +17,6 @@ in
       pkgs.fishPlugins.autopair
       pkgs.fishPlugins.bang-bang
       pkgs.fishPlugins.bass
-      pkgs.fishPlugins.fish-you-should-use
       pkgs.fishPlugins.puffer
       pkgs.fishPlugins.sponge
       # keep-sorted end

@@ -208,6 +208,7 @@ in
       # Launching apps
       {
         "Mod+Return" = withTitle "Terminal" (spawn "ghostty");
+        "Mod+D" = withTitle "Daily Note" (spawn "daily-note");
         "Mod+B" = withTitle "Browser" (spawn "zen-twilight");
         "Mod+E" = withTitle "Files" (spawn "nautilus");
         "Mod+Shift+G" = withTitle "Signal" (spawn "focus-or-spawn-signal");

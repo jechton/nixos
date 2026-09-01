@@ -6,11 +6,12 @@
 }:
 {
   config = lib.mkIf (!config.burrow.profiles.vm.enable) {
-    programs = {
-      obs-studio.enable = true;
-      obsidian.enable = true;
-    };
+    programs.obs-studio.enable = true;
 
+    # programs.obsidian is not used: with no vaults configured it only adds an
+    # activation script that rewrites ~/.config/obsidian/obsidian.json via
+    # `install`, which fails because impermanence bind-mounts that file. Obsidian
+    # manages its own vault registry at runtime and it persists via that mount.
     home.packages = with pkgs; [
       # keep-sorted start
       aseprite
@@ -20,6 +21,7 @@
       hunspellDicts.en_US
       inkscape
       libreoffice-stable
+      obsidian
       # keep-sorted end
     ];
 

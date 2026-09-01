@@ -3,4 +3,5 @@ locale = "en"
 
 [default.extend-words]
 facter = "facter"
+nd = "nd" # ordinal suffix in daily-note
 lazer = "lazer" # osu-lazer

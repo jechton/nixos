@@ -417,6 +417,24 @@ in
     }
   '';
 
+  # comma ships no completions. Complete the first token against command names
+  # from the nix-index database (the set comma can actually run), and everything
+  # after it as a nested command line so the wrapped command's own completions apply.
+  xdg.configFile."fish/completions/,.fish".text = ''
+    function __comma_complete_pkgs
+      set -l token (commandline -ct)
+      string length -q -- $token; or return
+      ${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"$token"[^/]*\$" 2>/dev/null \
+        | awk '{print $NF}' \
+        | string match -r '^/nix/store/[a-z0-9]{32}-[^/]+/bin/[^/]+$' \
+        | string replace -r '.*/' "" \
+        | sort -u
+    end
+
+    complete -c , -n __fish_is_first_token -x -a '(__comma_complete_pkgs)'
+    complete -c , -n 'not __fish_is_first_token' -x -a '(__fish_complete_subcommand)'
+  '';
+
   home.persistence."/persist".directories = [
     ".cache/direnv"
     ".cache/nix"

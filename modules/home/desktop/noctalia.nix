@@ -337,6 +337,8 @@ in
         "jechton/kimai" = {
           # Secret file: line 1 the Kimai URL, line 2 an API token.
           credentials_file = osConfig.age.secrets.kimai-credentials.path;
+          show_client = false;
+          show_project = false;
         };
         "yuuto/calculator" = {
           panel_placement = "floating";

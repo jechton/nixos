@@ -1,6 +1,20 @@
-{ lib, config, ... }:
+{
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 let
   inherit (import ./_lib.nix { inherit lib; }) mkNodes;
+
+  # greetd autologin never runs the PAM auth step, so pam_gnome_keyring starts
+  # gnome-keyring-daemon but never unlocks the login keyring
+  unlockKeyring = [
+    "sh"
+    "-c"
+    "printf '' | ${pkgs.gnome-keyring}/bin/gnome-keyring-daemon --unlock"
+  ];
+
   chatApps = lib.optionals (!config.burrow.profiles.vm.enable) [
     # equibop only lands in the tray if noctalia's StatusNotifier host is
     # already up when it launches, so give the bar a head start and pass the
@@ -20,7 +34,11 @@ let
 in
 {
   wayland.windowManager.niri.settings._children = mkNodes "spawn-at-startup" (
-    [ [ "noctalia" ] ] ++ chatApps
+    [
+      unlockKeyring
+      [ "noctalia" ]
+    ]
+    ++ chatApps
   );
 
   # nm-applet's autostart .desktop only excludes KDE/GNOME/COSMIC, so it

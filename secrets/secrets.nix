@@ -11,4 +11,7 @@ in
 {
   "user-password.age".publicKeys = [ personal ];
   "gpg-key.age".publicKeys = [ personal ];
+  "kimai-credentials.age".publicKeys = [ personal ];
+  "home-assistant-credentials.age".publicKeys = [ personal ];
+  "home-assistant-people-template.age".publicKeys = [ personal ];
 }

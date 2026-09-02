@@ -14,6 +14,7 @@ let
       actions.right = "exec xdg-open https://calendar.google.com/calendar/u/0/r";
       format = "%a %-m/%-d %-I:%M %P";
     };
+    kimai.type = "jechton/kimai:bar";
     network.show_label = false;
     notifications.hide_when_no_unread = true;
     phone-connect = {
@@ -50,6 +51,14 @@ let
 in
 {
   imports = [ inputs.noctalia.homeModules.default ];
+
+  # Noctalia's live config is $XDG_STATE_HOME/noctalia/settings.toml (wiped on
+  # boot, so it starts each session from the Nix-managed config.toml below).
+  # niri spawns noctalia as a bare process, not a systemd unit, so a switch
+  # can't restart it and mid-session settings changes here need a manual
+  # `noctalia msg config-reload` (or restart / relogin). If the desktop-widget
+  # editor was used this session, delete settings.toml's [desktop_widgets] block
+  # first so the reload falls back to config.toml.
 
   # udiskie/udiskie-info binaries the aristides/udiskie plugin shells out to;
   # udisks2 itself is already enabled system-wide in modules/system/niri.nix.
@@ -135,6 +144,7 @@ in
         end = [
           "tray"
           "udiskie"
+          "kimai"
           "screen-toolkit"
         ]
         ++ lib.optional voxtypeEnabled "voxtype"
@@ -159,7 +169,8 @@ in
       };
 
       control_center = {
-        calendar = "%-I:%M %P";
+        calendar.event_time_format = "%-I:%M %P";
+        sidebar_section = "none";
         # hide tabs for hardware that isn't actually present, rather than
         # keying off the vm profile: bluetooth.nix only flips hardware.bluetooth
         # on when facter detected an adapter, and power.nix only enables upower
@@ -167,6 +178,76 @@ in
         hidden_tabs =
           lib.optional (!osConfig.hardware.bluetooth.enable) "bluetooth"
           ++ lib.optional (!osConfig.services.upower.enable) "power";
+      };
+
+      # Both widgets align to where a left-hand window sits, stacked, so that
+      # window covers them. Offsets mirror niri's geometry: left edge = `gaps
+      # 10`, top edge = 24px bar + `gaps 10` = 34, and the 10px between the two
+      # boxes (and the people widget's internal cell gaps) is the same `gaps 10`.
+      # cx/cy are the box CENTER, so cx = left_edge + box_width/2, cy = top_edge
+      # + box_height/2. Nudge in the editor and copy the numbers back.
+      desktop_widgets = {
+        schema_version = 2;
+        widget_order = [
+          "desktop-widget-0000000000000001"
+          "desktop-widget-0000000000000003"
+        ];
+
+        grid = {
+          cell_size = 32;
+          major_interval = 4;
+          visible = true;
+        };
+
+        widget = {
+          # People / whereabouts: a single row of 4. left edge 10, top edge 34,
+          # box 608x64 -> cx = 10 + 304, cy = 34 + 32.
+          "desktop-widget-0000000000000001" = {
+            box_height = 64.0;
+            box_width = 608.0;
+            cx = 314.0;
+            cy = 66.0;
+            output = "eDP-1";
+            placement_height = 1200.0;
+            placement_width = 1920.0;
+            rotation = 0.0;
+            type = "jechton/home-assistant:template-desktop";
+            settings = {
+              background_radius = 0;
+              cell_align = "center";
+              cell_width = 140;
+              columns = 4;
+              column_gap = 10;
+              font_size = 42;
+              row_gap = 10;
+              template_file = osConfig.age.secrets.home-assistant-people-template.path;
+              title = "";
+            };
+          };
+          # Calendar: directly below, one window-gap (10px) down. left edge 10,
+          # top edge 108 (34 + 64 + 10), box 608x416 -> cx = 314, cy = 108 + 208.
+          "desktop-widget-0000000000000003" = {
+            box_height = 416.0;
+            box_width = 608.0;
+            cx = 314.0;
+            cy = 316.0;
+            output = "eDP-1";
+            placement_height = 1200.0;
+            placement_width = 1920.0;
+            rotation = 0.0;
+            type = "calendar";
+            settings = {
+              background = true;
+              background_color = "surface";
+              background_opacity = 0.8;
+              background_padding = 10;
+              background_radius = 0;
+              font_family = "";
+              show_events = true;
+              show_week_numbers = false;
+            };
+          };
+        };
       };
 
       idle = {
@@ -208,6 +289,14 @@ in
         "icefish/phone-connect" = {
           battery_display = "hidden";
         };
+        "jechton/home-assistant" = {
+          # Secret file: line 1 the HA URL, line 2 a long-lived access token.
+          credentials_file = osConfig.age.secrets.home-assistant-credentials.path;
+        };
+        "jechton/kimai" = {
+          # Secret file: line 1 the Kimai URL, line 2 an API token.
+          credentials_file = osConfig.age.secrets.kimai-credentials.path;
+        };
         "yuuto/calculator" = {
           panel_placement = "floating";
           panel_position = "center";
@@ -219,6 +308,8 @@ in
           "alexander/screen-toolkit"
           "aristides/udiskie"
           "icefish/phone-connect"
+          "jechton/home-assistant"
+          "jechton/kimai"
           "jechton/phone-media"
           "jechton/tenpo-ko"
           "noctalia/wallhaven"

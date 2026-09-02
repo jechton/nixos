@@ -8,9 +8,7 @@
     }:
     {
       devshells.default = {
-        motd = ''
-          Type 'menu' to view available actions.
-        '';
+        motd = "";
 
         env = [
           {
@@ -86,6 +84,73 @@
             category = "tools";
             help = "Prefetch a URL and print its SRI sha256 hash";
             command = "nix-prefetch-url \"$@\" | xargs nix hash convert --hash-algo sha256";
+          }
+          {
+            name = "secret";
+            category = "tools";
+            help = "Manage agenix secrets: secret <list|edit|show|rekey> [name]";
+            command = ''
+              set +u
+              cd "$PRJ_ROOT/secrets" || exit 1
+              keyfile=/persist/age/key.txt
+              action="''${1:-list}"
+              name="''${2%.age}"
+              file="$name.age"
+
+              # The age identity is root-owned; stage it in a tmpfs scratch file
+              # for one agenix call. $tmpkey stays empty for actions that skip it.
+              tmpkey=""
+              cleanup() { [ -n "$tmpkey" ] && rm -f "$tmpkey"; }
+              trap cleanup EXIT
+              stage_key() {
+                tmpkey="$(mktemp -p "''${XDG_RUNTIME_DIR:-/tmp}")"
+                sudo cat "$keyfile" > "$tmpkey"
+              }
+
+              case "$action" in
+                list)
+                  declared="$(grep -oE '"[A-Za-z0-9_-]+\.age"' secrets.nix | tr -d '"' | sort -u)"
+                  echo "declared in secrets.nix:"
+                  for f in $declared; do
+                    if [ -e "$f" ]; then
+                      echo "  $f"
+                    else
+                      echo "  $f  (no file: run 'secret edit ''${f%.age}')"
+                    fi
+                  done
+                  for f in *.age; do
+                    [ -e "$f" ] || continue
+                    case "$declared" in
+                      *"$f"*) ;;
+                      *) echo "  $f  (not declared in secrets.nix)" ;;
+                    esac
+                  done
+                  ;;
+                edit)
+                  [ -n "$name" ] || { echo "usage: secret edit <name>" >&2; exit 1; }
+                  if [ -s "$file" ]; then
+                    stage_key
+                    agenix -e "$file" -i "$tmpkey"
+                  else
+                    # A new secret only needs the recipient public keys.
+                    agenix -e "$file"
+                  fi
+                  ;;
+                show)
+                  [ -n "$name" ] || { echo "usage: secret show <name>" >&2; exit 1; }
+                  stage_key
+                  agenix -d "$file" -i "$tmpkey"
+                  ;;
+                rekey)
+                  stage_key
+                  agenix -r -i "$tmpkey"
+                  ;;
+                *)
+                  echo "usage: secret <list|edit|show|rekey> [name]" >&2
+                  exit 1
+                  ;;
+              esac
+            '';
           }
         ];
       };

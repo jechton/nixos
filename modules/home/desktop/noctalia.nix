@@ -180,7 +180,7 @@ in
           "workspaces"
           "taskbar"
           "phone-media"
-          "phone-lyrics"
+          # "phone-lyrics"
         ];
         end = [
           "tray"

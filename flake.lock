@@ -381,6 +381,24 @@
     },
     "flake-parts_6": {
       "inputs": {
+        "nixpkgs-lib": "nixpkgs-lib_4"
+      },
+      "locked": {
+        "lastModified": 1788306937,
+        "narHash": "sha256-lbrI1UYVpFgKSsyrU9oeF7FHfnu8nLD9ja0ou9f2rxk=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "f16b25b8c3d2809b87925d0b76652d7821a75c68",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "flake-parts_7": {
+      "inputs": {
         "nixpkgs-lib": [
           "stylix",
           "nixpkgs"
@@ -742,6 +760,21 @@
         "type": "github"
       }
     },
+    "nixpkgs-lib_4": {
+      "locked": {
+        "lastModified": 1788057806,
+        "narHash": "sha256-DTQSMxzDWmT0zhguthvegnVkn7CFqGCv4IHCzk5ZUpM=",
+        "owner": "nix-community",
+        "repo": "nixpkgs.lib",
+        "rev": "596e2e3940e09b2abbeb03f75fa1828c57fcd72c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nixpkgs.lib",
+        "type": "github"
+      }
+    },
     "nixpkgs-nixcord": {
       "locked": {
         "lastModified": 1786711500,
@@ -869,19 +902,36 @@
       }
     },
     "noctalia-plugins": {
-      "flake": false,
+      "inputs": {
+        "flake-parts": "flake-parts_6",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "noctalia": [
+          "noctalia"
+        ],
+        "noctalia-official-plugins": [
+          "noctalia-official-plugins"
+        ],
+        "pre-commit-hooks": [
+          "pre-commit-hooks"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
       "locked": {
-        "lastModified": 1788310375,
-        "narHash": "sha256-UrIKICGv9rcwnKIMwJZrRemxn8sbB7jnyuLNRr4vSrQ=",
-        "ref": "refs/heads/main",
-        "rev": "118e05a44bb6b778d180c8ec2c72a630e4dce435",
-        "revCount": 1,
-        "type": "git",
-        "url": "file:///home/jeremiah/Projects/noctalia-plugins"
+        "lastModified": 1788312590,
+        "narHash": "sha256-yGkeS7ywtSsEok7F0YsJA9zPVbTwx+uWT3YXqYSOC/M=",
+        "owner": "jechton",
+        "repo": "noctalia-plugins",
+        "rev": "ed45b98b338d3554dbe3ef8f028c0276f972a4b8",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/jeremiah/Projects/noctalia-plugins"
+        "owner": "jechton",
+        "repo": "noctalia-plugins",
+        "type": "github"
       }
     },
     "nur": {
@@ -987,7 +1037,7 @@
         "base16-helix": "base16-helix",
         "base16-vim": "base16-vim",
         "firefox-gnome-theme": "firefox-gnome-theme",
-        "flake-parts": "flake-parts_6",
+        "flake-parts": "flake-parts_7",
         "gnome-shell": "gnome-shell",
         "nixpkgs": [
           "nixpkgs"

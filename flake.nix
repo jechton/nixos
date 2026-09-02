@@ -72,8 +72,14 @@
       flake = false;
     };
     noctalia-plugins = {
-      url = "git+file:///home/jeremiah/Projects/noctalia-plugins";
-      flake = false;
+      url = "github:jechton/noctalia-plugins";
+      inputs = {
+        noctalia.follows = "noctalia";
+        noctalia-official-plugins.follows = "noctalia-official-plugins";
+        nixpkgs.follows = "nixpkgs";
+        pre-commit-hooks.follows = "pre-commit-hooks";
+        treefmt-nix.follows = "treefmt-nix";
+      };
     };
     noctalia.url = "github:noctalia-dev/noctalia-shell";
     nvf = {

@@ -48,6 +48,12 @@
             command = "nh os test -d always \"$@\"";
           }
           {
+            name = "plugin-test";
+            category = "system";
+            help = "Dry-test with the local noctalia-plugins working tree (no commit/lock)";
+            command = "nh os test -d always --override-input noctalia-plugins \"$HOME/Projects/noctalia-plugins\" \"$@\"";
+          }
+          {
             name = "sw";
             category = "system";
             help = "Build and apply system configurations with nh";

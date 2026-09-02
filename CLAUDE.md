@@ -7,7 +7,7 @@ Run from inside the devshell (`use flake` via direnv, or `nix develop`). Type `m
 - `check`: `nix fmt "$PRJ_ROOT" && nix flake check --no-build "$PRJ_ROOT"`. Run this after any change.
 - `os-test`: `nh os test -d always "$@"`, dry-test a system config without making it the boot default.
 - `sw`: `nh os switch -d always "$@"`, build and switch to a system config.
-- `update`: `nix flake update` then commits the lockfile.
+- `update [inputs...]`: `nix flake update` (all inputs, or only the named ones) then commits the lockfile and switches.
 - `gc`: `nh clean all -k 4 --optimise "$@"`.
 - `hash-url <url>`: prefetch a URL and print its SRI sha256.
 - `nix fmt` alone runs the treefmt suite (nixfmt, statix, deadnix, keep-sorted, typos).

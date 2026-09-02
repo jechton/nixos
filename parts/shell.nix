@@ -62,13 +62,17 @@
           {
             name = "update";
             category = "system";
-            help = "Pull upstream flake changes and commit";
+            help = "Update flake inputs (all, or just those named) and switch";
             command = ''
               echo -e "Updating flake...\n"
-              nix flake update --flake "$PRJ_ROOT"
+              nix flake update --flake "$PRJ_ROOT" "$@"
               git -C "$PRJ_ROOT" add -A
-              git -C "$PRJ_ROOT" commit -m "chore: update inputs"
-              nh os switch -d always "$@"
+              if [ "$#" -gt 0 ]; then
+                git -C "$PRJ_ROOT" commit -m "chore: update $*"
+              else
+                git -C "$PRJ_ROOT" commit -m "chore: update inputs"
+              fi
+              nh os switch -d always
             '';
           }
           {

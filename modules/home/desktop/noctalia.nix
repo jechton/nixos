@@ -55,7 +55,11 @@ let
       actions.right = "exec xdg-open https://calendar.google.com/calendar/u/0/r";
       format = "%a %-m/%-d %-I:%M %P";
     };
-    kimai.type = "jechton/kimai:bar";
+    kimai = {
+      type = "jechton/kimai:bar";
+      show_client = false;
+      show_project = false;
+    };
     network.show_label = false;
     notifications.hide_when_no_unread = true;
     phone-connect = {
@@ -337,8 +341,6 @@ in
         "jechton/kimai" = {
           # Secret file: line 1 the Kimai URL, line 2 an API token.
           credentials_file = osConfig.age.secrets.kimai-credentials.path;
-          show_client = false;
-          show_project = false;
         };
         "yuuto/calculator" = {
           panel_placement = "floating";

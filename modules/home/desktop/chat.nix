@@ -190,6 +190,7 @@ in
         settings = {
           # keep-sorted start block=yes
           arRPC = true;
+          badgeOnlyForMentions = true;
           clickTrayToShowHide = true;
           discordBranch = "stable";
           enableSplashScreen = false;

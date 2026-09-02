@@ -14,6 +14,11 @@ in
     options mt7921e disable_aspm=1
   '';
 
+  # NetworkManager owns DHCP on every managed interface. Without this, facter's
+  # auto-detection also points dhcpcd at wlan0, so two DHCP clients race on the
+  # same link (dhcpcd's start times out waiting for carrier during rebuilds).
+  hardware.facter.detected.dhcp.enable = false;
+
   networking = {
     networkmanager = {
       enable = true;

@@ -57,7 +57,6 @@ let
     };
     kimai = {
       type = "jechton/kimai:bar";
-      show_client = false;
       show_project = false;
     };
     network.show_label = false;
@@ -341,6 +340,8 @@ in
         "jechton/kimai" = {
           # Secret file: line 1 the Kimai URL, line 2 an API token.
           credentials_file = osConfig.age.secrets.kimai-credentials.path;
+          # Panel setting: prefix each project in the picker with its customer name.
+          show_client = false;
         };
         "yuuto/calculator" = {
           panel_placement = "floating";

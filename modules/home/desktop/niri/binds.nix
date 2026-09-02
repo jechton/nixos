@@ -67,6 +67,14 @@ let
       "msg"
     ]
     ++ command;
+
+  emojiPicker = withTitle "Emoji Picker" (
+    spawn (noctalia [
+      "panel-toggle"
+      "launcher"
+      "/emo"
+    ])
+  );
 in
 {
   wayland.windowManager.niri.settings = {
@@ -166,13 +174,9 @@ in
             "yuuto/calculator:panel"
           ])
         );
-        "Mod+Ctrl+E" = withTitle "Emoji Picker" (
-          spawn (noctalia [
-            "panel-toggle"
-            "launcher"
-            "/emo"
-          ])
-        );
+        # Mod+Period, plus the dedicated emoji key (sends Super+Ctrl+Alt+Shift+Space).
+        "Mod+Period" = emojiPicker;
+        "Mod+Ctrl+Alt+Shift+Space" = emojiPicker;
         "XF86AudioRaiseVolume" = hidden (spawn (noctalia [ "volume-up" ]));
         "XF86AudioLowerVolume" = hidden (spawn (noctalia [ "volume-down" ]));
         "XF86AudioMute" = hidden (spawn (noctalia [ "volume-mute" ]));

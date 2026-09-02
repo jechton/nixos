@@ -142,7 +142,6 @@ in
           "phone-connect"
           "notifications"
           "clipboard"
-          "tenpo-ko"
           "network"
           "bluetooth"
           "volume"

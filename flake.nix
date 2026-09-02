@@ -71,6 +71,10 @@
       url = "github:noctalia-dev/official-plugins";
       flake = false;
     };
+    noctalia-plugins = {
+      url = "git+file:///home/jeremiah/Projects/noctalia-plugins";
+      flake = false;
+    };
     noctalia.url = "github:noctalia-dev/noctalia-shell";
     nvf = {
       url = "github:notashelf/nvf";

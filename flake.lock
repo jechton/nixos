@@ -868,6 +868,22 @@
         "type": "github"
       }
     },
+    "noctalia-plugins": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1788310375,
+        "narHash": "sha256-UrIKICGv9rcwnKIMwJZrRemxn8sbB7jnyuLNRr4vSrQ=",
+        "ref": "refs/heads/main",
+        "rev": "118e05a44bb6b778d180c8ec2c72a630e4dce435",
+        "revCount": 1,
+        "type": "git",
+        "url": "file:///home/jeremiah/Projects/noctalia-plugins"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:///home/jeremiah/Projects/noctalia-plugins"
+      }
+    },
     "nur": {
       "inputs": {
         "flake-parts": [
@@ -956,6 +972,7 @@
         "noctalia": "noctalia",
         "noctalia-community-plugins": "noctalia-community-plugins",
         "noctalia-official-plugins": "noctalia-official-plugins",
+        "noctalia-plugins": "noctalia-plugins",
         "nvf": "nvf",
         "pre-commit-hooks": "pre-commit-hooks",
         "stylix": "stylix",

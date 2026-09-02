@@ -19,14 +19,14 @@ let
     phone-connect = {
       type = "icefish/phone-connect:bar";
     };
-    # opens jeremiah/phone-media's standalone synced-lyrics popup; the
+    # opens jechton/phone-media's standalone synced-lyrics popup; the
     # now-playing popup below also embeds a compact version of the same view
-    phone-lyrics.type = "jeremiah/phone-media:lyrics_bar";
+    phone-lyrics.type = "jechton/phone-media:lyrics_bar";
     # replaces the builtin "media" widget and its control-center popup: same
     # now-playing display, plus scroll-to-change-phone-volume when the active
     # player is KDE Connect, minus the popup's spectrum visualizer, which
     # never shows anything for a KDE Connect player
-    phone-media.type = "jeremiah/phone-media:bar";
+    phone-media.type = "jechton/phone-media:bar";
     screen-toolkit.type = "alexander/screen-toolkit:widget";
     taskbar = {
       group_by_workspace = true;
@@ -35,6 +35,7 @@ let
       show_workspace_label = false;
       show_active_indicator = false;
     };
+    tenpo-ko.type = "jechton/tenpo-ko:bar";
     udiskie = {
       hide_when_empty = true;
       type = "aristides/udiskie:status";
@@ -103,8 +104,8 @@ in
     enable = true;
 
     # The build-time config validator runs in the Nix sandbox, where it can't
-    # load the local path plugin source (jeremiah/phone-media), so it warns that
-    # this plugin's widget types are "unrecognized". The config is fine: it
+    # load the local path plugin source (jechton/*), so it warns that these
+    # plugins' widget types are "unrecognized". The config is fine: it
     # validates cleanly outside the sandbox and the plugin loads at runtime.
     # nix flake check plus noctalia's own startup validation still cover us.
     checkConfig = false;
@@ -141,6 +142,7 @@ in
           "phone-connect"
           "notifications"
           "clipboard"
+          "tenpo-ko"
           "network"
           "bluetooth"
           "volume"
@@ -218,7 +220,8 @@ in
           "alexander/screen-toolkit"
           "aristides/udiskie"
           "icefish/phone-connect"
-          "jeremiah/phone-media"
+          "jechton/phone-media"
+          "jechton/tenpo-ko"
           "noctalia/wallhaven"
           "yuuto/calculator"
         ]
@@ -242,7 +245,7 @@ in
           {
             name = "local";
             kind = "path";
-            location = toString ./plugins;
+            location = toString inputs.noctalia-plugins;
           }
         ];
       };

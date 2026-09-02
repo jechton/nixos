@@ -68,6 +68,7 @@
               nix flake update --flake "$PRJ_ROOT"
               git -C "$PRJ_ROOT" add -A
               git -C "$PRJ_ROOT" commit -m "chore: update inputs"
+              nh os switch -d always "$@"
             '';
           }
           {

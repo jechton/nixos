@@ -327,6 +327,15 @@ in
       notification = {
         offset_x = 8;
         offset_y = 8;
+
+        history_retention_hours = 2;
+
+        filter_order = [ "claude-code" ];
+        filter.claude-code = {
+          enabled = true;
+          match_content = "Claude Code";
+          save_history = false;
+        };
       };
 
       plugin_settings = {

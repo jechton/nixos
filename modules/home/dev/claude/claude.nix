@@ -26,20 +26,6 @@ in
       attribution.sessionUrl = false;
       autoUpdates = false;
       effortLevel = "medium";
-      hooks.Notification = [
-        {
-          matcher = "permission_prompt";
-          hooks = [
-            {
-              type = "command";
-              command = ''
-                msg=$(sed -n 's/.*"message":"\([^"]*\)".*/\1/p')
-                ${pkgs.libnotify}/bin/notify-send "Claude Code" "''${msg:-Permission requested}" 2>/dev/null || true
-              '';
-            }
-          ];
-        }
-      ];
       # RTK (Rust Token Killer): rewrites Bash commands to filtered `rtk`
       # equivalents before they run, cutting command output noise from the
       # context window. `rtk hook claude` is the native PreToolUse processor,
@@ -94,11 +80,6 @@ in
           "Bash(sudo *)"
         ];
       };
-      # The built-in OS notification channel is all-or-nothing across notification
-      # types, so it's disabled here and permission prompts get their own desktop
-      # notification via a hook scoped to just that type, leaving out idle_prompt
-      # ("Claude is waiting for your input").
-      preferredNotifChannel = "notifications_disabled";
       statusLine = {
         type = "command";
         command = "$HOME/.claude/claude-statusline";

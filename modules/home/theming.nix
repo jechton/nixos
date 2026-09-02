@@ -11,11 +11,11 @@ let
   cfg = config.burrow.theme;
 
   c = config.lib.stylix.colors.withHashtag;
-  oreo-gruvbox-cursor = pkgs.oreo-cursors-plus.override {
+  oreo-custom-cursor = pkgs.oreo-cursors-plus.override {
     cursorsConf = ''
       sizes = 24, 32, 40, 48
 
-      gruvbox = color: ${c.base05}, label: ${c.base00}, shadow: ${c.base00}, shadow-opacity: 0.4, stroke: ${c.base00}, stroke-width: 1, stroke-opacity: 0.8
+      custom = color: ${c.base05}, label: ${c.base00}, shadow: ${c.base00}, shadow-opacity: 0.4, stroke: ${c.base00}, stroke-width: 1, stroke-opacity: 0.8
     '';
   };
 
@@ -78,8 +78,8 @@ in
       inherit (cfg) fonts;
 
       cursor = {
-        name = "oreo_gruvbox_cursors";
-        package = oreo-gruvbox-cursor;
+        name = "oreo_custom_cursors";
+        package = oreo-custom-cursor;
         size = 32;
       };
 

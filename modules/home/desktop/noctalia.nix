@@ -210,10 +210,10 @@ in
       calendar = {
         enabled = true;
         account.personal_google.type = "google";
+        event_time_format = "%-I:%M %P";
       };
 
       control_center = {
-        calendar.event_time_format = "%-I:%M %P";
         sidebar_section = "none";
         # hide tabs for hardware that isn't actually present, rather than
         # keying off the vm profile: bluetooth.nix only flips hardware.bluetooth

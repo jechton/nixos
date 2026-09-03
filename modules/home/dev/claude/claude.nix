@@ -95,10 +95,14 @@ in
     # MIT), inlined instead of running that plugin's per-session hook injection.
     context = ./context.md;
 
-    # Loaded on demand instead of always in context: tool-selection guide for
-    # the structural search/rewrite tools plus the rtk meta commands. Covers
-    # what `rtk init` puts in RTK.md, and more.
-    skills.cli-tools = ./cli-tools-skill.md;
+    # Every *.md under ./skills is loaded as a skill named after the file.
+    skills =
+      lib.mapAttrs' (file: _: lib.nameValuePair (lib.removeSuffix ".md" file) (./skills + "/${file}"))
+        (
+          lib.filterAttrs (file: type: type == "regular" && lib.hasSuffix ".md" file) (
+            builtins.readDir ./skills
+          )
+        );
 
     # Anthropic's /commit and /commit-and-push slash commands, linked out of
     # the claude-code repo's plugins/ directory.

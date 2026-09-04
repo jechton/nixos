@@ -9,46 +9,6 @@
 let
   voxtypeEnabled = config.burrow.desktop.voxtype.enable;
 
-  # Curated wallpapers. Images under wallpapers/recolor/ are remapped to the
-  # active base16 palette with lutgen so they harmonize with the theme (only
-  # wallpapers that survive recoloring well go there); everything else passes
-  # through untouched. Rebuilds when burrow.theme.colorScheme changes.
-  recoloredWallpapers =
-    let
-      inherit (config.lib.stylix) colors;
-      palette = lib.concatMapStringsSep " " (n: colors.${n}) [
-        "base00"
-        "base01"
-        "base02"
-        "base03"
-        "base04"
-        "base05"
-        "base06"
-        "base07"
-        "base08"
-        "base09"
-        "base0A"
-        "base0B"
-        "base0C"
-        "base0D"
-        "base0E"
-        "base0F"
-      ];
-    in
-    pkgs.runCommand "recolored-wallpapers" { nativeBuildInputs = [ pkgs.lutgen ]; } ''
-      cd ${./wallpapers}
-      find . -type f -print0 | while IFS= read -r -d "" f; do
-        mkdir -p "$out/$(dirname "$f")"
-        case "$f" in
-          ./recolor/*.png | ./recolor/*.jpg | ./recolor/*.jpeg | ./recolor/*.webp)
-            lutgen apply -o "$out/$f" "$f" -- ${palette}
-            ;;
-          *)
-            cp "$f" "$out/$f"
-            ;;
-        esac
-      done
-    '';
   widgets = {
     # keep-sorted start block=yes
     clock = {
@@ -125,14 +85,6 @@ in
     pkgs.udiskie
     pkgs.zbar
   ];
-
-  # Curated wallpapers checked into the repo. recursive=true keeps the
-  # directory itself writable, so wallpapers can be dropped in by hand
-  # alongside these without conflicting with the managed symlinks.
-  home.file."Pictures/Wallpapers" = {
-    source = recoloredWallpapers;
-    recursive = true;
-  };
 
   # Hide launcher entries for background/tray tooling that shouldn't show up
   # as user-facing apps: noctalia itself, and Qt theming helpers pulled in by

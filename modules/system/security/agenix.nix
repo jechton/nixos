@@ -36,6 +36,12 @@ in
         file = ../../../secrets/home-assistant-people-template.age;
         owner = "jeremiah";
       };
+      # tar archive of all wallpaper images. Extracted and recolored into
+      # ~/Pictures/Wallpapers at login by modules/home/desktop/wallpapers.nix.
+      wallpapers = {
+        file = ../../../secrets/wallpapers.tar.age;
+        owner = "jeremiah";
+      };
     };
 
     environment.persistence."/persist".directories = [ "/age" ];

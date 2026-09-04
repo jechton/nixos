@@ -88,7 +88,7 @@
           {
             name = "secret";
             category = "tools";
-            help = "Manage agenix secrets: secret <list|edit|show|rekey> [name]";
+            help = "Manage agenix secrets: secret <list|edit|show|rekey|wallpapers> [name|dir]";
             command = ''
               set +u
               cd "$PRJ_ROOT/secrets" || exit 1
@@ -145,8 +145,33 @@
                   stage_key
                   agenix -r -i "$tmpkey"
                   ;;
+                wallpapers)
+                  # Edit wallpapers.tar.age in place: decrypt to a scratch
+                  # dir, open a shell there to add/remove images, re-pack on exit
+                  # if anything changed. No persistent plaintext copy to drift.
+                  work="$(mktemp -d -p "''${XDG_RUNTIME_DIR:-/tmp}")"
+                  cleanup() { [ -n "$tmpkey" ] && rm -f "$tmpkey"; rm -rf "$work"; }
+                  if [ -s wallpapers.tar.age ]; then
+                    stage_key
+                    agenix -d wallpapers.tar.age -i "$tmpkey" | tar -C "$work" -xf -
+                  fi
+                  digest() { ( cd "$work" && find . -type f -exec sha256sum {} + | sort | sha256sum ); }
+                  before="$(digest)"
+                  echo "extracted to $work — add/remove images, then exit the shell to re-pack"
+                  ( cd "$work" && exec "$SHELL" )
+                  if [ "$before" = "$(digest)" ]; then
+                    echo "no changes, archive untouched"
+                  else
+                    archive="$(mktemp -p "''${XDG_RUNTIME_DIR:-/tmp}")"
+                    tar -C "$work" -cf "$archive" .
+                    [ -n "$tmpkey" ] || stage_key
+                    EDITOR="cp $archive" agenix -e wallpapers.tar.age -i "$tmpkey"
+                    rm -f "$archive"
+                    echo "re-packed $(find "$work" -type f | wc -l) files"
+                  fi
+                  ;;
                 *)
-                  echo "usage: secret <list|edit|show|rekey> [name]" >&2
+                  echo "usage: secret <list|edit|show|rekey|wallpapers> [name|dir]" >&2
                   exit 1
                   ;;
               esac

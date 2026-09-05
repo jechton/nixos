@@ -108,6 +108,16 @@ in
   programs.noctalia = {
     enable = true;
 
+    # PR not yet merged upstream: https://github.com/noctalia-dev/noctalia/pull/4249
+    package = inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [
+        (pkgs.fetchpatch {
+          url = "https://github.com/noctalia-dev/noctalia/pull/4249.diff";
+          hash = "sha256-ZfCvWxILdYGh967kbqg846aXhsU6B6Tvk6EAT0Nxtao=";
+        })
+      ];
+    });
+
     # The build-time config validator runs in the Nix sandbox, where it can't
     # load the local path plugin source (jechton/*), so it warns that these
     # plugins' widget types are "unrecognized". The config is fine: it
@@ -163,6 +173,9 @@ in
         enabled = true;
         account.personal_google.type = "google";
         event_time_format = "%-I:%M %P";
+        dedupe_events = true;
+        # Matches the "(Name at <hour>[:minute])" suffix
+        dedupe_ignore_patterns = [ "\\s*\\([A-Za-z]+ at \\d+(:\\d{2})?\\)\\s*$" ];
       };
 
       control_center = {

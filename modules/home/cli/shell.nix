@@ -179,6 +179,87 @@ in
           '';
         };
 
+        extract = {
+          description = "Extract an archive based on its extension";
+          argumentNames = [ "file" ];
+          # fish
+          body = ''
+            if test -z "$file"
+              echo "Usage: extract <file>"
+              return 1
+            end
+            if not test -f "$file"
+              echo "extract: no such file: $file"
+              return 1
+            end
+            switch (string lower -- $file)
+              case '*.tar' '*.tar.gz' '*.tgz' '*.tar.bz2' '*.tbz2' '*.tar.xz' '*.txz' '*.tar.zst'
+                ${getExe pkgs.gnutar} -xvf "$file"
+              case '*.zip'
+                ${getExe pkgs.unzip} "$file"
+              case '*.7z'
+                ${getExe pkgs.p7zip} x "$file"
+              case '*.gz'
+                ${getExe pkgs.gzip} -dk "$file"
+              case '*.bz2'
+                ${getExe pkgs.bzip2} -dk "$file"
+              case '*.xz'
+                ${getExe pkgs.xz} -dk "$file"
+              case '*'
+                echo "extract: unsupported archive type: $file"
+                return 1
+            end
+          '';
+        };
+
+        ftldr = {
+          description = "Fuzzy-search and view tldr pages";
+          # fish
+          body = ''
+            set -l page (${getExe pkgs.tealdeer} --list | ${getExe pkgs.fzf} --preview '${getExe pkgs.tealdeer} {}')
+            if test -n "$page"
+              tldr $page
+            end
+          '';
+        };
+
+        "," = {
+          description = "Run a command once via comma; with no argument, fuzzy-search binaries by name with fzf first";
+          # fish
+          body = ''
+            if test (count $argv) -gt 0
+              command , $argv
+              return
+            end
+            set -l pick (${getExe pkgs.fzf} --disabled --ansi \
+              --header 'type to fuzzy-search nix packages by binary name (comma)' \
+              --bind 'change:reload:[ -n "{q}" ] && ${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/{q}[^/]*\$" 2>/dev/null | sed "s#.*/##" | sort -u || true' \
+              --preview '${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"{}"\$" 2>/dev/null')
+            test -n "$pick"; or return
+            command , $pick
+          '';
+        };
+
+        fge = {
+          description = "Find and edit file by content match with fzf preview";
+          argumentNames = [ "pattern" ];
+          # fish
+          body = ''
+            if test -z "$pattern"
+              echo "Usage: fge <pattern>"
+              return 1
+            end
+            set -l selection (${getExe pkgs.ripgrep} --color=always --line-number --no-heading -- "$pattern" | \
+              ${getExe pkgs.fzf} --ansi --delimiter : \
+                --preview '${getExe pkgs.bat} --color=always --style=numbers --highlight-line {2} -- {1}' \
+                --preview-window 'up,60%,+{2}-10')
+            if test -n "$selection"
+              set -l parts (string split -m2 : -- $selection)
+              $EDITOR "$parts[1]:$parts[2]"
+            end
+          '';
+        };
+
         rg-fzf = {
           description = "Search with ripgrep and preview with fzf+bat";
           argumentNames = [ "pattern" ];
@@ -424,10 +505,17 @@ in
     function __comma_complete_pkgs
       set -l token (commandline -ct)
       string length -q -- $token; or return
+      # nix-locate's line already carries the providing package attr (field 1)
+      # ahead of the store path (last field); surface it as the completion's
+      # description column instead of discarding it.
       ${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"$token"[^/]*\$" 2>/dev/null \
-        | awk '{print $NF}' \
-        | string match -r '^/nix/store/[a-z0-9]{32}-[^/]+/bin/[^/]+$' \
-        | string replace -r '.*/' "" \
+        | while read -l line
+            set -l parts (string match -r '^(\S+)\s+\S+\s+\S+\s+(/nix/store/[a-z0-9]{32}-[^/]+/bin/[^/]+)$' -- $line)
+            test (count $parts) -eq 3; or continue
+            set -l bin (string replace -r '.*/' '' -- $parts[3])
+            set -l pkg (string replace -r '\.(out|bin|man|doc|dev|lib)$' '' -- $parts[2])
+            printf '%s\t%s\n' $bin $pkg
+          end \
         | sort -u
     end
 

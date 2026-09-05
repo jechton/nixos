@@ -187,6 +187,16 @@ in
         hidden_tabs =
           lib.optional (!osConfig.hardware.bluetooth.enable) "bluetooth"
           ++ lib.optional (!osConfig.services.upower.enable) "power";
+
+        # default shortcuts minus nightlight, which gammastep now handles
+        # instead, see modules/home/desktop/nightlight.nix
+        shortcuts = map (type: { inherit type; }) [
+          "wifi"
+          "bluetooth"
+          "caffeine"
+          "notification"
+          "power_profile"
+        ];
       };
 
       # Both widgets align to where a left-hand window sits, stacked, so that
@@ -286,8 +296,6 @@ in
         blur_intensity = 0.75;
         blurred_desktop = true;
       };
-
-      nightlight.enabled = true;
 
       notification = {
         offset_x = 8;

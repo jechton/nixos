@@ -233,7 +233,7 @@ in
             end
             set -l pick (${getExe pkgs.fzf} --disabled --ansi \
               --header 'type to fuzzy-search nix packages by binary name (comma)' \
-              --bind 'change:reload:[ -n "{q}" ] && ${lib.getExe' pkgs.nix-index "nix-locate"} --minimal --regex --type x --type s "/bin/{q}[^/]*\$" 2>/dev/null | sed "s#.*/##" | sort -u || true' \
+              --bind 'change:reload:[ -n "{q}" ] && ${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/{q}[^/]*\$" 2>/dev/null | sed "s#.*/##" | sort -u || true' \
               --preview '${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"{}"\$" 2>/dev/null')
             test -n "$pick"; or return
             command , $pick

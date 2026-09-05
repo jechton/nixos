@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   niriLib = import ./_lib.nix { inherit lib; };
   inherit (niriLib)
@@ -167,6 +172,11 @@ in
           ])
         );
         "Mod+Ctrl+N" = withTitle "Toggle DND" (spawn (noctalia [ "notification-dnd-toggle" ]));
+        "Mod+Ctrl+Shift+N" = withTitle "Toggle Night Light" (spawn [
+          "sh"
+          "-c"
+          "systemctl --user is-active --quiet gammastep && { systemctl --user stop gammastep; notify-send 'Night Light' 'Off'; } || { systemctl --user start gammastep; notify-send 'Night Light' 'On'; }"
+        ]);
         "Mod+Slash" = withTitle "Keybind Cheatsheet" (spawn "niri-keybind-cheatsheet");
         "Mod+Ctrl+Q" = withTitle "Calculator" (
           spawn (noctalia [
@@ -298,4 +308,7 @@ in
       (mkWorkspaceNumberBinds "Mod+Shift" "move-column-to-workspace" "Move Column to Workspace")
     ];
   };
+
+  # notify-send, used by the night light toggle bind above.
+  home.packages = [ pkgs.libnotify ];
 }

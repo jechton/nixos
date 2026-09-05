@@ -179,6 +179,26 @@ in
           '';
         };
 
+        fge = {
+          description = "Find and edit file by content match with fzf preview";
+          argumentNames = [ "pattern" ];
+          # fish
+          body = ''
+            if test -z "$pattern"
+              echo "Usage: fge <pattern>"
+              return 1
+            end
+            set -l selection (${getExe pkgs.ripgrep} --color=always --line-number --no-heading -- "$pattern" | \
+              ${getExe pkgs.fzf} --ansi --delimiter : \
+                --preview '${getExe pkgs.bat} --color=always --style=numbers --highlight-line {2} -- {1}' \
+                --preview-window 'up,60%,+{2}-10')
+            if test -n "$selection"
+              set -l parts (string split -m2 : -- $selection)
+              $EDITOR "$parts[1]:$parts[2]"
+            end
+          '';
+        };
+
         rg-fzf = {
           description = "Search with ripgrep and preview with fzf+bat";
           argumentNames = [ "pattern" ];

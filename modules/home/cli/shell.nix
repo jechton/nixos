@@ -223,6 +223,23 @@ in
           '';
         };
 
+        "," = {
+          description = "Run a command once via comma; with no argument, fuzzy-search binaries by name with fzf first";
+          # fish
+          body = ''
+            if test (count $argv) -gt 0
+              command , $argv
+              return
+            end
+            set -l pick (${getExe pkgs.fzf} --disabled --ansi \
+              --header 'type to fuzzy-search nix packages by binary name (comma)' \
+              --bind 'change:reload:[ -n "{q}" ] && ${lib.getExe' pkgs.nix-index "nix-locate"} --minimal --regex --type x --type s "/bin/{q}[^/]*\$" 2>/dev/null | sed "s#.*/##" | sort -u || true' \
+              --preview '${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"{}"\$" 2>/dev/null')
+            test -n "$pick"; or return
+            command , $pick
+          '';
+        };
+
         fge = {
           description = "Find and edit file by content match with fzf preview";
           argumentNames = [ "pattern" ];

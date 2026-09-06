@@ -59,9 +59,6 @@ in
       md = "mkdir";
       rd = "rmdir";
       rg = getExe pkgs.bat-extras.batgrep;
-      # tealdeer's pager setting runs pages through $PAGER; override the global
-      # "bat" pager here so line numbers don't clutter tldr's own formatting.
-      tldr = "env PAGER='bat --plain' tldr";
       # keep-sorted end
     };
     sessionVariables = {
@@ -161,7 +158,7 @@ in
           description = "Find and edit file with fzf preview";
           # fish
           body = ''
-            set -l file (${getExe pkgs.fd} --type f --hidden --follow --exclude .git | ${getExe pkgs.fzf} --preview '${getExe pkgs.bat} --color=always --style=numbers --line-range=:500 {}')
+            set -l file (${getExe pkgs.fd} --type f --hidden --follow --exclude .git | ${getExe pkgs.fzf} --query "$argv" --preview '${getExe pkgs.bat} --color=always --style=numbers --line-range=:500 {}')
             if test -n "$file"
               $EDITOR -- "$file"
             end
@@ -172,9 +169,99 @@ in
           description = "Find directory and cd into it";
           # fish
           body = ''
-            set -l dir (${getExe pkgs.fd} --type d --hidden --follow --exclude .git | ${getExe pkgs.fzf} --preview '${getExe pkgs.eza} --tree --level=1 --color=always -- {}')
+            set -l dir (${getExe pkgs.fd} --type d --hidden --follow --exclude .git | ${getExe pkgs.fzf} --query "$argv" --preview '${getExe pkgs.eza} --tree --level=1 --color=always -- {}')
             if test -n "$dir"
               cd -- "$dir"
+            end
+          '';
+        };
+
+        extract = {
+          description = "Extract an archive based on its extension";
+          argumentNames = [ "file" ];
+          # fish
+          body = ''
+            if test -z "$file"
+              echo "Usage: extract <file>"
+              return 1
+            end
+            if not test -f "$file"
+              echo "extract: no such file: $file"
+              return 1
+            end
+            switch (string lower -- $file)
+              case '*.tar' '*.tar.gz' '*.tgz' '*.tar.bz2' '*.tbz2' '*.tar.xz' '*.txz' '*.tar.zst'
+                ${getExe pkgs.gnutar} -xvf "$file"
+              case '*.zip'
+                ${getExe pkgs.unzip} "$file"
+              case '*.7z'
+                ${getExe pkgs.p7zip} x "$file"
+              case '*.gz'
+                ${getExe pkgs.gzip} -dk "$file"
+              case '*.bz2'
+                ${lib.getExe' pkgs.bzip2 "bzip2"} -dk "$file"
+              case '*.xz'
+                ${lib.getExe' pkgs.xz "xz"} -dk "$file"
+              case '*'
+                echo "extract: unsupported archive type: $file"
+                return 1
+            end
+          '';
+        };
+
+        tldr = {
+          description = "View a tldr page; with no argument, fuzzy-search pages with fzf";
+          # fish
+          body = ''
+            set -l tealdeer ${getExe pkgs.tealdeer}
+            if test (count $argv) -eq 0
+              set -l page ($tealdeer --list | ${getExe pkgs.fzf} --preview "env PAGER=cat $tealdeer {}")
+              test -n "$page"; or return
+              set argv $page
+            end
+            # tealdeer pages through $PAGER; override the global "bat" pager so its
+            # line numbers don't clutter the page's own formatting.
+            env PAGER='bat --plain' $tealdeer $argv
+          '';
+        };
+
+        "," = {
+          description = "Run a command once via comma; with no argument, fuzzy-search binaries by name with fzf first";
+          # fish
+          body = ''
+            if test (count $argv) -gt 0
+              command , $argv
+              return
+            end
+            # fzf substitutes {q}/{} as shell-quoted tokens, so the fixed parts of
+            # the regex must sit in their own adjacent quotes for the shell to
+            # concatenate them. Start from empty stdin so fzf doesn't fall back to
+            # its default file-listing command before the first keystroke.
+            set -l pick (printf ''' | ${getExe pkgs.fzf} --disabled --ansi \
+              --header 'fuzzy-search nix packages by binary name (comma)' \
+              --bind 'change:reload:[ -n {q} ] && ${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"{q}"[^/]*\$" 2>/dev/null | sed "s#.*/##" | sort -u || true' \
+              --preview '${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"{}"\$" 2>/dev/null')
+            test -n "$pick"; or return
+            command , $pick
+          '';
+        };
+
+        fge = {
+          description = "Find and edit a file by content match, searching interactively as you type";
+          # fish
+          body = ''
+            # Drive ripgrep from fzf's query on every keystroke, like fe drives fd.
+            # Any argument seeds the initial query. Guard the empty query so an
+            # unfiltered whole-tree search never runs.
+            set -l reload '[ -n {q} ] && ${getExe pkgs.ripgrep} --color=always --line-number --no-heading -- {q} 2>/dev/null || true'
+            set -l selection (printf ''' | ${getExe pkgs.fzf} --ansi --disabled --delimiter : \
+              --query "$argv" \
+              --bind "start:reload:$reload" --bind "change:reload:$reload" \
+              --preview '${getExe pkgs.bat} --color=always --style=numbers --highlight-line {2} -- {1}' \
+              --preview-window 'up,60%,+{2}-10')
+            if test -n "$selection"
+              set -l parts (string split -m2 : -- $selection)
+              $EDITOR "$parts[1]:$parts[2]"
             end
           '';
         };
@@ -424,10 +511,17 @@ in
     function __comma_complete_pkgs
       set -l token (commandline -ct)
       string length -q -- $token; or return
+      # nix-locate's line already carries the providing package attr (field 1)
+      # ahead of the store path (last field); surface it as the completion's
+      # description column instead of discarding it.
       ${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"$token"[^/]*\$" 2>/dev/null \
-        | awk '{print $NF}' \
-        | string match -r '^/nix/store/[a-z0-9]{32}-[^/]+/bin/[^/]+$' \
-        | string replace -r '.*/' "" \
+        | while read -l line
+            set -l parts (string match -r '^(\S+)\s+\S+\s+\S+\s+(/nix/store/[a-z0-9]{32}-[^/]+/bin/[^/]+)$' -- $line)
+            test (count $parts) -eq 3; or continue
+            set -l bin (string replace -r '.*/' ''' -- $parts[3])
+            set -l pkg (string replace -r '\.(out|bin|man|doc|dev|lib)$' ''' -- $parts[2])
+            printf '%s\t%s\n' $bin $pkg
+          end \
         | sort -u
     end
 

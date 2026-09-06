@@ -25,6 +25,7 @@
         packages = [
           # keep-sorted start
           inputs.agenix.packages.${system}.default
+          pkgs.jq
           pkgs.mkpasswd
           #keep-sorted end
         ]
@@ -60,8 +61,15 @@
           {
             name = "update";
             category = "system";
-            help = "Update flake inputs (all, or just those named) and switch";
+            help = "Update flake inputs (all, named, or -p to pick interactively) and switch";
             command = ''
+              if [ "''${1:-}" = "-p" ]; then
+                shift
+                inputs="$(nix flake metadata --json --flake "$PRJ_ROOT" | jq -r '.locks.nodes.root.inputs | keys[]' | sort)"
+                picked="$(printf '%s\n' "$inputs" | fzf --multi --header 'tab to pick inputs to update, enter to confirm')"
+                [ -n "$picked" ] || { echo "no inputs selected"; exit 0; }
+                set -- $picked
+              fi
               echo -e "Updating flake...\n"
               nix flake update --flake "$PRJ_ROOT" "$@"
               git -C "$PRJ_ROOT" add -A
@@ -88,7 +96,7 @@
           {
             name = "secret";
             category = "tools";
-            help = "Manage agenix secrets: secret <list|edit|show|rekey|wallpapers> [name|dir]";
+            help = "Manage agenix secrets: secret <list|edit|show|rekey|wallpapers> [name|dir] (omit name on edit/show to pick interactively)";
             command = ''
               set +u
               cd "$PRJ_ROOT/secrets" || exit 1
@@ -105,6 +113,10 @@
               stage_key() {
                 tmpkey="$(mktemp -p "''${XDG_RUNTIME_DIR:-/tmp}")"
                 sudo cat "$keyfile" > "$tmpkey"
+              }
+              pick_secret() {
+                grep -oE '"[A-Za-z0-9_-]+\.age"' secrets.nix | tr -d '"' | sed 's/\.age$//' | sort -u \
+                  | fzf --header "pick a secret to $1"
               }
 
               case "$action" in
@@ -127,7 +139,11 @@
                   done
                   ;;
                 edit)
-                  [ -n "$name" ] || { echo "usage: secret edit <name>" >&2; exit 1; }
+                  if [ -z "$name" ]; then
+                    name="$(pick_secret edit)"
+                    [ -n "$name" ] || { echo "no secret selected" >&2; exit 1; }
+                    file="$name.age"
+                  fi
                   if [ -s "$file" ]; then
                     stage_key
                     agenix -e "$file" -i "$tmpkey"
@@ -137,7 +153,11 @@
                   fi
                   ;;
                 show)
-                  [ -n "$name" ] || { echo "usage: secret show <name>" >&2; exit 1; }
+                  if [ -z "$name" ]; then
+                    name="$(pick_secret show)"
+                    [ -n "$name" ] || { echo "no secret selected" >&2; exit 1; }
+                    file="$name.age"
+                  fi
                   stage_key
                   agenix -d "$file" -i "$tmpkey"
                   ;;

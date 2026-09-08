@@ -7,12 +7,12 @@ let
   );
 in
 {
-  # mt7921e's PCIe ASPM negotiation is broken on resume: throughput craters
-  # after suspend and only a driver reload (or reboot) fixes it. Disabling
-  # ASPM for the driver sidesteps the bug entirely.
-  boot.extraModprobeConfig = lib.mkIf hasWifi ''
-    options mt7921e disable_aspm=1
-  '';
+  # The firmware never hands PCIe ASPM control to the kernel on this board, so
+  # the mt7921e `disable_aspm=1` option silently no-ops ("can't disable ASPM; OS
+  # doesn't have ASPM control") and L1 ASPM stays on, roughly halving MT7922
+  # WiFi throughput. Forcing ASPM off platform-wide is the only lever that works
+  # and also covers the post-resume throughput crater the driver option targeted.
+  boot.kernelParams = lib.mkIf hasWifi [ "pcie_aspm=off" ];
 
   # NetworkManager owns DHCP on every managed interface. Without this, facter's
   # auto-detection also points dhcpcd at wlan0, so two DHCP clients race on the

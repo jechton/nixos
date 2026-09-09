@@ -91,6 +91,7 @@
     doc.enable = false;
     info.enable = false;
     man.enable = lib.mkDefault true;
+    man.cache.enable = true;
     nixos.enable = false;
   };
 

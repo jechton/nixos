@@ -33,10 +33,12 @@ let
   ];
 in
 {
+  # noctalia is started by its systemd user service (programs.noctalia.systemd
+  # in ../noctalia.nix), not here, so it can be restarted on resume and on
+  # config changes.
   wayland.windowManager.niri.settings._children = mkNodes "spawn-at-startup" (
     [
       unlockKeyring
-      [ "noctalia" ]
     ]
     ++ chatApps
   );

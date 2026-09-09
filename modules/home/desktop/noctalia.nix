@@ -58,11 +58,32 @@ in
 
   # Noctalia's live config is $XDG_STATE_HOME/noctalia/settings.toml (wiped on
   # boot, so it starts each session from the Nix-managed config.toml below).
-  # niri spawns noctalia as a bare process, not a systemd unit, so a switch
-  # can't restart it and mid-session settings changes here need a manual
-  # `noctalia msg config-reload` (or restart / relogin). If the desktop-widget
-  # editor was used this session, delete settings.toml's [desktop_widgets] block
-  # first so the reload falls back to config.toml.
+  # noctalia runs as the systemd user service below (not a niri spawn-at-startup
+  # child), so a switch that changes config.toml restarts it automatically via
+  # the module's X-Restart-Triggers. If the desktop-widget editor was used this
+  # session, delete settings.toml's [desktop_widgets] block before the restart
+  # so it falls back to config.toml.
+
+  # noctalia's shared curl handle keeps a connection pool that goes stale across
+  # a suspend/resume: every plugin HTTP request (kimai, home-assistant) then
+  # hangs until its 30s timeout and never recovers until the process restarts
+  # (noctalia-dev/noctalia-shell src/net/http_client.cpp — the plugin `request`
+  # path sets neither CURLOPT_FRESH_CONNECT nor a resume hook). Bounce the
+  # service on resume until that's fixed upstream. sleep.target is pulled in by
+  # suspend/hibernate/hybrid-sleep/suspend-then-hibernate; ordering After it
+  # means this runs as the system thaws. try-restart is a no-op when noctalia
+  # isn't running (e.g. suspended at the greeter).
+  systemd.user.services.noctalia-resume = {
+    Unit = {
+      Description = "Restart noctalia after resume (works around a stale curl connection pool)";
+      After = [ "sleep.target" ];
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.systemd}/bin/systemctl --user try-restart noctalia.service";
+    };
+    Install.WantedBy = [ "sleep.target" ];
+  };
 
   # udiskie/udiskie-info binaries the aristides/udiskie plugin shells out to;
   # udisks2 itself is already enabled system-wide in modules/system/niri.nix.
@@ -107,6 +128,12 @@ in
 
   programs.noctalia = {
     enable = true;
+
+    # Run noctalia as a graphical-session-bound systemd user service instead of
+    # a niri spawn-at-startup child (see the resume workaround above, and so a
+    # switch can restart it on config changes). The spawn-at-startup entry is
+    # removed in ../niri/startup.nix.
+    systemd.enable = true;
 
     # PR not yet merged upstream: https://github.com/noctalia-dev/noctalia/pull/4249
     package = inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {

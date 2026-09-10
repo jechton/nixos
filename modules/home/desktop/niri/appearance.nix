@@ -1,6 +1,6 @@
 { config, lib, ... }:
 let
-  inherit (import ./_lib.nix { inherit lib; }) mkNodes mkRule;
+  inherit (import ./_lib.nix { inherit lib; }) mkNodes mkRule columnWidths;
 
   windowRules = [
     {
@@ -49,7 +49,7 @@ let
         { app-id = "^org\\.telegram\\.desktop$"; }
         { app-id = "^telegram-desktop$"; }
       ];
-      default-column-width.proportion = 0.33333;
+      default-column-width.proportion = columnWidths.third;
     }
   ];
 

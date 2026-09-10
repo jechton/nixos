@@ -1,18 +1,18 @@
 { lib, ... }:
 let
-  inherit (import ./_lib.nix { inherit lib; }) mkNodes;
+  inherit (import ./_lib.nix { inherit lib; }) mkNodes columnWidths;
 in
 {
   wayland.windowManager.niri.settings = {
     layout = {
       gaps = 10;
       preset-column-widths._children = mkNodes "proportion" [
-        0.33333
-        0.5
-        0.66667
-        1.0
+        columnWidths.third
+        columnWidths.half
+        columnWidths.twoThirds
+        columnWidths.full
       ];
-      default-column-width.proportion = 0.5;
+      default-column-width.proportion = columnWidths.half;
       always-center-single-column = { };
     };
   };

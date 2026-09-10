@@ -9,6 +9,18 @@ rec {
   # Wrap a list of `{ <key> = ...; }` node values as KDL children.
   mkNodes = key: items: map (item: { ${key} = item; }) items;
 
+  # Column width presets. niri already accounts for gaps in `proportion`, so
+  # complementary fractions tile the working area exactly. Truncated decimals
+  # like 0.33333 / 0.66667 do not: their rounded pixel widths are not exact
+  # complements, leaving a residual that makes the view nudge ("jiggle") when
+  # focus moves between two tiled columns. Full-precision fractions avoid it.
+  columnWidths = {
+    third = 1.0 / 3.0;
+    half = 1.0 / 2.0;
+    twoThirds = 2.0 / 3.0;
+    full = 1.0;
+  };
+
   # `matches = [ { app-id = "..."; } ... ];` -> repeated `match` child nodes.
   mkMatches =
     matchKey: matches:

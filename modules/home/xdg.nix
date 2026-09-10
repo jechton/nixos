@@ -81,7 +81,12 @@ in
         // forEach audioTypes "mpv.desktop"
         // forEach textTypes "Helix.desktop"
         // {
+          # xdg-open's generic resolver does not walk the mime type hierarchy,
+          # so mount points and the x-directory alias need explicit entries
+          # even though they inherit from inode/directory.
           "inode/directory" = "org.gnome.Nautilus.desktop";
+          "inode/mount-point" = "org.gnome.Nautilus.desktop";
+          "application/x-directory" = "org.gnome.Nautilus.desktop";
         };
     };
 }

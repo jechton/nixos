@@ -75,6 +75,10 @@
         normal = {
           "C-s" = ":write";
           "y" = "yank_to_clipboard";
+          "d" = [
+            "yank_to_clipboard"
+            "delete_selection_noyank"
+          ];
           "p" = "paste_clipboard_after";
           "P" = "paste_clipboard_before";
           "A-up" = [
@@ -96,6 +100,11 @@
         select = {
           "y" = [
             "yank_to_clipboard"
+            "normal_mode"
+          ];
+          "d" = [
+            "yank_to_clipboard"
+            "delete_selection_noyank"
             "normal_mode"
           ];
           "p" = "replace_selections_with_clipboard";

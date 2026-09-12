@@ -320,8 +320,50 @@ in
       location.auto_locate = true;
 
       lockscreen = {
-        blur_intensity = 0.75;
+        blur_intensity = 1.0;
         blurred_desktop = true;
+        tint_intensity = 0.5;
+      };
+
+      lockscreen_widgets = {
+        enabled = true;
+        widget_order = [
+          "lockscreen-login-box@eDP-1"
+          "lockscreen-clock"
+        ];
+
+        widget = {
+          # Laptop display ID, will probably need to edit and make a per-host thing when installing on a desktop
+          "lockscreen-login-box@eDP-1" = {
+            type = "login_box";
+            output = "eDP-1";
+            settings = {
+              center_password_text = true;
+              input_radius = 0.0;
+              show_session_buttons = false;
+              show_unlock_hint = false;
+            };
+          };
+
+          # Centered on the screen: cx = 1920/2, cy = 1200/2.
+          lockscreen-clock = {
+            type = "clock";
+            output = "eDP-1";
+            cx = 960.0;
+            cy = 600.0;
+            box_width = 400.0;
+            box_height = 250.0;
+            rotation = 0.0;
+            settings = {
+              background = false;
+              center_text = true;
+              clock_style = "digital";
+              color = "on_surface";
+              format = "{:%-I:%M %P}";
+              shadow = true;
+            };
+          };
+        };
       };
 
       notification = {

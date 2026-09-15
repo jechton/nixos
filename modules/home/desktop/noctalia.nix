@@ -337,6 +337,11 @@ in
           "lockscreen-login-box@eDP-1" = {
             type = "login_box";
             output = "eDP-1";
+            cx = 960.0;
+            cy = 900.0;
+            box_width = 400.0;
+            box_height = 250.0;
+            rotation = 0.0;
             settings = {
               center_password_text = true;
               input_radius = 0.0;

@@ -1,4 +1,23 @@
 { pkgs, ... }:
+let
+  # wireplumber writes the route's mute state to $XDG_STATE_HOME/wireplumber/
+  # default-routes and restores it from there whenever the route reinitializes,
+  # e.g. when noctalia restarts and reconnects wireplumber's mixer-api. Muting
+  # via wpctl below persists "mute":true there, so leaving it would re-mute on
+  # every such reconnect instead of just at boot. Flip it back to false right
+  # after so the live sink stays muted now, but future restores default to
+  # unmuted. Retry briefly since wireplumber writes the file asynchronously.
+  resetMuteRestore = pkgs.writeShellScript "reset-mute-restore" ''
+    file="$HOME/.local/state/wireplumber/default-routes"
+    for _ in $(seq 1 20); do
+      if [ -f "$file" ] && grep -q '"mute":true' "$file"; then
+        sed -i 's/"mute":true/"mute":false/g' "$file"
+        break
+      fi
+      sleep 0.1
+    done
+  '';
+in
 {
   # mute the default sink once per boot, not on every home-manager switch.
   # the stamp lives in /run (tmpfs), so it clears on reboot and the
@@ -13,7 +32,10 @@
     Service = {
       Type = "oneshot";
       ExecStart = "${pkgs.wireplumber}/bin/wpctl set-mute @DEFAULT_AUDIO_SINK@ 1";
-      ExecStartPost = "${pkgs.coreutils}/bin/touch /run/user/%U/mute-audio-on-boot.done";
+      ExecStartPost = [
+        "${resetMuteRestore}"
+        "${pkgs.coreutils}/bin/touch /run/user/%U/mute-audio-on-boot.done"
+      ];
     };
     Install.WantedBy = [ "default.target" ];
   };

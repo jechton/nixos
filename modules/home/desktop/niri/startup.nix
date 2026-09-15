@@ -15,22 +15,36 @@ let
     "printf '' | ${pkgs.gnome-keyring}/bin/gnome-keyring-daemon --unlock"
   ];
 
-  chatApps = lib.optionals (!config.burrow.profiles.vm.enable) [
-    # equibop only lands in the tray if noctalia's StatusNotifier host is
-    # already up when it launches, so give the bar a head start and pass the
-    # explicit minimize flag.
-    [
-      "sh"
-      "-c"
-      "sleep 5 && exec equibop --start-minimized"
-    ]
-    [ "signal-desktop" ]
-    [ "telegram-desktop" ]
-    [
-      "slack"
-      "-u"
-    ]
+  # Tray apps only land in the tray if noctalia's StatusNotifier host is
+  # already up when they launch, so poll for it before exec-ing the app
+  # instead of racing a fixed sleep.
+  waitForTrayHost = pkgs.writeShellScript "wait-for-tray-host" ''
+    for _ in $(seq 1 50); do
+      state=$(busctl --user get-property org.kde.StatusNotifierWatcher /StatusNotifierWatcher org.kde.StatusNotifierWatcher IsStatusNotifierHostRegistered 2>/dev/null)
+      [ "$state" = "b true" ] && exit 0
+      sleep 0.2
+    done
+  '';
+  trayApp = args: [
+    "sh"
+    "-c"
+    "${waitForTrayHost} && exec ${lib.escapeShellArgs args}"
   ];
+
+  chatApps = lib.optionals (!config.burrow.profiles.vm.enable) (
+    map trayApp [
+      [
+        "equibop"
+        "--start-minimized"
+      ]
+      [ "signal-desktop" ]
+      [ "telegram-desktop" ]
+      [
+        "slack"
+        "-u"
+      ]
+    ]
+  );
 in
 {
   # noctalia is started by its systemd user service (programs.noctalia.systemd

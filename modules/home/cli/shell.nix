@@ -266,6 +266,18 @@ in
           '';
         };
 
+        fkill = {
+          description = "Interactively pick and kill processes with fzf";
+          # fish
+          body = ''
+            set -l pids (ps -eo pid,ppid,%cpu,%mem,comm --sort=-%cpu \
+              | ${getExe pkgs.fzf} --multi --header-lines=1 \
+              | awk '{print $1}')
+            test -n "$pids"; or return
+            kill -9 $pids
+          '';
+        };
+
         rg-fzf = {
           description = "Search with ripgrep and preview with fzf+bat";
           argumentNames = [ "pattern" ];

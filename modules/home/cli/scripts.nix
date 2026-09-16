@@ -23,6 +23,40 @@ let
     '';
   };
 
+  niriWorkspaceCycle = pkgs.writeShellApplication {
+    name = "niri-workspace-cycle";
+    runtimeInputs = with pkgs; [
+      jq
+      niri
+    ];
+    text = ''
+      direction="$1" # down or up
+
+      data="$(niri msg -j workspaces)"
+      output="$(jq -r '.[] | select(.is_focused) | .output' <<<"$data")"
+      current="$(jq -r '.[] | select(.is_focused) | .idx' <<<"$data")"
+
+      mapfile -t idxs < <(jq -r --arg output "$output" \
+        '[.[] | select(.output == $output)] | sort_by(.idx) | .[].idx' <<<"$data")
+
+      for i in "''${!idxs[@]}"; do
+        if [ "''${idxs[$i]}" = "$current" ]; then
+          pos=$i
+          break
+        fi
+      done
+
+      count=''${#idxs[@]}
+      if [ "$direction" = "down" ]; then
+        next=$(( (pos + 1) % count ))
+      else
+        next=$(( (pos - 1 + count) % count ))
+      fi
+
+      niri msg action focus-workspace "''${idxs[$next]}"
+    '';
+  };
+
   ns = pkgs.writeShellApplication {
     name = "ns";
     runtimeInputs = [
@@ -68,6 +102,7 @@ in
     packages = [
       # keep-sorted start
       focusOrSpawnSignal
+      niriWorkspaceCycle
       ns
       ocrRegion
       # keep-sorted end

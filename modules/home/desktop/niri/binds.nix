@@ -109,8 +109,14 @@ in
         );
         "Mod+F" = withTitle "Maximize Column" (noArg "maximize-column");
         "Mod+Shift+F" = withTitle "Fullscreen Window" (noArg "fullscreen-window");
-        "Mod+Tab" = withTitle "Focus Workspace Below" (noArg "focus-workspace-down");
-        "Mod+Shift+Tab" = withTitle "Focus Workspace Above" (noArg "focus-workspace-up");
+        "Mod+Tab" = withTitle "Focus Workspace Below" (spawn [
+          "niri-workspace-cycle"
+          "down"
+        ]);
+        "Mod+Shift+Tab" = withTitle "Focus Workspace Above" (spawn [
+          "niri-workspace-cycle"
+          "up"
+        ]);
 
         "Mod+BracketLeft" = withTitle "Consume/Expel Window Left" (noArg "consume-or-expel-window-left");
         "Mod+BracketRight" = withTitle "Consume/Expel Window Right" (noArg "consume-or-expel-window-right");

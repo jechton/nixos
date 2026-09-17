@@ -31,6 +31,22 @@ let
     "${waitForTrayHost} && exec ${lib.escapeShellArgs args}"
   ];
 
+  # Telegram's Qt Wayland platform plugin sometimes loses the race with
+  # niri's compositor/GPU readiness right after boot (EGL not up yet) and
+  # exits immediately with no retry of its own, so retry it here a few
+  # times instead of exec-ing straight into it.
+  trayAppRetry = args: [
+    "sh"
+    "-c"
+    ''
+      ${waitForTrayHost}
+      for _ in $(seq 1 5); do
+        ${lib.escapeShellArgs args} && break
+        sleep 2
+      done
+    ''
+  ];
+
   chatApps = lib.optionals (!config.burrow.profiles.vm.enable) (
     map trayApp [
       [
@@ -38,11 +54,16 @@ let
         "--start-minimized"
       ]
       [ "signal-desktop" ]
-      [ "telegram-desktop" ]
       [
         "slack"
         "-u"
       ]
+    ]
+    ++ [
+      (trayAppRetry [
+        "Telegram"
+        "-startintray"
+      ])
     ]
   );
 in

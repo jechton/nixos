@@ -309,7 +309,7 @@ in
           # tasks (🔁) are closed without spawning the next occurrence; handle
           # those in Obsidian.
           sed -i "$2s/- \[ \]/- [x]/; $2s/\$/ ✅ $today/" "$1"
-          notify-send "Task done" "$3" || echo "done: $3"
+          notify_open "Task done" "$3" "$1"
         }
 
         act_schedule() {
@@ -318,10 +318,10 @@ in
           if [ -n "''${when:-}" ]; then
             d=$(resolve_date "$when") || { echo "unparsable date: $when" >&2; return 1; }
             sed -i "$2{s/ ⏳ [0-9-]\{10\}//; s/\$/ ⏳ $d/}" "$1"
-            notify-send "Task ⏳ $d" "$3" || echo "$3 -> ⏳ $d"
+            notify_open "Task ⏳ $d" "$3" "$1"
           else
             sed -i "$2s/ ⏳ [0-9-]\{10\}//" "$1"
-            notify-send "Task unscheduled" "$3" || echo "$3 -> unscheduled"
+            notify_open "Task unscheduled" "$3" "$1"
           fi
         }
 
@@ -332,7 +332,7 @@ in
           # Replace everything after the "- [ ] " marker on that line.
           esc=$(printf '%s' "$new" | sed 's/[&/\]/\\&/g')
           sed -i "$2s/\(^[[:space:]]*- \[ \] \).*/\1$esc/" "$1"
-          notify-send "Task edited" "$new" || echo "edited: $new"
+          notify_open "Task edited" "$new" "$1"
         }
 
         act_open() {
@@ -343,6 +343,18 @@ in
           rel="''${rel// /%20}"
           rel="''${rel//&/%26}"
           xdg-open "obsidian://open?vault=''${vault##*/}&file=$rel" >/dev/null 2>&1
+        }
+
+        # Send a notification whose click opens $3's note in Obsidian, falling
+        # back to plain notify-send if the daemon doesn't support actions.
+        # Runs in the background since --action blocks until clicked/dismissed.
+        notify_open() {
+          local title="$1" body="$2" file="$3"
+          (
+            action=$(notify-send --action="default=Open in Obsidian" "$title" "$body" 2>/dev/null) || exit 0
+            [ "$action" = "default" ] && act_open "$file"
+          ) &
+          disown
         }
 
         # Create a new open task from $1. Trailing "@when" sets a ⏳ scheduled
@@ -371,6 +383,7 @@ in
                 { print }
                 END { if (in_s) print add }
               ' "$note" > "$note.tmp" && mv "$note.tmp" "$note"
+              notify_open "Task added" "$text" "$note"
               ;;
             *)
               awk -v add="$item" '
@@ -382,9 +395,9 @@ in
                 { while (held-- > 0) print ""; held = 0; print }
                 END { if (!placed) { while (held-- > 0) print ""; print add } }
               ' "$tasks_file" > "$tasks_file.tmp" && mv "$tasks_file.tmp" "$tasks_file"
+              notify_open "Task added" "$text" "$tasks_file"
               ;;
           esac
-          notify-send "Task added" "$text" || echo "added: $item"
         }
 
         case "$cmd" in

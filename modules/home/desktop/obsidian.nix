@@ -226,9 +226,14 @@ in
           esac
         }
 
+        # Render a wikilink for display: [[Link|Alias]] -> Alias, [[Link]] -> Link.
+        strip_wikilinks() {
+          printf '%s' "$1" | sed -E 's/\[\[[^]|]*\|([^]]*)\]\]/\1/g; s/\[\[([^]]*)\]\]/\1/g'
+        }
+
         # "task text  · location" display line. $1 file, $2 task text.
         fmt() {
-          printf '%s  · %s\n' "$2" "$(loc_label "$1")"
+          printf '%s  · %s\n' "$(strip_wikilinks "$2")" "$(loc_label "$1")"
         }
 
         # Earliest 📅/⏳/🛫 date in a task's text, empty if it has none.
@@ -349,7 +354,8 @@ in
         # back to plain notify-send if the daemon doesn't support actions.
         # Runs in the background since --action blocks until clicked/dismissed.
         notify_open() {
-          local title="$1" body="$2" file="$3"
+          local title="$1" body file="$3"
+          body=$(strip_wikilinks "$2")
           (
             action=$(notify-send --action="default=Open in Obsidian" "$title" "$body" 2>/dev/null) || exit 0
             [ "$action" = "default" ] && act_open "$file"

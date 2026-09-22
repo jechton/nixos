@@ -23,7 +23,11 @@ in
     package = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.claude-code;
     settings = {
       # keep-sorted start block=yes
-      attribution.sessionUrl = false;
+      attribution = {
+        commit = "";
+        pr = "";
+        sessionUrl = false;
+      };
       autoUpdates = false;
       effortLevel = "medium";
       # RTK (Rust Token Killer): rewrites Bash commands to filtered `rtk`
@@ -42,7 +46,6 @@ in
           ];
         }
       ];
-      includeCoAuthoredBy = false;
       lspServers = {
         python = {
           command = "${pkgs.pyright}/bin/pyright-langserver";
@@ -65,6 +68,23 @@ in
       model = "sonnet";
       outputStyle = "Concise";
       permissions = {
+        allow = [
+          # keep-sorted start
+          "WebFetch(domain:docs.anthropic.com)"
+          "WebFetch(domain:github.com)"
+          "WebFetch(domain:raw.githubusercontent.com)"
+          "WebFetch(domain:search.nixos.org)"
+          "WebFetch(domain:wiki.nixos.org)"
+          # keep-sorted end
+        ];
+        ask = [
+          # keep-sorted start
+          "Bash(git push *)"
+          "Bash(kill *)"
+          "Bash(pkill *)"
+          "Bash(rm *)"
+          # keep-sorted end
+        ];
         deny = [
           "Bash(chmod -R 000 /*)"
           "Bash(chmod -R 777 /*)"

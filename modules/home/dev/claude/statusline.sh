@@ -1,5 +1,6 @@
 # model·effort · dir branch +ins -del · ctx used% · 5h used% ↻rem · 7d used% ↻rem
-#   dir     = folder name inside a git repo, fish-style abbreviated path outside
+#   dir     = folder name inside a git repo, fish-style abbreviated path outside;
+#             in a Claude Code-managed worktree, shows "origrepo ⑂worktree-name" instead
 #   used%   = colored by burn pace (used% vs time-elapsed%): blue ok, yellow tight, red too fast
 #   ↻rem    = time left until the window resets
 #
@@ -52,6 +53,8 @@ read_fields() {
       print V[".rate_limits.five_hour.resets_at"]
       print V[".rate_limits.seven_day.used_percentage"]
       print V[".rate_limits.seven_day.resets_at"]
+      print V[".worktree.name"]
+      print V[".worktree.original_cwd"]
     }'
 }
 
@@ -64,6 +67,8 @@ read_fields() {
   IFS= read -r fh_reset
   IFS= read -r sd_used
   IFS= read -r sd_reset
+  IFS= read -r wt_name
+  IFS= read -r wt_orig_cwd
 } < <(read_fields)
 
 now=$(date +%s)
@@ -112,7 +117,11 @@ fish_path() { # ~/Projects/foo/bar -> ~/P/f/bar, keeping the leading dot of hidd
 dirseg=""
 if [ -n "$cwd" ] && git -C "$cwd" --no-optional-locks -c core.useBuiltinFSMonitor=false rev-parse --git-dir >/dev/null 2>&1; then
   G=(git -C "$cwd" --no-optional-locks -c core.useBuiltinFSMonitor=false)
-  dirseg="${CYAN}${cwd##*/}${RESET}"
+  if is_set "$wt_name"; then
+    dirseg="${CYAN}${wt_orig_cwd##*/}${RESET} ${DIM}⑂${RESET}${CYAN}${wt_name}${RESET}"
+  else
+    dirseg="${CYAN}${cwd##*/}${RESET}"
+  fi
   br=$("${G[@]}" symbolic-ref --short HEAD 2>/dev/null || "${G[@]}" rev-parse --short HEAD 2>/dev/null || true)
   stats=$("${G[@]}" diff --shortstat HEAD 2>/dev/null || true)
   ins=$(printf '%s' "$stats" | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || true)

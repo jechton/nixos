@@ -23,6 +23,7 @@ in
     package = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.claude-code;
     settings = {
       # keep-sorted start block=yes
+      advisorModel = "opus";
       attribution = {
         commit = "";
         pr = "";

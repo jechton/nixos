@@ -1,11 +1,9 @@
-# Line 1: model [effort] cwd  git-branch (+changes)
-# Line 2: context bar | 5h <dots> <used%> ↻rem | 7d <dots> <used%> ↻rem
-#   dots FILL  = usage % consumed (5h: 5 dots, 7d: 7 dots; in-progress dot = quarter steps)
-#   dots COLOR = burn pace (used% vs time-elapsed%): blue ok, yellow tight, red too fast
-#   ↻rem       = time left until the window resets
+# model·effort · dir branch +ins -del · ctx used% · 5h used% ↻rem · 7d used% ↻rem
+#   dir     = folder name inside a git repo, fish-style abbreviated path outside
+#   used%   = colored by burn pace (used% vs time-elapsed%): blue ok, yellow tight, red too fast
+#   ↻rem    = time left until the window resets
 #
-# Customize via env: CC_SL_FULL CC_SL_HALF CC_SL_EMPTY (dot glyphs),
-# CC_SL_PACE_FLOOR (used% below which pace color stays blue; default 5).
+# Customize via env: CC_SL_PACE_FLOOR (used% below which pace color stays blue; default 5).
 
 input=$(cat)
 
@@ -70,37 +68,66 @@ read_fields() {
 
 now=$(date +%s)
 
-# --- colors / glyphs ----------------------------------------------------------
+# --- colors -------------------------------------------------------------------
 BLUE=$'\033[94m'; YELLOW=$'\033[33m'; RED=$'\033[31m'; GREEN=$'\033[32m'
 DIM=$'\033[2;37m'; RESET=$'\033[0m'
 MODELC=$'\033[35m'; EFFORTC=$'\033[93m'; CYAN=$'\033[36m'
 GITC=$'\033[31m'
-FULL=${CC_SL_FULL:-●}; EMPTY=${CC_SL_EMPTY:-○}
-Q1=${CC_SL_Q1:-◔}; HALF=${CC_SL_HALF:-◑}; Q3=${CC_SL_Q3:-◕}
+SEP=" ${DIM}·${RESET} "
 
 is_set() { [ -n "$1" ] && [ "$1" != "null" ]; }
 
-# --- line 1 -------------------------------------------------------------------
-[ -z "$model" ] || [ "$model" = "null" ] && model="Claude"
-cwd_tilde="${cwd/#$HOME/\~}"
-line1="${MODELC}${model}${RESET}"
-is_set "$effort" && line1+=" ${EFFORTC}[${effort}]${RESET}"
-is_set "$cwd_tilde" && line1+=" ${CYAN}${cwd_tilde}${RESET}"
+join() { # appends $1 to $out with a separator
+  [ -n "$1" ] || return 0
+  if [ -n "$out" ]; then out+="${SEP}$1"; else out=$1; fi
+}
 
+# --- model·effort -------------------------------------------------------------
+# "Opus 5.5" -> "opus"; effort abbreviated so medium and max stay distinct.
+is_set "$model" || model="Claude"
+model=${model%% *}
+model=${model,,}
+case "$effort" in
+  low) effort=l ;;
+  medium) effort=m ;;
+  high) effort=h ;;
+  xhigh) effort=xh ;;
+esac
+modelseg="${MODELC}${model}${RESET}"
+is_set "$effort" && modelseg+="${DIM}·${RESET}${EFFORTC}${effort}${RESET}"
+
+# --- dir + git ----------------------------------------------------------------
+fish_path() { # ~/Projects/foo/bar -> ~/P/f/bar, keeping the leading dot of hidden dirs
+  local p="${1/#$HOME/\~}" out="" part last
+  last=${p##*/}
+  [ "$p" = "$last" ] || [ "$p" = "/" ] && { printf '%s' "$p"; return; }
+  [ "$p" = "/$last" ] && { printf '/%s' "$last"; return; }
+  IFS=/ read -ra parts <<< "${p%/*}"
+  for part in "${parts[@]}"; do
+    if [ "${part:0:1}" = "." ]; then out+="${part:0:2}/"; else out+="${part:0:1}/"; fi
+  done
+  printf '%s%s' "$out" "$last"
+}
+
+dirseg=""
 if [ -n "$cwd" ] && git -C "$cwd" --no-optional-locks -c core.useBuiltinFSMonitor=false rev-parse --git-dir >/dev/null 2>&1; then
   G=(git -C "$cwd" --no-optional-locks -c core.useBuiltinFSMonitor=false)
+  dirseg="${CYAN}${cwd##*/}${RESET}"
   br=$("${G[@]}" symbolic-ref --short HEAD 2>/dev/null || "${G[@]}" rev-parse --short HEAD 2>/dev/null || true)
   stats=$("${G[@]}" diff --shortstat HEAD 2>/dev/null || true)
   ins=$(printf '%s' "$stats" | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || true)
   del=$(printf '%s' "$stats" | grep -oE '[0-9]+ deletion' | grep -oE '[0-9]+' || true)
   if [ -n "$br" ]; then
-    line1+=" ${GITC}${br}${RESET}"
+    dirseg+=" ${GITC}${br}${RESET}"
     if [ -n "$ins" ] || [ -n "$del" ]; then
-      line1+=" ${GREEN}+${ins:-0}${RESET} ${RED}-${del:-0}${RESET}"
+      dirseg+=" ${GREEN}+${ins:-0}${RESET} ${RED}-${del:-0}${RESET}"
     fi
   fi
+elif [ -n "$cwd" ]; then
+  dirseg="${CYAN}$(fish_path "$cwd")${RESET}"
 fi
-# --- line 2 -------------------------------------------------------------------
+
+# --- context + rate limits ----------------------------------------------------
 round() { printf '%.0f' "$1" 2>/dev/null; }
 
 fmt_remaining() { # $1=sec $2=daily(1/0) — rounds to nearest unit
@@ -120,8 +147,8 @@ fmt_remaining() { # $1=sec $2=daily(1/0) — rounds to nearest unit
   if [ "$h" -gt 0 ]; then printf '%dh%dm' "$h" "$m"; else printf '%dm' "$m"; fi
 }
 
-render_window() { # $1=label $2=windowSec $3=units $4=daily $5=used $6=reset
-  local label=$1 win=$2 units=$3 daily=$4 used=$5 reset=$6
+render_window() { # $1=label $2=windowSec $3=daily $4=used $5=reset
+  local label=$1 win=$2 daily=$3 used=$4 reset=$5
   is_set "$reset" || return 0
   reset=${reset%.*}
   case "$reset" in ''|*[!0-9]*) return 0 ;; esac
@@ -130,20 +157,6 @@ render_window() { # $1=label $2=windowSec $3=units $4=daily $5=used $6=reset
   [ "$elapsed" -gt "$win" ] && elapsed=$win
   local u; u=$(round "$used"); u=${u:-0}
   [ "$u" -lt 0 ] && u=0; [ "$u" -gt 100 ] && u=100
-  # Dots track usage %, not the clock. Floor to the last fully-consumed quarter so a
-  # part never claims usage you haven't reached (each part = a quarter of one dot).
-  local maxq=$(( units * 4 ))
-  local quarters=$(( u * maxq / 100 ))
-  [ "$quarters" -gt "$maxq" ] && quarters=$maxq
-  local full=$(( quarters / 4 )) rem=$(( quarters % 4 ))
-  local partial=""
-  case "$rem" in
-    1) partial="$Q1" ;;
-    2) partial="$HALF" ;;
-    3) partial="$Q3" ;;
-  esac
-  local pcount=0; [ -n "$partial" ] && pcount=1
-  local empty=$(( units - full - pcount ))
   # Color = burn pace: usage % vs the share of the window's time already elapsed.
   # Just after a reset elapsed≈0, so the ratio explodes and even 1% reads as
   # "too fast". Below PACE_FLOOR% used you can't exhaust the window regardless of
@@ -156,33 +169,21 @@ render_window() { # $1=label $2=windowSec $3=units $4=daily $5=used $6=reset
     else col=$RED; fi
     pct=" ${col}${u}%${RESET}"
   fi
-  local dots="" i=0
-  while [ $i -lt $full ]; do dots+="$FULL"; i=$((i+1)); done
-  [ -n "$partial" ] && dots+="$partial"
-  i=0; while [ $i -lt $empty ]; do dots+="$EMPTY"; i=$((i+1)); done
-  printf '%s %s%s%s%s %s↻%s%s' "$label" "$col" "$dots" "$RESET" "$pct" "$DIM" "$(fmt_remaining $(( reset - now )) "$daily")" "$RESET"
+  printf '%s%s %s↻%s%s' "$label" "$pct" "$DIM" "$(fmt_remaining $(( reset - now )) "$daily")" "$RESET"
 }
 
 ctxseg=""
 if is_set "$ctx"; then
   cpct=$(round "$ctx"); cpct=${cpct:-0}
   [ "$cpct" -lt 0 ] && cpct=0; [ "$cpct" -gt 100 ] && cpct=100
-  filled=$(( (cpct + 5) / 10 )); [ "$filled" -gt 10 ] && filled=10
   if [ "$cpct" -lt 60 ]; then cc=$GREEN; elif [ "$cpct" -le 80 ]; then cc=$YELLOW; else cc=$RED; fi
-  bar="" i=0
-  while [ $i -lt $filled ]; do bar+="█"; i=$((i+1)); done
-  while [ $i -lt 10 ]; do bar+="░"; i=$((i+1)); done
-  ctxseg="⛁ ${cc}${bar} ${cpct}%${RESET}"
+  ctxseg="ctx ${cc}${cpct}%${RESET}"
 fi
 
-seg5=$(render_window "5h" 18000 5 0 "$fh_used" "$fh_reset")
-seg7=$(render_window "7d" 604800 7 1 "$sd_used" "$sd_reset")
-usage="$seg5"
-[ -n "$seg7" ] && { [ -n "$usage" ] && usage="$usage | $seg7" || usage="$seg7"; }
-
-line2="$ctxseg"
-if [ -n "$usage" ]; then
-  [ -n "$line2" ] && line2="$line2 | $usage" || line2="$usage"
-fi
-
-printf '%s\n%s\n' "$line1" "$line2"
+out=""
+join "$modelseg"
+join "$dirseg"
+join "$ctxseg"
+join "$(render_window "5h" 18000 0 "$fh_used" "$fh_reset")"
+join "$(render_window "7d" 604800 1 "$sd_used" "$sd_reset")"
+printf '%s\n' "$out"

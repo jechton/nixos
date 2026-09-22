@@ -101,6 +101,7 @@ in
           "Bash(sudo *)"
         ];
       };
+      promptSuggestionEnabled = false;
       statusLine = {
         type = "command";
         command = "$HOME/.claude/claude-statusline";

@@ -62,6 +62,7 @@ in
           };
         };
       };
+      model = "sonnet";
       outputStyle = "Concise";
       permissions = {
         deny = [

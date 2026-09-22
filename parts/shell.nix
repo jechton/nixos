@@ -84,8 +84,8 @@
           {
             name = "gc";
             category = "maintenance";
-            help = "Garbage collect system profile and optimize nix-store";
-            command = "nh clean all -k 4 --optimise \"$@\"";
+            help = "Garbage collect system profile and optimize nix-store, keeping each direnv project's current environment";
+            command = "nh clean all -k 4 --keep-one --optimise \"$@\"";
           }
           {
             name = "hash-url";

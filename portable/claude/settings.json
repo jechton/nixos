@@ -1,0 +1,88 @@
+{
+  "advisorModel": "opus",
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
+  "effortLevel": "medium",
+  "enabledPlugins": {
+    "commit-commands@claude-code-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-code-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-code"
+      }
+    }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          }
+        ]
+      }
+    ]
+  },
+  "lspServers": {
+    "python": {
+      "command": "pyright-langserver",
+      "args": ["--stdio"],
+      "extensionToLanguage": {
+        ".py": "python"
+      }
+    },
+    "typescript": {
+      "command": "typescript-language-server",
+      "args": ["--stdio"],
+      "extensionToLanguage": {
+        ".ts": "typescript",
+        ".tsx": "typescriptreact",
+        ".js": "javascript",
+        ".jsx": "javascriptreact"
+      }
+    }
+  },
+  "model": "sonnet",
+  "outputStyle": "Concise",
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(kill *)",
+      "Bash(pkill *)",
+      "Bash(rm *)"
+    ],
+    "deny": [
+      "Bash(chmod -R 000 /*)",
+      "Bash(chmod -R 777 /*)",
+      "Bash(dd *)",
+      "Bash(halt*)",
+      "Bash(mkfs*)",
+      "Bash(poweroff*)",
+      "Bash(reboot*)",
+      "Bash(rm -rf .*)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~*)",
+      "Bash(shutdown*)",
+      "Bash(sudo *)"
+    ]
+  },
+  "promptSuggestionEnabled": false,
+  "statusLine": {
+    "type": "command",
+    "command": "$HOME/.claude/claude-statusline",
+    "padding": 0
+  }
+}

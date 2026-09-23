@@ -21,6 +21,7 @@ in
     # numtide's llm-agents.nix rebuilds claude-code daily; nixpkgs-unstable
     # lags upstream by a week or more.
     package = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.claude-code;
+    # Mirrored in portable/claude/settings.json for non-Nix machines; keep in sync.
     settings = {
       # keep-sorted start block=yes
       advisorModel = "opus";

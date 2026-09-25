@@ -22,6 +22,7 @@
       ".local/share/Steam"
       ".local/share/bottles"
       ".local/share/osu"
+      ".renpy"
       ".steam"
       # keep-sorted end
     ];

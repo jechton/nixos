@@ -1,14 +1,12 @@
 {
   pkgs,
   lib,
-  inputs,
   config,
+  osConfig,
   ...
 }:
 let
   inherit (lib) mkOption types;
-
-  cfg = config.burrow.theme;
 
   c = config.lib.stylix.colors.withHashtag;
   oreo-custom-cursor = pkgs.oreo-cursors-plus.override {
@@ -35,7 +33,9 @@ let
     };
 in
 {
-  imports = [ inputs.stylix.homeModules.stylix ];
+  # The system-level stylix module (modules/system/theming.nix) auto-imports
+  # this same home-manager module and copies its enable/base16Scheme/fonts/etc
+  # over via home-manager.sharedModules, so it's not imported again here.
 
   options.burrow.theme = {
     colorScheme = mkOption {
@@ -65,18 +65,11 @@ in
   };
 
   config = {
+    burrow.theme = {
+      inherit (osConfig.burrow.theme) colorScheme fonts;
+    };
+
     stylix = {
-      enable = true;
-      # Don't complain about version mismatch, since stylix updates slower than nixpkgs
-      enableReleaseChecks = false;
-      autoEnable = true;
-      # Left unset this defaults to "either", which some targets treat as "follow
-      # system" instead of forcing dark, even with an unambiguously dark scheme.
-      polarity = "dark";
-      base16Scheme = "${inputs.stylix.inputs.tinted-schemes}/base16/${cfg.colorScheme}.yaml";
-
-      inherit (cfg) fonts;
-
       cursor = {
         name = "oreo_custom_cursors";
         package = oreo-custom-cursor;

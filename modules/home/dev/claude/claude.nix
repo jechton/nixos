@@ -127,9 +127,54 @@ in
           )
         );
 
-    # Anthropic's /commit and /commit-and-push slash commands, linked out of
-    # the claude-code repo's plugins/ directory.
-    plugins.commit-commands = "${inputs.claude-code}/plugins/commit-commands";
+    # Anthropic's /commit and /commit-and-push slash commands, amended to
+    # stage only the changes relevant to the task (same rule as the
+    # stage-my-changes skill, so a commit doesn't sweep up unrelated
+    # uncommitted edits), plus a /commit-push command derived from /commit's
+    # text (so it tracks upstream if that command's context/task changes)
+    # with push added, layered into the same plugin so it shares the
+    # commit-commands namespace.
+    plugins.commit-commands =
+      let
+        stagingClause = " Stage only the changes relevant to this task; if the working tree has unrelated uncommitted edits, leave them unstaged (use `git add -p` for a file that mixes both).";
+
+        commitMdUpstream = builtins.readFile "${inputs.claude-code}/plugins/commit-commands/commands/commit.md";
+        commitMdText =
+          lib.replaceStrings
+            [
+              "Based on the above changes, create a single git commit."
+              "Stage and create the commit using a single message."
+            ]
+            [
+              "Based on the above changes, create a single git commit.${stagingClause}"
+              "Stage only the changes relevant to this task, then create the commit in a single message."
+            ]
+            commitMdUpstream;
+        commitMd = pkgs.writeText "commit.md" commitMdText;
+
+        commitPushMd = pkgs.writeText "commit-push.md" (
+          lib.replaceStrings
+            [
+              "allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)"
+              "description: Create a git commit"
+              "Based on the above changes, create a single git commit."
+              "Stage only the changes relevant to this task, then create the commit in a single message."
+            ]
+            [
+              "allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git push:*)"
+              "description: Commit and push"
+              "Based on the above changes, create a single git commit, then push the current branch to origin."
+              "Stage only the changes relevant to this task, then create the commit and push in a single message."
+            ]
+            commitMdText
+        );
+      in
+      pkgs.runCommand "commit-commands-plugin" { } ''
+        cp -r ${inputs.claude-code}/plugins/commit-commands "$out"
+        chmod -R u+w "$out"
+        cp ${commitMd} "$out/commands/commit.md"
+        cp ${commitPushMd} "$out/commands/commit-push.md"
+      '';
   };
 
   home.packages = [

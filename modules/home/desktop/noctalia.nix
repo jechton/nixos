@@ -85,6 +85,25 @@ in
     Install.WantedBy = [ "sleep.target" ];
   };
 
+  # networking.nix disables NetworkManager-wait-online for a faster boot, so
+  # noctalia starts (via graphical-session.target) well before the network is
+  # actually up. Its one Google Calendar OAuth refresh attempt at startup then
+  # fails with a DNS lookup error and is never retried, leaving the calendar
+  # looking logged out until manually re-authenticated. Wait for real
+  # connectivity here and restart noctalia once it's up.
+  systemd.user.services.noctalia-wait-network = {
+    Unit = {
+      Description = "Restart noctalia once the network is up (works around a startup OAuth refresh racing DNS)";
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.networkmanager}/bin/nm-online -s -q --timeout=60";
+      ExecStartPost = "${pkgs.systemd}/bin/systemctl --user try-restart noctalia.service";
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
+
   # udiskie/udiskie-info binaries the aristides/udiskie plugin shells out to;
   # udisks2 itself is already enabled system-wide in modules/system/niri.nix.
   # glib provides gdbus, which the phone-connect plugin shells out to for all

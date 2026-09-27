@@ -5,6 +5,35 @@
   ...
 }:
 {
+  # lazy: xwayland-satellite 0.8.2 (current nixpkgs pin) drops override-redirect
+  # popups instantly, breaking Steam's context/top-bar menus. Fix is merged
+  # upstream (Supreeeme/xwayland-satellite#494) but unreleased; drop this
+  # override once nixpkgs bumps past 0.8.2.
+  nixpkgs.overlays = [
+    (final: prev: {
+      xwayland-satellite = prev.xwayland-satellite.overrideAttrs (
+        old:
+        let
+          version = "0.8.2-unstable-2026-09-26";
+          src = final.fetchFromGitHub {
+            owner = "Supreeeme";
+            repo = "xwayland-satellite";
+            rev = "add2795134593faafce60e404a0a75df68e9ee0c";
+            hash = "sha256-0TxfMgqW0/BLD4M942c5DCKYrtPvzsPJwvdcco4LQUM=";
+          };
+        in
+        {
+          inherit version src;
+          cargoDeps = final.rustPlatform.fetchCargoVendor {
+            inherit (old) pname;
+            inherit version src;
+            hash = "sha256-s1gl9eR6Mt2QLrhfcowstPFjzwE/lz4PJhJzWYHoIHg=";
+          };
+        }
+      );
+    })
+  ];
+
   programs.niri.enable = true;
 
   programs.dconf.enable = true;

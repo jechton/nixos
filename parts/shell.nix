@@ -72,7 +72,7 @@
               fi
               echo -e "Updating flake...\n"
               nix flake update --flake "$PRJ_ROOT" "$@"
-              git -C "$PRJ_ROOT" add -A
+              git -C "$PRJ_ROOT" add "$PRJ_ROOT/flake.lock"
               if [ "$#" -gt 0 ]; then
                 git -C "$PRJ_ROOT" commit -m "chore: update $*"
               else

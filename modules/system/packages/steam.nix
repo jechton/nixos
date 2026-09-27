@@ -9,9 +9,12 @@
   imports = [ inputs.nix-gaming.nixosModules.pipewireLowLatency ];
 
   config = lib.mkIf (!config.burrow.profiles.vm.enable) {
+    nixpkgs.overlays = [ inputs.millennium.overlays.default ];
+
     programs = {
       steam = {
         enable = true;
+        package = pkgs.millennium-steam;
         protontricks.enable = true;
         gamescopeSession.enable = true;
         extraCompatPackages = [ pkgs.proton-ge-bin ];

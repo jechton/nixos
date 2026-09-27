@@ -159,7 +159,8 @@ in
       patches = (old.patches or [ ]) ++ [
         (pkgs.fetchpatch {
           url = "https://github.com/noctalia-dev/noctalia/pull/4249.diff";
-          hash = "sha256-ZfCvWxILdYGh967kbqg846aXhsU6B6Tvk6EAT0Nxtao=";
+          excludes = [ "docs/*" ];
+          hash = "sha256-KRSgp98h3Jaj01yap9U4AfYyiW8A6pLKbhH5PRjaq/s=";
         })
       ];
     });

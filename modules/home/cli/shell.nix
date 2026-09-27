@@ -468,6 +468,41 @@ in
 
     vivid.enable = true;
 
+    wezterm = {
+      enable = true;
+      settings = {
+        default_cursor_style = "SteadyBar";
+        # mirrors ghostty's unfocused-split-opacity
+        inactive_pane_hsb = {
+          saturation = 1.0;
+          brightness = 0.85;
+        };
+      };
+      # mirrors ghostty's split keybinds; wezterm has no equalize-splits action
+      extraConfig = ''
+        return {
+          keys = {
+            { key = "Enter", mods = "ALT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },
+            { key = "Enter", mods = "ALT|SHIFT", action = wezterm.action.SplitVertical { domain = "CurrentPaneDomain" } },
+            { key = "w", mods = "ALT", action = wezterm.action.CloseCurrentPane { confirm = false } },
+            { key = "LeftArrow", mods = "ALT|SHIFT", action = wezterm.action.ActivatePaneDirection "Left" },
+            { key = "RightArrow", mods = "ALT|SHIFT", action = wezterm.action.ActivatePaneDirection "Right" },
+            { key = "UpArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection "Up" },
+            { key = "DownArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection "Down" },
+            { key = "z", mods = "ALT|SHIFT", action = wezterm.action.TogglePaneZoomState },
+          },
+          -- mirrors ghostty's copy-on-select = clipboard
+          mouse_bindings = {
+            {
+              event = { Up = { streak = 1, button = "Left" } },
+              mods = "NONE",
+              action = wezterm.action.CompleteSelection "ClipboardAndPrimarySelection",
+            },
+          },
+        }
+      '';
+    };
+
     zoxide = {
       enable = true;
       options = [ "--cmd cd" ];

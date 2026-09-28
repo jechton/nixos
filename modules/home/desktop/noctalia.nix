@@ -223,6 +223,8 @@ in
         dedupe_events = true;
         # Matches the "(Name at <hour>[:minute])" suffix
         dedupe_ignore_patterns = [ "\\s*\\([A-Za-z]+ at \\d+(:\\d{2})?\\)\\s*$" ];
+        # Empty disables the all-day event digest notification.
+        reminders.all_day_digest_time = "";
       };
 
       control_center = {

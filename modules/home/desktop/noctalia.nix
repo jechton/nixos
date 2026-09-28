@@ -160,7 +160,7 @@ in
         (pkgs.fetchpatch {
           url = "https://github.com/noctalia-dev/noctalia/pull/4249.diff";
           excludes = [ "docs/*" ];
-          hash = "sha256-KRSgp98h3Jaj01yap9U4AfYyiW8A6pLKbhH5PRjaq/s=";
+          hash = "sha256-b3wHe8oMu+jGENYvw/kAEdzTlunzPcqaqsiaTo3Dn3s=";
         })
       ];
     });

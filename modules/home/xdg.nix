@@ -34,7 +34,10 @@ in
     GRADLE_USER_HOME = "${cfg.dataHome}/gradle";
   };
 
-  home.sessionPath = [ "${cfg.dataHome}/pnpm" ];
+  home.sessionPath = [
+    "${config.home.homeDirectory}/.local/bin"
+    "${cfg.dataHome}/pnpm"
+  ];
 
   home.persistence."/persist".directories = [
     ".cache/npm"

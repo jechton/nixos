@@ -29,17 +29,20 @@ in
       isNormalUser = true;
       description = cfg.displayName;
       extraGroups = [
-        "wheel"
-        "nix"
+        # keep-sorted start
+        "audio"
+        "dialout"
+        "docker"
+        "games"
+        "input"
         "network"
         "networkmanager"
-        "video"
-        "audio"
+        "nix"
         "pipewire"
-        "input"
-        "games"
         "power"
-        "docker"
+        "video"
+        "wheel"
+        # keep-sorted end
       ];
       hashedPasswordFile = config.age.secrets.user-password.path;
     };

@@ -19,6 +19,7 @@
     home.persistence."/persist".directories = [
       # keep-sorted start
       ".config/itch"
+      ".config/millennium"
       ".local/share/Steam"
       ".local/share/bottles"
       ".local/share/osu"

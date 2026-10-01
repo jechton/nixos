@@ -6,8 +6,6 @@
   ...
 }:
 {
-  imports = [ inputs.nix-gaming.nixosModules.pipewireLowLatency ];
-
   config = lib.mkIf (!config.burrow.profiles.vm.enable) {
     nixpkgs.overlays = [ inputs.millennium.overlays.default ];
 
@@ -24,7 +22,13 @@
 
       gamemode = {
         enable = true;
-        settings.general.renice = 10;
+        settings = {
+          general.renice = 10;
+          custom = {
+            start = "${pkgs.pipewire}/bin/pw-metadata -n settings 0 clock.force-quantum 64";
+            end = "${pkgs.pipewire}/bin/pw-metadata -n settings 0 clock.force-quantum 0";
+          };
+        };
       };
 
       gamescope = {
@@ -37,10 +41,5 @@
       };
     };
 
-    services.pipewire.lowLatency = {
-      enable = true;
-      quantum = 64;
-      rate = 48000;
-    };
   };
 }

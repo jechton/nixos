@@ -52,7 +52,10 @@ in
       ];
     };
 
-    firewall.enable = true;
+    firewall = {
+      enable = true;
+      allowedTCPPorts = [ 6053 ];
+    };
 
     nameservers = [
       # these are all quad9

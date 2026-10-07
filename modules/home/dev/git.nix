@@ -121,7 +121,7 @@
           branch = true;
           showStash = true;
         };
-        tag.sort = "version.refname";
+        tag.sort = "version:refname";
         # prevent data corruption
         transfer.fsckObjects = true;
         #keep-sorted end

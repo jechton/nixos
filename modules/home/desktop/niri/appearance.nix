@@ -35,6 +35,12 @@ let
       open-floating = true;
     }
     {
+      matches = [ { app-id = "^net\\.sapples\\.LiveCaptions$"; } ];
+      open-floating = true;
+      default-column-width.proportion = 0.3;
+      default-window-height.fixed = 120;
+    }
+    {
       matches = [
         { app-id = "^steam$"; }
         { app-id = "^Steam$"; }

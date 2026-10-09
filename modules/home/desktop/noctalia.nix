@@ -154,17 +154,6 @@ in
     # removed in ../niri/startup.nix.
     systemd.enable = true;
 
-    # PR not yet merged upstream: https://github.com/noctalia-dev/noctalia/pull/4249
-    package = inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
-      patches = (old.patches or [ ]) ++ [
-        (pkgs.fetchpatch {
-          url = "https://github.com/noctalia-dev/noctalia/pull/4249.diff";
-          excludes = [ "docs/*" ];
-          hash = "sha256-b3wHe8oMu+jGENYvw/kAEdzTlunzPcqaqsiaTo3Dn3s=";
-        })
-      ];
-    });
-
     # The build-time config validator runs in the Nix sandbox, where it can't
     # load the local path plugin source (jechton/*), so it warns that these
     # plugins' widget types are "unrecognized". The config is fine: it

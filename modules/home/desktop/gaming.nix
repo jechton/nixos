@@ -13,7 +13,6 @@
       (bottles.override { removeWarningPopup = true; })
       itch
       osu-lazer-bin
-      wineasio
       # keep-sorted end
     ];
 

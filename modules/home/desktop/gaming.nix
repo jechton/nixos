@@ -10,7 +10,7 @@
 
     home.packages = with pkgs; [
       # keep-sorted start
-      bottles
+      (bottles.override { removeWarningPopup = true; })
       itch
       osu-lazer-bin
       # keep-sorted end

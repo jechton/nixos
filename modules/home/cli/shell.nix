@@ -310,6 +310,19 @@ in
     };
 
     # keep-sorted start block=yes newline_separated=yes
+    aria2 = {
+      enable = true;
+      settings = {
+        continue = true;
+        max-connection-per-server = 16;
+        split = 16;
+        min-split-size = "1M";
+        max-concurrent-downloads = 5;
+        file-allocation = "falloc";
+        disk-cache = "64M";
+      };
+    };
+
     bat = {
       enable = true;
       extraPackages = with pkgs.bat-extras; [

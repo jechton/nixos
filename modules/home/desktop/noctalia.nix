@@ -277,7 +277,7 @@ in
               column_gap = 10;
               font_size = 42;
               row_gap = 10;
-              template_file = osConfig.age.secrets.home-assistant-people-template.path;
+              template_file = "${pkgs.writeText "home-assistant-people-template.jinja" "{% from 'location.jinja' import family_locations %}{{ family_locations() }}"}";
               title = "";
             };
           };

@@ -1,4 +1,16 @@
+{ lib, ... }:
 {
+  # programs.ssh normally symlinks ~/.ssh/config into /nix/store, but /nix/store
+  # is group-writable by nixbld, which trips OpenSSH's safe_path() check
+  # ("Bad owner or permissions") for any strict ssh client. Replace the symlink
+  # with a real copy after each activation so the resolved path never touches the store.
+  home.activation.sshConfigRealFile = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -L "$HOME/.ssh/config" ]; then
+      cp --remove-destination "$(readlink -f "$HOME/.ssh/config")" "$HOME/.ssh/config"
+      chmod 600 "$HOME/.ssh/config"
+    fi
+  '';
+
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;

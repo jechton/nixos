@@ -39,7 +39,10 @@ in
 
       wifi = lib.mkIf hasWifi {
         backend = "wpa_supplicant";
-        powersave = config.burrow.profiles.laptop.enable;
+        # Powersave lets the radio doze and miss incoming UDP packets, which
+        # breaks KDE Connect reachability (laptop can discover the phone but
+        # the phone's packets back never arrive).
+        powersave = false;
         scanRandMacAddress = true;
       };
     };

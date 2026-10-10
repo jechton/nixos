@@ -8,9 +8,11 @@
       body = ''
         sudo systemctl start ivpn-service
         for i in (seq 10)
+          ivpn firewall -lan_allow >/dev/null 2>&1
+          ivpn splittun -on >/dev/null 2>&1
           set -l out (ivpn connect -fastest 2>&1)
           if test $status -eq 0
-            echo $out
+            printf '%s\n' $out
             return
           end
           if string match -iq '*not logged in*' -- $out
@@ -29,6 +31,17 @@
       body = ''
         ivpn disconnect
         sudo systemctl stop ivpn-service
+      '';
+    };
+
+    claude = {
+      description = "Run claude; bypasses the VPN tunnel when it's connected";
+      body = ''
+        if ivpn status 2>/dev/null | string match -q '*: CONNECTED*'
+          ivpn exclude claude $argv
+        else
+          command claude $argv
+        end
       '';
     };
   };

@@ -75,6 +75,9 @@ in
       # fish
       interactiveShellInit = ''
         set fish_greeting
+        # sponge purges a failed command from history after this many
+        # subsequent commands, instead of immediately
+        set --universal sponge_delay 10
       '';
 
       # fish

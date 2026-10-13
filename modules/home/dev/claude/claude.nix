@@ -28,6 +28,9 @@ in
         pr = "";
         sessionUrl = false;
       };
+      # Trigger auto-compact well before the default window; long sessions
+      # stay expensive even with caching once context passes ~150k tokens.
+      autoCompactWindow = 150000;
       autoUpdates = false;
       effortLevel = "medium";
       # RTK (Rust Token Killer): rewrites Bash commands to filtered `rtk`

@@ -40,7 +40,10 @@ in
   ];
 
   home.persistence."/persist".directories = [
+    ".bun/install/cache"
     ".cache/npm"
+    ".local/share/android"
+    ".local/share/gradle"
     ".local/share/npm"
     ".local/share/pnpm"
   ];

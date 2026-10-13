@@ -14,6 +14,13 @@ let
     ];
     text = builtins.readFile ./statusline.sh;
   };
+  # lazy: nixpkgs' pinned pnpmDeps hash for typescript-language-server doesn't
+  # match what pnpm actually fetches; drop this override once upstream re-pins it.
+  typescript-language-server = pkgs.typescript-language-server.overrideAttrs (old: {
+    pnpmDeps = old.pnpmDeps.overrideAttrs (_: {
+      outputHash = "sha256-xR/EF60lVBsITKgH7wCM2wHM46PFQevD51KfCENSUH4=";
+    });
+  });
 in
 {
   programs.claude-code = {
@@ -58,7 +65,7 @@ in
           };
         };
         typescript = {
-          command = "${pkgs.typescript-language-server}/bin/typescript-language-server";
+          command = "${typescript-language-server}/bin/typescript-language-server";
           args = [ "--stdio" ];
           extensionToLanguage = {
             ".ts" = "typescript";

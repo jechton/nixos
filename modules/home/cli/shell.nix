@@ -328,6 +328,23 @@ in
 
     bat = {
       enable = true;
+      # The stylix theme's lineHighlight (base03) equals its comment color, so
+      # comments on batgrep's matched lines vanish. Use base02 instead.
+      config.theme = lib.mkForce "base16-stylix-hl";
+      themes.base16-stylix-hl.src =
+        pkgs.runCommand "base16-stylix-hl.tmTheme"
+          {
+            theme = config.programs.bat.themes.base16-stylix.src;
+            from = config.lib.stylix.colors.withHashtag.base03;
+            to = config.lib.stylix.colors.withHashtag.base02;
+          }
+          ''
+            awk -v from="$from" -v to="$to" '
+              /<key>lineHighlight<\/key>/ { hl = 1 }
+              hl && /<string>/ { sub(from, to); hl = 0 }
+              { print }
+            ' "$theme" > $out
+          '';
       extraPackages = with pkgs.bat-extras; [
         batpipe
         batwatch

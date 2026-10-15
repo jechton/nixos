@@ -7,15 +7,45 @@
 }:
 let
   inherit (lib) mkOption types;
-
-  c = config.lib.stylix.colors.withHashtag;
-  oreo-custom-cursor = pkgs.oreo-cursors-plus.override {
-    cursorsConf = ''
-      sizes = 24, 32, 40, 48
-
-      custom = color: ${c.base05}, label: ${c.base00}, shadow: ${c.base00}, shadow-opacity: 0.4, stroke: ${c.base00}, stroke-width: 1, stroke-opacity: 0.8
-    '';
-  };
+  # Catppuccin mocha "dark" cursors with the mocha palette replaced by the
+  # stylix scheme. Only the colors the cursor templates use are overridden.
+  catppuccin-custom-cursor =
+    let
+      colorOverrides = pkgs.writeText "cursor-colors.json" (
+        builtins.toJSON {
+          mocha = {
+            base = config.lib.stylix.colors.base00;
+            text = config.lib.stylix.colors.base05;
+            blue = config.lib.stylix.colors.base0D;
+            green = config.lib.stylix.colors.base0B;
+            lavender = config.lib.stylix.colors.base0D;
+            mauve = config.lib.stylix.colors.base0E;
+            peach = config.lib.stylix.colors.base09;
+            red = config.lib.stylix.colors.base08;
+          };
+        }
+      );
+    in
+    pkgs.catppuccin-cursors.overrideAttrs (old: {
+      outputs = [ "out" ];
+      postPatch = (old.postPatch or "") + ''
+        substituteInPlace build \
+          --replace-fail 'whiskers $file $flavour' \
+          'whiskers $file $flavour --color-overrides "$(cat ${colorOverrides})"'
+      '';
+      buildPhase = ''
+        runHook preBuild
+        patchShebangs .
+        just build mocha dark
+        runHook postBuild
+      '';
+      installPhase = ''
+        runHook preInstall
+        mkdir -p $out/share/icons
+        mv dist/catppuccin-mocha-dark-cursors $out/share/icons/
+        runHook postInstall
+      '';
+    });
 
   mkFontOption =
     { name, package }:
@@ -71,8 +101,8 @@ in
 
     stylix = {
       cursor = {
-        name = "oreo_custom_cursors";
-        package = oreo-custom-cursor;
+        name = "catppuccin-mocha-dark-cursors";
+        package = catppuccin-custom-cursor;
         size = 32;
       };
 

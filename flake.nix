@@ -111,20 +111,20 @@
     extra-substituters = [
       # keep-sorted start
       "https://cache.nixos.org"
-      "https://chaotic-nyx.cachix.org" # cachyos kernel
       "https://cache.numtide.com" # llm-agents.nix
       "https://nix-community.cachix.org"
       "https://noctalia.cachix.org"
+      "https://nyx-cache.chaotic.cx" # cachyos kernel
       # keep-sorted end
     ];
 
     extra-trusted-public-keys = [
       # keep-sorted start
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      "chaotic-nyx.cachix.org-1:HfnXSw4pj95iI/n17rIDy40agHj12WfF+Gqk6SonIT8="
       "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
+      "nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk="
       # keep-sorted end
     ];
 

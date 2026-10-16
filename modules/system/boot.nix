@@ -10,10 +10,7 @@
 
   boot = {
     kernelPackages =
-      if config.burrow.profiles.vm.enable then
-        pkgs.linuxPackages
-      else
-        pkgs.linuxPackages_cachyos;
+      if config.burrow.profiles.vm.enable then pkgs.linuxPackages else pkgs.linuxPackages_cachyos;
 
     initrd.systemd.enable = true;
     loader = {

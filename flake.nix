@@ -42,7 +42,6 @@
     };
     chaotic = {
       url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
     claude-code = {
       url = "github:anthropics/claude-code";

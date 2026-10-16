@@ -42,7 +42,6 @@
         "https://niri.cachix.org"
         "https://nix-community.cachix.org"
         "https://noctalia.cachix.org"
-        "https://nyx-cache.chaotic.cx" # cachyos kernel
         # keep-sorted end
       ];
 
@@ -52,7 +51,6 @@
         "niri.cachix.org-1:Wv0OmO7PsuocRKzfDoJ3mulSl7Z6oezYhGhR+3W2964="
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
         "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
-        "nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk="
         # keep-sorted end
       ];
 

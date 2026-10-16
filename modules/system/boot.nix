@@ -5,9 +5,8 @@
   ...
 }:
 {
-  nixpkgs.overlays = [
-    inputs.chaotic.overlays.default
-  ];
+  # Adds the Chaotic-Nyx overlay and binary cache.
+  imports = [ inputs.chaotic.nixosModules.default ];
 
   boot = {
     kernelPackages =

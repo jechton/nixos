@@ -6,7 +6,7 @@
 }:
 {
   nixpkgs.overlays = [
-    inputs.nix-cachyos-kernel.overlays.pinned
+    inputs.chaotic.overlays.default
   ];
 
   boot = {
@@ -14,7 +14,7 @@
       if config.burrow.profiles.vm.enable then
         pkgs.linuxPackages
       else
-        pkgs.cachyosKernels.linuxPackages-cachyos-bore;
+        pkgs.linuxPackages_cachyos;
 
     initrd.systemd.enable = true;
     loader = {

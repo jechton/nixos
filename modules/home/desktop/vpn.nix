@@ -1,16 +1,28 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 {
   home.packages = [ pkgs.riseup-vpn ];
 
   programs.fish.functions = {
     vpn-on = {
-      description = "Start the IVPN daemon and connect to the fastest server";
+      description = "Start the IVPN daemon and connect to the fastest server, or pick one with --pick";
       body = ''
         sudo systemctl start ivpn-service
+        set -l target -fastest
+        if contains -- --pick $argv
+          set -l servers
+          for i in (seq 10)
+            set servers (ivpn servers 2>/dev/null)
+            and break
+            sleep 0.5
+          end
+          set -l choice (printf '%s\n' $servers | string match '*.ivpn.net*' | ${lib.getExe pkgs.fzf} --prompt 'server> ')
+          or return 1
+          set target (string match -r '\S+\.ivpn\.net' -- $choice)[1]
+        end
         for i in (seq 10)
           ivpn firewall -lan_allow >/dev/null 2>&1
           ivpn splittun -on >/dev/null 2>&1
-          set -l out (ivpn connect -fastest 2>&1)
+          set -l out (ivpn connect $target 2>&1)
           if test $status -eq 0
             printf '%s\n' $out
             return

@@ -32,7 +32,6 @@ in
       pkgs.pnpm
       pkgs.procs
       pkgs.qsv
-      pkgs.superfile
       pkgs.trash-cli
       pkgs.unzip
       pkgs.xan
@@ -154,6 +153,19 @@ in
               return 1
             end
             mkdir -p -- "$dir" && cd -- "$dir"
+          '';
+        };
+
+        spf = {
+          description = "Superfile, cd to the last directory on quit";
+          # fish
+          body = ''
+            set -lx SPF_LAST_DIR ~/.local/state/superfile/lastdir
+            command superfile $argv
+            if test -f $SPF_LAST_DIR
+              source $SPF_LAST_DIR
+              rm -f -- $SPF_LAST_DIR
+            end
           '';
         };
 
@@ -486,7 +498,84 @@ in
       ];
     };
 
-    superfile.enable = true;
+    superfile = {
+      enable = true;
+      zoxidePackage = config.programs.zoxide.package;
+      settings = {
+        auto_check_update = false;
+        cd_on_quit = true;
+        editor = "hx";
+        theme = "stylix";
+        zoxide_support = true;
+      };
+      themes.stylix =
+        let
+          inherit (config.lib.stylix.colors.withHashtag)
+            base00
+            base01
+            base03
+            base04
+            base05
+            base08
+            base0B
+            base0C
+            base0D
+            base0E
+            ;
+        in
+        {
+          code_syntax_highlight = "catppuccin-mocha";
+
+          full_screen_fg = base04;
+          full_screen_bg = base00;
+
+          gradient_color = [
+            base0D
+            base0E
+          ];
+          directory_icon_color = "";
+
+          file_panel_fg = base04;
+          file_panel_bg = base00;
+          file_panel_border = base03;
+          file_panel_border_active = base0D;
+          file_panel_top_directory_icon = base0B;
+          file_panel_top_path = base0D;
+          file_panel_item_selected_fg = base0C;
+          file_panel_item_selected_bg = base00;
+
+          footer_fg = base04;
+          footer_bg = base00;
+          footer_border = base03;
+          footer_border_active = base0B;
+
+          sidebar_fg = base04;
+          sidebar_bg = base00;
+          sidebar_title = base0C;
+          sidebar_border = base00;
+          sidebar_border_active = base08;
+          sidebar_item_selected_fg = base0C;
+          sidebar_item_selected_bg = base00;
+          sidebar_divider = base03;
+
+          modal_fg = base04;
+          modal_bg = base00;
+          modal_border_active = base03;
+          modal_cancel_fg = base01;
+          modal_cancel_bg = base08;
+          modal_confirm_fg = base01;
+          modal_confirm_bg = base0C;
+
+          help_menu_hotkey = base0C;
+          help_menu_title = base08;
+
+          cursor = base05;
+          correct = base0B;
+          error = base08;
+          hint = base0C;
+          cancel = base08;
+        };
+    };
 
     tealdeer = {
       enable = true;
@@ -615,6 +704,8 @@ in
     ".cache/tealdeer"
     ".local/share/direnv"
     ".local/share/fish"
+    ".local/share/superfile"
     ".local/share/zoxide"
+    ".local/state/superfile"
   ];
 }

@@ -4,7 +4,12 @@
 #   used%   = colored by burn pace (used% vs time-elapsed%): blue ok, yellow tight, red too fast
 #   ↻rem    = time left until the window resets
 #
-# Customize via env: CC_SL_PACE_FLOOR (used% below which pace color stays blue; default 5).
+# On wide terminals (CC_SL_WIDE_COLS or more, default 100) each window also shows the pace
+# delta vs. time elapsed: ⇡N% (red) = N points over pace, ⇣N% (green) = N points under.
+# At CC_SL_WIDEST_COLS or more (default 120) it also shows the local reset time.
+#
+# Customize via env: CC_SL_PACE_FLOOR (used% below which pace color stays blue; default 5),
+# CC_SL_WIDE_COLS (width that enables the pace arrows; default 100), CC_SL_WIDEST_COLS (reset times; default 120).
 
 input=$(cat)
 
@@ -72,6 +77,13 @@ read_fields() {
 } < <(read_fields)
 
 now=$(date +%s)
+
+# Terminal width: $COLUMNS if exported, else ask the controlling tty (stdin is the JSON pipe).
+cols=${COLUMNS:-$(stty size </dev/tty 2>/dev/null | cut -d' ' -f2)}
+wide=0
+widest=0
+case "$cols" in ''|*[!0-9]*) ;; *) [ "$cols" -ge "${CC_SL_WIDE_COLS:-100}" ] && wide=1 ;; esac
+case "$cols" in ''|*[!0-9]*) ;; *) [ "$cols" -ge "${CC_SL_WIDEST_COLS:-120}" ] && widest=1 ;; esac
 
 # --- colors -------------------------------------------------------------------
 BLUE=$'\033[94m'; YELLOW=$'\033[33m'; RED=$'\033[31m'; GREEN=$'\033[32m'
@@ -177,8 +189,17 @@ render_window() { # $1=label $2=windowSec $3=daily $4=used $5=reset
     elif [ $(( 2 * u * win )) -le $(( 3 * elapsed * 100 )) ]; then col=$YELLOW
     else col=$RED; fi
     pct=" ${col}${u}%${RESET}"
+    if [ "$wide" -eq 1 ]; then
+      local delta=$(( u - elapsed * 100 / win ))
+      if [ "$delta" -gt 0 ]; then pct+=" ${RED}⇡${delta}%${RESET}"
+      elif [ "$delta" -lt 0 ]; then pct+=" ${GREEN}⇣$(( -delta ))%${RESET}"; fi
+    fi
   fi
-  printf '%s%s %s↻%s%s' "$label" "$pct" "$DIM" "$(fmt_remaining $(( reset - now )) "$daily")" "$RESET"
+  local at=""
+  if [ "$widest" -eq 1 ]; then
+    if [ "$daily" -eq 1 ]; then at=$(date -d "@$reset" "+ (%a %-I:%M%P)"); else at=$(date -d "@$reset" "+ (%-I:%M%P)"); fi
+  fi
+  printf '%s%s %s↻%s%s%s' "$label" "$pct" "$DIM" "$(fmt_remaining $(( reset - now )) "$daily")" "$at" "$RESET"
 }
 
 ctxseg=""

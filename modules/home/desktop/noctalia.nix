@@ -444,6 +444,7 @@ in
         launcher = {
           categories = false;
           compact = true;
+          layout = "simple";
         };
 
         panel.open_near_click_control_center = true;

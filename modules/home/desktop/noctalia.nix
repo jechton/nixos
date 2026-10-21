@@ -101,7 +101,8 @@ in
     pkgs.satty
     pkgs.tesseract
     pkgs.translate-shell
-    pkgs.udiskie
+    # lazy: test_cache::test_is_valid fails in the nixpkgs build; drop once fixed upstream.
+    (pkgs.udiskie.overridePythonAttrs { doCheck = false; })
     pkgs.zbar
   ];
 

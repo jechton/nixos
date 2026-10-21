@@ -1,6 +1,6 @@
 ---
 name: cli-tools
-description: Reference for token-optimized CLI tools (ast-grep, semgrep, fastmod, rtk). Load before first use of any code search or rewrite tool, or before running rtk meta commands.
+description: Reference for token-optimized CLI tools (ast-grep, fastmod, rtk). Load before first use of any code search or rewrite tool, or before running rtk meta commands.
 ---
 
 # CLI Tools Reference
@@ -9,17 +9,18 @@ Token-optimized tools for structural code search, rewriting, and rtk analytics.
 
 ## Which tool
 
-1. Renaming a method call, function call, or expression: `ast-grep`.
-2. Structural pattern where arguments or expressions vary: `semgrep`.
-3. Literal string replacement (config keys, identifiers, YAML): `fastmod`.
-4. rtk token-savings analytics: `rtk gain` or `rtk discover`.
+1. Renaming a method call, function call, or expression, or any structural
+   pattern (use metavariables when arguments vary): `ast-grep`.
+2. Literal string replacement (config keys, identifiers, YAML): `fastmod`.
+3. rtk token-savings analytics: `rtk gain` or `rtk discover`.
 
 If the target is not a syntax fragment in the language (YAML keys, plain
-strings, config values), use `fastmod`, not `ast-grep` or `semgrep`.
+strings, config values), use `fastmod`, not `ast-grep`.
 
 ## ast-grep
 
-AST-aware search and structural rewrite.
+AST-aware search and structural rewrite. Metavariables (`$X`, `$$$ARGS`)
+match varying expressions and argument lists.
 
 ```bash
 ast-grep run --pattern '<pattern>' --lang <lang> .
@@ -30,21 +31,6 @@ Use for renaming a call or expression across a codebase, or when `fastmod`
 would wrongly match inside comments and strings. Languages: Java, TypeScript,
 JavaScript, Python, Go, Rust, C, C++. Do not use for bare identifiers in
 config or YAML, or when the pattern is not a valid syntax fragment.
-
-## semgrep
-
-Structural analysis and rewriting with metavariables (`$X`, `$FUNC`,
-`$...ARGS`).
-
-```bash
-semgrep scan --pattern '<pattern>' --lang <lang> .
-semgrep scan --pattern '<pattern>' --lang <lang> --json .
-semgrep scan --config <rule.yaml> .
-```
-
-Use when arguments or expressions vary and the exact AST match of `ast-grep`
-is too rigid. For a simple literal rename use `fastmod`; for one specific call
-with no argument variation use `ast-grep`.
 
 ## fastmod
 

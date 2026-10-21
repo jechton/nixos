@@ -191,7 +191,6 @@ in
     pkgs.ast-grep
     pkgs.fastmod
     pkgs.rtk
-    pkgs.semgrep
     # keep-sorted end
   ];
 

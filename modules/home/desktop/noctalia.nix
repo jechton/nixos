@@ -64,27 +64,6 @@ in
   # session, delete settings.toml's [desktop_widgets] block before the restart
   # so it falls back to config.toml.
 
-  # noctalia's shared curl handle keeps a connection pool that goes stale across
-  # a suspend/resume: every plugin HTTP request (kimai, home-assistant) then
-  # hangs until its 30s timeout and never recovers until the process restarts
-  # (noctalia-dev/noctalia-shell src/net/http_client.cpp — the plugin `request`
-  # path sets neither CURLOPT_FRESH_CONNECT nor a resume hook). Bounce the
-  # service on resume until that's fixed upstream. sleep.target is pulled in by
-  # suspend/hibernate/hybrid-sleep/suspend-then-hibernate; ordering After it
-  # means this runs as the system thaws. try-restart is a no-op when noctalia
-  # isn't running (e.g. suspended at the greeter).
-  systemd.user.services.noctalia-resume = {
-    Unit = {
-      Description = "Restart noctalia after resume (works around a stale curl connection pool)";
-      After = [ "sleep.target" ];
-    };
-    Service = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.systemd}/bin/systemctl --user try-restart noctalia.service";
-    };
-    Install.WantedBy = [ "sleep.target" ];
-  };
-
   # networking.nix disables NetworkManager-wait-online for a faster boot, so
   # noctalia starts (via graphical-session.target) well before the network is
   # actually up. Its one Google Calendar OAuth refresh attempt at startup then

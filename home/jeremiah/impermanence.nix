@@ -9,6 +9,8 @@ _: {
       "Videos"
       "Projects"
 
+      "Games"
+
       # No owning module for these
       {
         directory = ".ssh";

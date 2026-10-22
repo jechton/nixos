@@ -14,6 +14,19 @@ let
     ];
     text = builtins.readFile ./statusline.sh;
   };
+  # PreToolUse hook: python is not installed, so a bare python/python3 command
+  # always fails. Exit 2 blocks the call and shows stderr to Claude. Only
+  # command-position matches are blocked, so `uv run python ...` passes.
+  denyPython = pkgs.writeShellApplication {
+    name = "claude-deny-python";
+    runtimeInputs = [ pkgs.jq ];
+    text = ''
+      if jq -e '.tool_input.command | test("(^|[;&|(]\\s*)python3?(\\s|$)")' > /dev/null; then
+        echo "python is not installed. Use Edit/Write, sed, fastmod, jq, or 'uv run python'." >&2
+        exit 2
+      fi
+    '';
+  };
   # lazy: nixpkgs' pinned pnpmDeps hash for typescript-language-server doesn't
   # match what pnpm actually fetches; drop this override once upstream re-pins it.
   typescript-language-server = pkgs.typescript-language-server.overrideAttrs (old: {
@@ -52,6 +65,10 @@ in
             {
               type = "command";
               command = "${lib.getExe pkgs.rtk} hook claude";
+            }
+            {
+              type = "command";
+              command = lib.getExe denyPython;
             }
           ];
         }

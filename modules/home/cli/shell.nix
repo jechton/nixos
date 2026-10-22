@@ -117,6 +117,21 @@ in
       };
 
       functions = {
+        fish_command_not_found = {
+          description = "List packages providing the missing command, then suggest running it via comma";
+          # fish
+          body = ''
+            set -l attrs (${lib.getExe' pkgs.nix-index "nix-locate"} --minimal --no-group --type x --type s --whole-name --at-root "/bin/$argv[1]" 2>/dev/null | string replace -r '\.out$' ''' | sort -u)
+            if test -z "$attrs"
+              echo "fish: Unknown command: $argv[1]" >&2
+              return 127
+            end
+            echo "The program '$argv[1]' is not installed. It is provided by:" >&2
+            printf '  %s\n' $attrs >&2
+            echo "Run it once with comma: , "(string escape -- $argv | string join ' ') >&2
+          '';
+        };
+
         starship_transient_prompt_func = {
           body = "starship module character";
         };
@@ -482,9 +497,13 @@ in
 
     lazydocker.enable = true;
 
-    nix-index-database.comma.enable = true;
+    nix-index = {
+      enable = true;
+      # fish_command_not_found below replaces the stock handler to add a comma hint
+      enableFishIntegration = false;
+    };
 
-    nix-index.enable = true;
+    nix-index-database.comma.enable = true;
 
     ripgrep = {
       enable = true;

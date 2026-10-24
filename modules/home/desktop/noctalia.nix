@@ -438,7 +438,15 @@ in
         time_format = "%-I:%M %P";
         polkit_agent = true;
         avatar_path = "${config.home.homeDirectory}/.face";
-        screenshot.directory = "~/Pictures/Screenshots";
+        screenshot = {
+          annotate = true;
+          confirm_region = true;
+          directory = "~/Pictures/Screenshots";
+          region_modifier = "super";
+          remember_last_region = true;
+          show_cursor = true;
+          skip_annotate_on_copy_save = true;
+        };
         font_family = lib.mkForce config.burrow.theme.fonts.monospace.name;
 
         launcher = {

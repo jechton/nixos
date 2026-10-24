@@ -259,7 +259,7 @@ in
       {
         "Print" = withTitle "Screenshot" (spawn (noctalia [ "screenshot-region" ]));
         "Ctrl+Print" = withTitle "Screenshot Screen" (spawn (noctalia [ "screenshot-fullscreen" ]));
-        "Alt+Print" = withTitle "Screenshot Window" (spawn (noctalia [ "screenshot-window" ]));
+        "Alt+Print" = withTitle "Screenshot Window" (noArg "screenshot-window");
         "Mod+Shift+S" = withTitle "Screenshot Region" (spawn (noctalia [ "screenshot-region" ]));
         "Mod+Ctrl+Shift+S" = withTitle "Screenshot Screen" (spawn (noctalia [ "screenshot-fullscreen" ]));
         "Mod+Ctrl+Print" = withTitle "OCR Region" (spawn "ocr-region");

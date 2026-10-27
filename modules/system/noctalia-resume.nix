@@ -1,4 +1,14 @@
 { config, pkgs, ... }:
+let
+  userctl = "${pkgs.systemd}/bin/systemctl --user --machine=${config.burrow.users.username}@.host";
+  relock = pkgs.writeShellScript "noctalia-relock" ''
+    for _ in $(seq 20); do
+      ${userctl} start lock-before-sleep.service && exit 0
+      sleep 1
+    done
+    exit 1
+  '';
+in
 {
   # noctalia's shared curl handle keeps a connection pool that goes stale across
   # a suspend/resume: every plugin HTTP request (kimai, home-assistant) then
@@ -11,13 +21,21 @@
   # user unit wanted by it never runs. Ordering After sleep.target means this
   # runs as the system thaws. try-restart is a no-op when noctalia isn't
   # running (e.g. suspended at the greeter).
+  #
+  # The session is locked before suspend (lock-before-sleep in
+  # hardware/power.nix). When the locker process exits, niri keeps the screen
+  # locked behind a solid red surface until a new locker takes over, so the
+  # restart is followed by a re-lock, retried until the new noctalia's IPC is up.
   systemd.services.noctalia-resume = {
     description = "Restart noctalia after resume (works around a stale curl connection pool)";
     after = [ "sleep.target" ];
     wantedBy = [ "sleep.target" ];
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = "${pkgs.systemd}/bin/systemctl --user --machine=${config.burrow.users.username}@.host try-restart noctalia.service";
+      ExecStart = [
+        "${userctl} try-restart noctalia.service"
+        "${relock}"
+      ];
     };
   };
 }

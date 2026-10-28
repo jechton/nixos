@@ -84,7 +84,8 @@ in
       wantedBy = [ "sleep.target" ];
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = "noctalia msg session lock";
+        # user units don't get the system PATH, so spell out the profile path
+        ExecStart = "/run/current-system/sw/bin/noctalia msg session lock";
       };
     };
   };

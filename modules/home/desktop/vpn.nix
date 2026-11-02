@@ -14,7 +14,12 @@
             and break
             sleep 0.5
           end
-          set -l choice (printf '%s\n' $servers | string match '*.ivpn.net*' | ${lib.getExe pkgs.fzf} --prompt 'server> ')
+          set -l rows
+          for line in (printf '%s\n' $servers | string match '*WireGuard*')
+            set -l f (string trim -- (string split '|' -- $line))
+            set -a rows (string join '|' $f[3] $f[4] $f[5] $f[2])
+          end
+          set -l choice (printf '%s\n' $rows | ${pkgs.util-linux}/bin/column -t -s '|' | ${lib.getExe pkgs.fzf} --prompt 'server> ')
           or return 1
           set target (string match -r '\S+\.ivpn\.net' -- $choice)[1]
         end
@@ -41,6 +46,7 @@
       description = "Disconnect IVPN";
       body = ''
         ivpn disconnect
+        ivpn firewall -off
       '';
     };
 

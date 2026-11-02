@@ -20,6 +20,8 @@
       done
       ivpn wifi -default_trust_status untrusted
       ivpn wifi -set_trusted_action untrusted_connect_vpn:on
+      # a firewall on join would block the captive portal login page
+      ivpn wifi -set_trusted_action untrusted_enable_firewall:off
     '';
   };
 

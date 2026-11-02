@@ -96,7 +96,12 @@
   programs = {
     nh = {
       enable = true;
-      clean.enable = true;
+      clean = {
+        enable = true;
+        # Without this the weekly clean drops every direnv devshell root, so
+        # large shell deps (chromium) are re-downloaded on next entry.
+        extraArgs = "--keep-one";
+      };
     };
     nix-ld.enable = true;
   };

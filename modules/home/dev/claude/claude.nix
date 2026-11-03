@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   lib,
   inputs,
@@ -70,6 +71,9 @@ in
       autoCompactWindow = 150000;
       autoUpdates = false;
       effortLevel = "medium";
+      # impeccable's URL scanning only auto-detects Chrome, Chromium, Edge and
+      # Brave; point it at the Chromium-based Helium instead.
+      env.IMPECCABLE_BROWSER = "${config.programs.helium.package}/bin/helium";
       # RTK (Rust Token Killer): rewrites Bash commands to filtered `rtk`
       # equivalents before they run, cutting command output noise from the
       # context window. `rtk hook claude` is the native PreToolUse processor,

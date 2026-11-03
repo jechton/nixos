@@ -251,6 +251,9 @@ in
       executable = true;
     };
 
+    # Opts in to the i-have-adhd SessionStart hook injecting its ruleset every session.
+    home.file.".claude/.i-have-adhd-always".text = "";
+
     home.persistence."/persist" = {
       directories = [ ".claude" ];
       files = [ ".claude.json" ];

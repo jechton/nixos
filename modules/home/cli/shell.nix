@@ -558,6 +558,9 @@ in
 
     nix-search-tv.enable = true;
 
+    # thefuck replacement: `f` offers a corrected version of the last command.
+    pay-respects.enable = true;
+
     ripgrep = {
       enable = true;
       arguments = [

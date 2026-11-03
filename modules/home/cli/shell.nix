@@ -661,6 +661,14 @@ in
     # keep-sorted end
   };
 
+  # Television's built-in channels, pinned to the package version so they don't
+  # depend on `tv update-channels` writing into the wiped home. recursive keeps
+  # the directory writable-by-merge with channels declared in Nix.
+  xdg.configFile."television/cable" = {
+    source = "${pkgs.television.src}/cable/unix";
+    recursive = true;
+  };
+
   # Markdown files piped through less/bat (e.g. via batpipe) render with glow
   # instead of bat's plain syntax highlighting.
   xdg.configFile."batpipe/viewers.d/markdown.sh".text = ''

@@ -55,6 +55,18 @@
       url = "github:oxcl/nix-flake-helium-browser";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    humanizer = {
+      url = "github:blader/humanizer";
+      flake = false;
+    };
+    i-have-adhd = {
+      url = "github:ayghri/i-have-adhd";
+      flake = false;
+    };
+    impeccable = {
+      url = "github:pbakaus/impeccable";
+      flake = false;
+    };
     llm-agents.url = "github:numtide/llm-agents.nix";
     mattpocock-skills = {
       url = "github:mattpocock/skills";

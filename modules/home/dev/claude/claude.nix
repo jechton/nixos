@@ -173,7 +173,14 @@ in
       )
       // lib.mapAttrs (
         name: category: "${inputs.mattpocock-skills}/skills/${category}/${name}"
-      ) mattpocockSkills;
+      ) mattpocockSkills
+      // {
+        humanizer = "${inputs.humanizer}";
+      };
+
+    # Upstream plugins used as-is: their repo (or subdirectory) is the plugin.
+    plugins.i-have-adhd = "${inputs.i-have-adhd}";
+    plugins.impeccable = "${inputs.impeccable}/plugin";
 
     # Anthropic's /commit and /commit-and-push slash commands, amended to
     # stage only the changes relevant to the task (same rule as the

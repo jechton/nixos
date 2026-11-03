@@ -460,6 +460,54 @@
         "type": "github"
       }
     },
+    "humanizer": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793171853,
+        "narHash": "sha256-KaAcA2rxlkae3DID4w3GFQbyXrnararlHVrL32C5jeE=",
+        "owner": "blader",
+        "repo": "humanizer",
+        "rev": "0ef9fe5bc3572734fd3ae6c448fe00a30cd5dcf0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "blader",
+        "repo": "humanizer",
+        "type": "github"
+      }
+    },
+    "i-have-adhd": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791734634,
+        "narHash": "sha256-GTqrnZxQvzo/ogAuUrffkOaMK1BYm/4rAZsnfmDt7DU=",
+        "owner": "ayghri",
+        "repo": "i-have-adhd",
+        "rev": "1ecea1993b7fce257ffbd686c070948b5e07eda6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ayghri",
+        "repo": "i-have-adhd",
+        "type": "github"
+      }
+    },
+    "impeccable": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793659091,
+        "narHash": "sha256-CuVmyKOPOAoHyrO+NM71kryBcKayM/E6TTX9z6K/QVo=",
+        "owner": "pbakaus",
+        "repo": "impeccable",
+        "rev": "9fadc41729c38fd47d7ae622b501558653f9d2e9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "pbakaus",
+        "repo": "impeccable",
+        "type": "github"
+      }
+    },
     "impermanence": {
       "inputs": {
         "home-manager": [
@@ -934,6 +982,9 @@
         "flake-parts": "flake-parts",
         "helium-browser": "helium-browser",
         "home-manager": "home-manager_2",
+        "humanizer": "humanizer",
+        "i-have-adhd": "i-have-adhd",
+        "impeccable": "impeccable",
         "impermanence": "impermanence",
         "import-tree": "import-tree",
         "llm-agents": "llm-agents",

@@ -5,7 +5,7 @@ in
 {
   wayland.windowManager.niri.settings = {
     layout = {
-      gaps = 10;
+      gaps = 4;
       preset-column-widths._children = mkNodes "proportion" [
         columnWidths.third
         columnWidths.half

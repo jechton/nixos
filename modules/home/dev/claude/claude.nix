@@ -5,6 +5,23 @@
   ...
 }:
 let
+  # Skill name -> its category directory in github:mattpocock/skills.
+  mattpocockSkills = {
+    # keep-sorted start
+    diagnosing-bugs = "engineering";
+    domain-modeling = "engineering";
+    grill-me = "productivity";
+    grill-with-docs = "engineering";
+    grilling = "productivity";
+    handoff = "productivity";
+    prototype = "engineering";
+    research = "engineering";
+    tdd = "engineering";
+    wait-what = "productivity";
+    writing-for-agents = "productivity";
+    # keep-sorted end
+  };
+
   statusline = pkgs.writeShellApplication {
     name = "claude-statusline";
     runtimeInputs = with pkgs; [
@@ -144,14 +161,19 @@ in
     # MIT), inlined instead of running that plugin's per-session hook injection.
     context = ./context.md;
 
-    # Every *.md under ./skills is loaded as a skill named after the file.
+    # Every *.md under ./skills is loaded as a skill named after the file,
+    # plus the mattpocock/skills directories in mattpocockSkills (sibling
+    # files stay alongside SKILL.md). Those skills call each other by name,
+    # so keep the upstream names.
     skills =
-      lib.mapAttrs' (file: _: lib.nameValuePair (lib.removeSuffix ".md" file) (./skills + "/${file}"))
-        (
-          lib.filterAttrs (file: type: type == "regular" && lib.hasSuffix ".md" file) (
-            builtins.readDir ./skills
-          )
-        );
+      lib.mapAttrs' (file: _: lib.nameValuePair (lib.removeSuffix ".md" file) (./skills + "/${file}")) (
+        lib.filterAttrs (file: type: type == "regular" && lib.hasSuffix ".md" file) (
+          builtins.readDir ./skills
+        )
+      )
+      // lib.mapAttrs (
+        name: category: "${inputs.mattpocock-skills}/skills/${category}/${name}"
+      ) mattpocockSkills;
 
     # Anthropic's /commit and /commit-and-push slash commands, amended to
     # stage only the changes relevant to the task (same rule as the

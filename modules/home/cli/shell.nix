@@ -8,6 +8,11 @@
 let
   inherit (lib) getExe;
 
+  # Appended by the --help and -h abbreviations. The trailing test makes the
+  # command's exit status the real command's, not bat's, so history filters
+  # such as sponge see failures.
+  helpPipe = "2>&1 | bat --style=plain --language=help; test $pipestatus[1] -eq 0";
+
   # Built-in television channels for tools this system doesn't use.
   unusedChannels = [
     # keep-sorted start
@@ -125,6 +130,7 @@ in
         # sponge purges a failed command from history after this many
         # subsequent commands, instead of immediately
         set --universal sponge_delay 10
+        set --universal sponge_filters sponge_filter_help_pipe sponge_filter_failed sponge_filter_matched
       '';
 
       # fish
@@ -155,13 +161,13 @@ in
         "--help" = {
           position = "anywhere";
           regex = "^--help$";
-          expansion = "--help 2>&1 | bat --style=plain --language=help";
+          expansion = "--help ${helpPipe}";
         };
 
         "-h" = {
           position = "anywhere";
           regex = "^-h$";
-          expansion = "-h 2>&1 | bat --style=plain --language=help";
+          expansion = "-h ${helpPipe}";
         };
       };
 
@@ -178,6 +184,34 @@ in
             echo "The program '$argv[1]' is not installed. It is provided by:" >&2
             printf '  %s\n' $attrs >&2
             echo "Run it once with comma: , "(string escape -- $argv | string join ' ') >&2
+          '';
+        };
+
+        fish_should_add_to_history = {
+          description = "Record --help and -h commands without the bat pipe their abbreviations add";
+          # fish
+          body = ''
+            set -l suffix ' ${helpPipe}'
+            if string match -q -- "*$suffix" $argv
+              history append (string replace -- $suffix ''' $argv)
+              return 1
+            end
+            return 0
+          '';
+        };
+
+        sponge_filter_help_pipe = {
+          description = "Purge failed --help commands under the name fish_should_add_to_history recorded";
+          argumentNames = [
+            "command"
+            "exit_code"
+          ];
+          # fish
+          body = ''
+            set -l suffix ' ${helpPipe}'
+            string match -q -- "*$suffix" $command; or return 1
+            test $exit_code -ne 0; or return 1
+            set --global _sponge_current_command (string replace -- $suffix ''' $command)
           '';
         };
 
@@ -666,6 +700,40 @@ in
     television = {
       enable = true;
       enableFishIntegration = true;
+      # Replaces the built-in channel: fd's global ignore file lists `.git/`,
+      # which hides the very directories this channel searches for.
+      channels.git-repos = {
+        metadata = {
+          name = "git-repos";
+          description = "Select from git repositories on this machine.";
+          requirements = [
+            "fd"
+            "git"
+          ];
+        };
+        source = {
+          command = "fd -g .git -HL -t d -d 10 --prune --no-global-ignore-file ~ --exec dirname '{}'";
+          display = "{split:/:-1}";
+        };
+        preview.command = "git -C '{}' log -n 200 --pretty=medium --all --graph --color";
+        keybindings = {
+          enter = "actions:cd";
+          ctrl-e = "actions:edit";
+        };
+        actions = {
+          cd = {
+            description = "Open a new shell in the selected repository";
+            command = "cd {} && $SHELL";
+            mode = "execute";
+          };
+          edit = {
+            description = "Open the repository in editor";
+            command = "\${EDITOR:-vim} {}";
+            shell = "bash";
+            mode = "execute";
+          };
+        };
+      };
     };
 
     vivid.enable = true;
@@ -717,7 +785,7 @@ in
   # the directory writable-by-merge with channels declared in Nix.
   xdg.configFile."television/cable" = {
     source = builtins.filterSource (
-      path: _: !lib.elem (lib.removeSuffix ".toml" (baseNameOf path)) unusedChannels
+      path: _: !lib.elem (lib.removeSuffix ".toml" (baseNameOf path)) (unusedChannels ++ [ "git-repos" ])
     ) "${pkgs.television.src}/cable/unix";
     recursive = true;
   };

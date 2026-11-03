@@ -255,7 +255,10 @@ in
     home.file.".claude/.i-have-adhd-always".text = "";
 
     home.persistence."/persist" = {
-      directories = [ ".claude" ];
+      directories = [
+        ".claude"
+        "Claude" # Claude Desktop artifacts and scheduled tasks
+      ];
       files = [ ".claude.json" ];
     };
   };

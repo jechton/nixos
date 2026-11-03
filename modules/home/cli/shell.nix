@@ -700,6 +700,20 @@ in
     television = {
       enable = true;
       enableFishIntegration = true;
+      channels.alias = {
+        metadata = {
+          name = "alias";
+          description = "Select from shell aliases.";
+        };
+        # Fish prints `alias name value` (no `=`), and an interactive shell
+        # also emits terminal escape sequences, so keep only alias lines.
+        source = {
+          command = "$SHELL -ic alias | grep '^alias '";
+          output = "{split: :1}";
+        };
+        preview.command = "$SHELL -ic alias | grep '^alias {split: :1} '";
+        ui.preview_panel.size = 30;
+      };
       # Replaces the built-in channel: fd's global ignore file lists `.git/`,
       # which hides the very directories this channel searches for.
       channels.git-repos = {

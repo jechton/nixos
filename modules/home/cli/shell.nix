@@ -7,6 +7,54 @@
 }:
 let
   inherit (lib) getExe;
+
+  # Built-in television channels for tools this system doesn't use.
+  unusedChannels = [
+    # keep-sorted start
+    "aerospace-windows"
+    "apt-packages"
+    "aws-buckets"
+    "aws-instances"
+    "aws-profiles"
+    "bash-history"
+    "brew-packages"
+    "cargo-commands"
+    "cargo-crates"
+    "crontab"
+    "diskutil"
+    "distrobox-list"
+    "dnf-packages"
+    "fj-issues"
+    "fj-prs"
+    "flatpak"
+    "gradle-tasks"
+    "guix"
+    "k8s-contexts"
+    "k8s-deployments"
+    "k8s-pods"
+    "k8s-services"
+    "launchd-services"
+    "node-packages"
+    "npm-packages"
+    "nu-history"
+    "opencode-sessions"
+    "pacman-packages"
+    "pip-packages"
+    "podman-containers"
+    "podman-images"
+    "podman-networks"
+    "podman-volumes"
+    "python-venvs"
+    "rustup"
+    "sesh"
+    "snap"
+    "snap-interfaces"
+    "snap-services"
+    "tea-issues"
+    "tea-prs"
+    "zsh-history"
+    # keep-sorted end
+  ];
 in
 {
   imports = [ inputs.nix-index-database.homeModules.nix-index ];
@@ -665,7 +713,9 @@ in
   # depend on `tv update-channels` writing into the wiped home. recursive keeps
   # the directory writable-by-merge with channels declared in Nix.
   xdg.configFile."television/cable" = {
-    source = "${pkgs.television.src}/cable/unix";
+    source = builtins.filterSource (
+      path: _: !lib.elem (lib.removeSuffix ".toml" (baseNameOf path)) unusedChannels
+    ) "${pkgs.television.src}/cable/unix";
     recursive = true;
   };
 

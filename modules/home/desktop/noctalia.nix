@@ -405,6 +405,7 @@ in
           "jechton/kimai"
           "jechton/phone-media"
           "jechton/tenpo-ko"
+          "noctalia/kaomoji"
           "yuuto/calculator"
         ]
         ++ lib.optional voxtypeEnabled "gabedunn/voxtype";

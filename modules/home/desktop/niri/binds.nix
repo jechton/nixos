@@ -73,13 +73,16 @@ let
     ]
     ++ command;
 
-  emojiPicker = withTitle "Emoji Picker" (
+  launcherWith =
+    text:
     spawn (noctalia [
       "panel-toggle"
       "launcher"
-      "/emo"
-    ])
-  );
+      text
+    ]);
+
+  emojiPicker = withTitle "Emoji Picker" (launcherWith "/emo");
+  kaomojiPicker = withTitle "Kaomoji Picker" (launcherWith "/kao");
 in
 {
   wayland.windowManager.niri.settings = {
@@ -193,6 +196,7 @@ in
         # Mod+Period, plus the dedicated emoji key (sends Super+Ctrl+Alt+Shift+Space).
         "Mod+Period" = emojiPicker;
         "Mod+Ctrl+Alt+Shift+Space" = emojiPicker;
+        "Mod+Shift+Period" = kaomojiPicker;
         "XF86AudioRaiseVolume" = hidden (spawn (noctalia [ "volume-up" ]));
         "XF86AudioLowerVolume" = hidden (spawn (noctalia [ "volume-down" ]));
         "XF86AudioMute" = hidden (spawn (noctalia [ "volume-mute" ]));

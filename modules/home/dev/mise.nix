@@ -4,6 +4,7 @@
     globalConfig = {
       tools = {
         aube = "latest";
+        node = "lts"; # global default so the mise shim resolves outside project dirs (hooks call node)
         uv = "latest";
         usage = "latest";
       };

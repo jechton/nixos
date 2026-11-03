@@ -82,7 +82,7 @@ in
       focus-ring.off = { };
       border = with config.lib.stylix.colors.withHashtag; {
         width = 2;
-        active-color = base0D;
+        active-color = base04;
         inactive-color = base03;
       };
     };

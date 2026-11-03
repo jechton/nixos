@@ -39,6 +39,9 @@
   programs.dconf.enable = true;
 
   environment.variables = {
+    # Chromium only picks the libsecret backend for desktops it recognizes, so
+    # on niri Claude Desktop falls back to unencrypted storage without this.
+    CLAUDE_PASSWORD_STORE = "gnome-libsecret";
     NIXOS_OZONE_WL = "1";
     GDK_BACKEND = "wayland,x11";
     XDG_SESSION_TYPE = "wayland";

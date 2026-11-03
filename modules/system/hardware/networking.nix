@@ -94,6 +94,11 @@ in
     network.wait-online.enable = false;
 
     services = {
+      NetworkManager = {
+        # restart in place instead of stop-then-start, so a switch can't leave it stopped
+        stopIfChanged = false;
+      };
+
       NetworkManager-wait-online.enable = false;
 
       # don't restart resolved on config changes; avoids a DNS hiccup during nixos-rebuild switch

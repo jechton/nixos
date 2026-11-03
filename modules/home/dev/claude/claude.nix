@@ -242,7 +242,10 @@ in
     pkgs.fastmod
     pkgs.rtk
     # keep-sorted end
-  ];
+  ]
+  ++ lib.optional (
+    !config.burrow.profiles.vm.enable
+  ) inputs.claude-desktop.packages.${pkgs.stdenv.hostPlatform.system}.claude-desktop;
 
   home.file.".claude/claude-statusline" = {
     source = "${statusline}/bin/claude-statusline";

@@ -4,8 +4,9 @@
 
   programs.fish.functions = {
     vpn-on = {
-      description = "Connect to the fastest IVPN server, or pick one with --pick";
+      description = "Start the IVPN daemon and connect to the fastest server, or pick one with --pick";
       body = ''
+        sudo systemctl start ivpn-service
         set -l target -fastest
         if contains -- --pick $argv
           set -l servers
@@ -43,10 +44,11 @@
     };
 
     vpn-off = {
-      description = "Disconnect IVPN";
+      description = "Disconnect IVPN and stop its daemon";
       body = ''
         ivpn disconnect
         ivpn firewall -off
+        sudo systemctl stop ivpn-service
       '';
     };
 

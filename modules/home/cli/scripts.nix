@@ -57,15 +57,6 @@ let
     '';
   };
 
-  ns = pkgs.writeShellApplication {
-    name = "ns";
-    runtimeInputs = [
-      pkgs.fzf
-      pkgs.nix-search-tv
-    ];
-    text = builtins.readFile "${pkgs.nix-search-tv.src}/nixpkgs.sh";
-  };
-
   ocrRegion = pkgs.writeShellApplication {
     name = "ocr-region";
     runtimeInputs = with pkgs; [
@@ -103,7 +94,6 @@ in
       # keep-sorted start
       focusOrSpawnSignal
       niriWorkspaceCycle
-      ns
       ocrRegion
       # keep-sorted end
     ];

@@ -95,6 +95,7 @@ in
         gpf = "git push --force-with-lease";
         "gpf!" = "git push --force";
         gu = "git pull";
+        ns = "tv nix-search-tv";
         gs = "git switch";
         gst = "git status -s";
 
@@ -453,6 +454,8 @@ in
 
     fzf = {
       enable = true;
+      # television owns Ctrl+T and Ctrl+R
+      enableFishIntegration = false;
       defaultCommand = "${getExe pkgs.fd} --type=f --hidden --exclude=.git";
       defaultOptions = [
         "--height=30%"
@@ -504,6 +507,8 @@ in
     };
 
     nix-index-database.comma.enable = true;
+
+    nix-search-tv.enable = true;
 
     ripgrep = {
       enable = true;
@@ -605,6 +610,11 @@ in
         };
         updates.auto_update = true;
       };
+    };
+
+    television = {
+      enable = true;
+      enableFishIntegration = true;
     };
 
     vivid.enable = true;

@@ -156,6 +156,10 @@ in
           command = "$HOME/.claude/claude-statusline";
           padding = 0;
         };
+        voice = {
+          enabled = true;
+          mode = "hold";
+        };
         # keep-sorted end
       };
 
@@ -243,6 +247,7 @@ in
       pkgs.ast-grep
       pkgs.fastmod
       pkgs.rtk
+      pkgs.sox
       # keep-sorted end
     ];
 

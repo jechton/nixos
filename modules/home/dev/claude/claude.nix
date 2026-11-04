@@ -115,7 +115,6 @@ in
           };
         };
         model = "sonnet";
-        outputStyle = "Concise";
         permissions = {
           allow = [
             # keep-sorted start

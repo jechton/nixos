@@ -9,6 +9,16 @@
   # daemon needs a writable cache dir, so redirect it to the persisted /var/lib.
   systemd.services.nix-daemon.environment.XDG_CACHE_HOME = "/var/lib";
 
+  # Background maintenance yields CPU and disk to interactive work.
+  systemd.services.fstrim.serviceConfig = {
+    Nice = 19;
+    IOSchedulingClass = "idle";
+  };
+  systemd.services.nh-clean.serviceConfig = {
+    Nice = 19;
+    IOSchedulingClass = "idle";
+  };
+
   nix = {
     package = pkgs.lixPackageSets.stable.lix;
     channel.enable = false;

@@ -149,7 +149,7 @@ in
         gpf = "git push --force-with-lease";
         "gpf!" = "git push --force";
         gu = "git pull";
-        ns = "tv nix-search-tv";
+        ns = "tv nix";
         gs = "git switch";
         gst = "git status -s";
 
@@ -714,6 +714,7 @@ in
         preview.command = "$SHELL -ic alias | grep '^alias {split: :1} '";
         ui.preview_panel.size = 30;
       };
+      channels.nix-search-tv.metadata.name = lib.mkForce "nix";
       # Replaces the built-in channel: fd's global ignore file lists `.git/`,
       # which hides the very directories this channel searches for.
       channels.git-repos = {

@@ -45,13 +45,6 @@ let
       fi
     '';
   };
-  # lazy: nixpkgs' pinned pnpmDeps hash for typescript-language-server doesn't
-  # match what pnpm actually fetches; drop this override once upstream re-pins it.
-  typescript-language-server = pkgs.typescript-language-server.overrideAttrs (old: {
-    pnpmDeps = old.pnpmDeps.overrideAttrs (_: {
-      outputHash = "sha256-xR/EF60lVBsITKgH7wCM2wHM46PFQevD51KfCENSUH4=";
-    });
-  });
 in
 {
   config = lib.mkIf (!config.burrow.profiles.vm.enable) {
@@ -104,7 +97,7 @@ in
             };
           };
           typescript = {
-            command = "${typescript-language-server}/bin/typescript-language-server";
+            command = "${pkgs.typescript-language-server}/bin/typescript-language-server";
             args = [ "--stdio" ];
             extensionToLanguage = {
               ".ts" = "typescript";
@@ -201,7 +194,7 @@ in
         let
           stagingClause = " Stage only the changes relevant to this task; if the working tree has unrelated uncommitted edits, leave them unstaged (use `git add -p` for a file that mixes both).";
 
-          commitMdUpstream = builtins.readFile "${inputs.claude-code}/plugins/commit-commands/commands/commit.md";
+          commitMdUpstream = builtins.readFile "${inputs.claude-plugins-official}/plugins/commit-commands/commands/commit.md";
           commitMdText =
             lib.replaceStrings
               [
@@ -233,7 +226,7 @@ in
           );
         in
         pkgs.runCommand "commit-commands-plugin" { } ''
-          cp -r ${inputs.claude-code}/plugins/commit-commands "$out"
+          cp -r ${inputs.claude-plugins-official}/plugins/commit-commands "$out"
           chmod -R u+w "$out"
           cp ${commitMd} "$out/commands/commit.md"
           cp ${commitPushMd} "$out/commands/commit-push.md"

@@ -43,13 +43,13 @@
     chaotic = {
       url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
     };
-    claude-code = {
-      url = "github:anthropics/claude-code";
-      flake = false;
-    };
     claude-desktop = {
       url = "github:aaddrick/claude-desktop-debian";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+    claude-plugins-official = {
+      url = "github:anthropics/claude-plugins-official";
+      flake = false;
     };
     devshell = {
       url = "github:numtide/devshell";

@@ -1,3 +1,4 @@
+{ config, ... }:
 {
   services.tailscale = {
     enable = true;
@@ -5,6 +6,7 @@
     extraSetFlags = [
       "--accept-dns"
       "--accept-routes"
+      "--operator=${config.burrow.users.username}"
       "-ssh"
     ];
   };

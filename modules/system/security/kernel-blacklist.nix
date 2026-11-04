@@ -36,7 +36,6 @@ in
       "affs" # Amiga Fast File System
       "befs" # "Be File System"
       "bfs" # BFS, used by SCO UnixWare OS for the /stand slice
-      "cifs" # smb (Common Internet File System)
       "cramfs" # compressed ROM/RAM file system
       "efs" # Extent File System
       "exofs" # EXtended Object File System

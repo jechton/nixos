@@ -115,14 +115,14 @@
                 sudo cat "$keyfile" > "$tmpkey"
               }
               pick_secret() {
-                grep -oE '"[A-Za-z0-9_-]+\.age"' secrets.nix | tr -d '"' | sed 's/\.age$//' | sort -u \
+                grep -oE '"[A-Za-z0-9_-]+\.age"' agenix-rules.nix | tr -d '"' | sed 's/\.age$//' | sort -u \
                   | fzf --header "pick a secret to $1"
               }
 
               case "$action" in
                 list)
-                  declared="$(grep -oE '"[A-Za-z0-9_-]+\.age"' secrets.nix | tr -d '"' | sort -u)"
-                  echo "declared in secrets.nix:"
+                  declared="$(grep -oE '"[A-Za-z0-9_-]+\.age"' agenix-rules.nix | tr -d '"' | sort -u)"
+                  echo "declared in agenix-rules.nix:"
                   for f in $declared; do
                     if [ -e "$f" ]; then
                       echo "  $f"
@@ -134,7 +134,7 @@
                     [ -e "$f" ] || continue
                     case "$declared" in
                       *"$f"*) ;;
-                      *) echo "  $f  (not declared in secrets.nix)" ;;
+                      *) echo "  $f  (not declared in agenix-rules.nix)" ;;
                     esac
                   done
                   ;;

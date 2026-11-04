@@ -32,6 +32,11 @@ in
         file = ../../../secrets/home-assistant-credentials.age;
         owner = "jeremiah";
       };
+      # Two lines, `username=...` and `password=...`, passed to mount.cifs by
+      # modules/system/bunpi-mounts.nix.
+      bunpi-credentials = {
+        file = ../../../secrets/bunpi-credentials.age;
+      };
       # tar archive of all wallpaper images. Extracted and recolored into
       # ~/Pictures/Wallpapers at login by modules/home/desktop/wallpapers.nix.
       wallpapers = {

@@ -2,6 +2,21 @@
 {
   home.packages = [ pkgs.wl-clipboard ];
 
+  # Nautilus cannot launch Terminal=true entries (the package's Helix.desktop),
+  # so this override starts a terminal explicitly.
+  xdg.desktopEntries.Helix = {
+    name = "Helix";
+    genericName = "Text Editor";
+    exec = "ghostty -e hx %F";
+    icon = "helix";
+    terminal = false;
+    categories = [
+      "Utility"
+      "TextEditor"
+    ];
+    mimeType = [ "text/plain" ];
+  };
+
   programs.helix = {
     enable = true;
     settings = {

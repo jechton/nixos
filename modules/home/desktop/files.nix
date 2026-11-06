@@ -6,7 +6,10 @@
 }:
 {
   config = lib.mkIf (!config.burrow.profiles.vm.enable) {
-    home.packages = [ pkgs.nautilus ];
+    home.packages = [
+      pkgs.file-roller
+      pkgs.nautilus
+    ];
 
     # Nautilus reads these from the GTK3 bookmarks file. The paths are the lazy
     # automounts from modules/system/bunpi-mounts.nix.

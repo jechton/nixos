@@ -77,6 +77,19 @@ in
         ]
       );
 
+      archiveTypes = [
+        "application/gzip"
+        "application/vnd.rar"
+        "application/x-7z-compressed"
+        "application/x-bzip2"
+        "application/x-compressed-tar"
+        "application/x-tar"
+        "application/x-xz"
+        "application/x-zstd-compressed-tar"
+        "application/zip"
+        "application/zstd"
+      ];
+
       forEach = types: app: builtins.listToAttrs (map (t: lib.nameValuePair t app) types);
     in
     {
@@ -86,6 +99,7 @@ in
         // forEach videoTypes "mpv.desktop"
         // forEach audioTypes "mpv.desktop"
         // forEach textTypes "Helix.desktop"
+        // forEach archiveTypes "org.gnome.FileRoller.desktop"
         // {
           # xdg-open's generic resolver does not walk the mime type hierarchy,
           # so mount points and the x-directory alias need explicit entries

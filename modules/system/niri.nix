@@ -38,6 +38,12 @@
 
   programs.dconf.enable = true;
 
+  # Adds "Open in Terminal" to the Nautilus right-click menu.
+  programs.nautilus-open-any-terminal = {
+    enable = true;
+    terminal = "ghostty";
+  };
+
   environment.variables = {
     # Chromium only picks the libsecret backend for desktops it recognizes, so
     # on niri Claude Desktop falls back to unencrypted storage without this.

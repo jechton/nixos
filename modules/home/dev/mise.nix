@@ -5,6 +5,7 @@
       tools = {
         aube = "latest";
         node = "lts"; # global default so the mise shim resolves outside project dirs (hooks call node)
+        python = "3.14"; # global default so the mise shim resolves outside project dirs (hooks call python3.14)
         uv = "latest";
         usage = "latest";
       };

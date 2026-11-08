@@ -32,7 +32,7 @@ in
       name = "daily-note";
       runtimeInputs = [
         pkgs.coreutils
-        pkgs.fuzzel
+        pkgs.rofi
         pkgs.gawk
         pkgs.gnused
         pkgs.libnotify
@@ -47,18 +47,18 @@ in
               "" \
               "Append a timestamped line to the '## Journal' section of today's" \
               "daily note, creating it from the template if needed. With no" \
-              "arguments, prompts for the entry in a fuzzel popup."
+              "arguments, prompts for the entry in a rofi popup."
             exit 0
             ;;
         esac
 
         note="$vault/journal/$(date +%y)/$(date +%m)/$(date +%y%m%d).md"
 
-        # Grab the entry text from the argument, or prompt with a fuzzel popup.
+        # Grab the entry text from the argument, or prompt with a rofi popup.
         if [ "$#" -gt 0 ]; then
           entry="$*"
         else
-          entry=$(fuzzel --dmenu --prompt "Daily note: " --placeholder "journal entry" --lines 0 --width 60 < /dev/null)
+          entry=$(rofi -dmenu -p "Daily note" -l 0 -theme-str 'entry { placeholder: "journal entry"; }' < /dev/null)
         fi
         [ -n "''${entry:-}" ] || exit 0
 
@@ -90,7 +90,7 @@ in
       name = "task";
       runtimeInputs = [
         pkgs.coreutils
-        pkgs.fuzzel
+        pkgs.rofi
         pkgs.gawk
         pkgs.gnugrep
         pkgs.gnused
@@ -103,17 +103,17 @@ in
         note="$vault/journal/$(date +%y)/$(date +%m)/$(date +%y%m%d).md"
         tasks_file="$vault/tasks/tasks.md"
 
-        # Mode: fuzzel popups when launched without a terminal (keybind), plain
-        # stdin/stdout prompts otherwise. --fuzzel / --cli force it either way.
+        # Mode: rofi popups when launched without a terminal (keybind), plain
+        # stdin/stdout prompts otherwise. --rofi / --cli force it either way.
         mode=cli
-        [ -t 0 ] || mode=fuzzel
+        [ -t 0 ] || mode=rofi
 
         cmd=""
         args=()
         for a in "$@"; do
           case "$a" in
             -h | --help | help) cmd=help ;;
-            --fuzzel) mode=fuzzel ;;
+            --rofi) mode=rofi ;;
             --cli) mode=cli ;;
             add | list | done | today | schedule | edit | open | menu)
               if [ -z "$cmd" ]; then cmd="$a"; else args+=("$a"); fi
@@ -128,7 +128,7 @@ in
 
         if [ "$cmd" = help ]; then
           printf '%s\n' \
-            "task [--cli|--fuzzel] <command> [args]" \
+            "task [--cli|--rofi] <command> [args]" \
             "" \
             "Commands:" \
             "  add [text] [@when] [!when]" \
@@ -152,8 +152,8 @@ in
             "a weekday (friday), a plain number of days (5), or anything GNU date -d" \
             "understands (\"next week\")." \
             "" \
-            "Modes: fuzzel popups when run from a keybind, terminal prompts" \
-            "otherwise. --fuzzel / --cli force one."
+            "Modes: rofi popups when run from a keybind, terminal prompts" \
+            "otherwise. --rofi / --cli force one."
           exit 0
         fi
 
@@ -162,9 +162,9 @@ in
         # Free-text prompt. $1 label, $2 placeholder, $3 optional prefilled value.
         ask() {
           local pre=()
-          if [ -n "''${3:-}" ]; then pre=(--search "$3"); fi
-          if [ "$mode" = fuzzel ]; then
-            fuzzel --dmenu --prompt "$1 " --placeholder "$2" "''${pre[@]}" --lines 0 --width 60 < /dev/null
+          if [ -n "''${3:-}" ]; then pre=(-filter "$3"); fi
+          if [ "$mode" = rofi ]; then
+            rofi -dmenu -p "$1" -l 0 -theme-str "entry { placeholder: \"$2\"; }" "''${pre[@]}" < /dev/null
           else
             printf '%s ' "$1" >&2
             local r
@@ -176,8 +176,8 @@ in
         # Menu select. $1 label, newline-separated options on stdin, prints the
         # 0-based index of the chosen option.
         choose() {
-          if [ "$mode" = fuzzel ]; then
-            fuzzel --dmenu --index --prompt "$1 " --width 80 --lines 15
+          if [ "$mode" = rofi ]; then
+            rofi -dmenu -i -no-custom -format i -p "$1" -l 15
           else
             local opts=() line i=1 sel
             mapfile -t opts
@@ -287,8 +287,8 @@ in
         # Menu select that also accepts a typed-in value not on the list.
         # $1 label, options on stdin. Prints the chosen (or typed) line.
         pick_free() {
-          if [ "$mode" = fuzzel ]; then
-            fuzzel --dmenu --prompt "$1 " --width 80 --lines 15
+          if [ "$mode" = rofi ]; then
+            rofi -dmenu -i -p "$1" -l 15
           else
             local opts=() line i=1 sel
             mapfile -t opts

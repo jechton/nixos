@@ -237,6 +237,7 @@ in
           "task"
           "menu"
         ]);
+        "Mod+Shift+M" = withTitle "Memos" (spawn "memo");
         "Mod+Shift+O" = withTitle "Obsidian" (spawn "obsidian");
         "Mod+B" = withTitle "Browser" (spawn "zen-twilight");
         "Mod+E" = withTitle "Files" (spawn "nautilus");

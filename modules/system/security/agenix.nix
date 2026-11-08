@@ -37,6 +37,12 @@ in
       bunpi-credentials = {
         file = ../../../secrets/bunpi-credentials.age;
       };
+      # Two lines: the Memos URL, then an access token. Read by the `memo`
+      # picker (see modules/home/desktop/memos.nix).
+      memos-credentials = {
+        file = ../../../secrets/memos-credentials.age;
+        owner = "jeremiah";
+      };
       # tar archive of all wallpaper images. Extracted and recolored into
       # ~/Pictures/Wallpapers at login by modules/home/desktop/wallpapers.nix.
       wallpapers = {

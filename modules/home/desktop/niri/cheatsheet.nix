@@ -76,19 +76,12 @@ let
   );
 in
 {
-  programs.fuzzel = {
-    enable = true;
-    settings = {
-      main.font = lib.mkForce "${config.burrow.theme.fonts.monospace.name}:size=10";
-      border.radius = 0;
-    };
-  };
 
   home.packages = [
     (pkgs.writeShellApplication {
       name = "niri-keybind-cheatsheet";
       runtimeInputs = [
-        pkgs.fuzzel
+        pkgs.rofi
         pkgs.util-linux
       ];
       text = ''
@@ -97,7 +90,7 @@ in
         selection=$(
           cut -f1,2 "$data" \
             | column -t -s $'\t' \
-            | fuzzel --dmenu --prompt "Keybind: " --width 80 --lines 20
+            | rofi -dmenu -i -p "Keybind" -l 20
         )
         [ -z "$selection" ] && exit 0
 

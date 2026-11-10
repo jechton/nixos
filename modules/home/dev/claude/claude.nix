@@ -186,13 +186,15 @@ in
       # Anthropic's /commit and /commit-and-push slash commands, amended to
       # stage only the changes relevant to the task (same rule as the
       # stage-my-changes skill, so a commit doesn't sweep up unrelated
-      # uncommitted edits), plus a /commit-push command derived from /commit's
+      # uncommitted edits) and to include any text passed after the command
+      # (e.g. a Jira smart commit) in the message, plus a /commit-push command derived from /commit's
       # text (so it tracks upstream if that command's context/task changes)
       # with push added, layered into the same plugin so it shares the
       # commit-commands namespace.
       plugins.commit-commands =
         let
           stagingClause = " Stage only the changes relevant to this task; if the working tree has unrelated uncommitted edits, leave them unstaged (use `git add -p` for a file that mixes both).";
+          argumentsClause = " If the user passed text after the command (`$ARGUMENTS`), include it verbatim in the commit message, on its own line at the end of the body.";
 
           commitMdUpstream = builtins.readFile "${inputs.claude-plugins-official}/plugins/commit-commands/commands/commit.md";
           commitMdText =
@@ -202,7 +204,7 @@ in
                 "Stage and create the commit using a single message."
               ]
               [
-                "Based on the above changes, create a single git commit.${stagingClause}"
+                "Based on the above changes, create a single git commit.${stagingClause}${argumentsClause}"
                 "Stage only the changes relevant to this task, then create the commit in a single message."
               ]
               commitMdUpstream;

@@ -319,7 +319,7 @@ in
 
         act_schedule() {
           local when d
-          when=$(ask "Schedule for:" "date, blank to unschedule")
+          when=$(ask "Schedule for" "date, blank to unschedule")
           if [ -n "''${when:-}" ]; then
             d=$(resolve_date "$when") || { echo "unparsable date: $when" >&2; return 1; }
             sed -i "$2{s/ ⏳ [0-9-]\{10\}//; s/\$/ ⏳ $d/}" "$1"
@@ -332,7 +332,7 @@ in
 
         act_edit() {
           local new esc
-          new=$(ask "Edit task:" "task text" "$3")
+          new=$(ask "Edit task" "task text" "$3")
           if [ -z "''${new:-}" ] || [ "$new" = "$3" ]; then return 0; fi
           # Replace everything after the "- [ ] " marker on that line.
           esc=$(printf '%s' "$new" | sed 's/[&/\]/\\&/g')
@@ -377,7 +377,7 @@ in
           fi
           item="- [ ] $text"
 
-          dest=$(printf '%s\n' "tasks file" "today's note" | choose "Add to:") || return 1
+          dest=$(printf '%s\n' "tasks file" "today's note" | choose "Add to") || return 1
           case "$dest" in
             1)
               ensure_daily
@@ -426,14 +426,14 @@ in
             ;;
 
           done | schedule | edit | open)
-            rec=$(pick_task "''${cmd^}:" "''${args[*]:-}") || exit 0
+            rec=$(pick_task "''${cmd^}" "''${args[*]:-}") || exit 0
             IFS=$'\t' read -r file ln disp <<< "$rec"
             "act_$cmd" "$file" "$ln" "$disp"
             ;;
 
           menu)
             scan_menu "''${args[*]:-}"
-            sel=$(printf '%s' "$MENU_LINES" | pick_free "Task or new:") || exit 0
+            sel=$(printf '%s' "$MENU_LINES" | pick_free "Task or new") || exit 0
             [ -n "''${sel:-}" ] || exit 0
             # Match the selection against the listed tasks; no match means the
             # text was typed in, so create a task from it.
@@ -462,7 +462,7 @@ in
 
           add)
             text="''${args[*]:-}"
-            [ -n "$text" ] || text=$(ask "New task:" "task text")
+            [ -n "$text" ] || text=$(ask "New task" "task text")
             [ -n "''${text:-}" ] || exit 0
             create_task "$text"
             ;;

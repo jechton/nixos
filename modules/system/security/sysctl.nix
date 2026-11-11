@@ -17,7 +17,7 @@
     "kernel.kptr_restrict" = 2;
 
     # disable the bpf() JIT to eliminate spray attacks, unless the scx scheduler needs it
-    "net.core.bpf_jit_enable" = config.services.scx.enable;
+    "net.core.bpf_jit_enable" = config.services.scx-loader.enable;
 
     # disable ftrace debugging
     "kernel.ftrace_enabled" = false;

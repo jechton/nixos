@@ -194,6 +194,8 @@ in
         enabled = true;
         account.personal_google.type = "google";
         event_time_format = "%-I:%M %P";
+        hide_past_events = true;
+        past_events_threshold_minutes = 60;
         dedupe_events = true;
         # Matches the "(Name at <hour>[:minute])" suffix
         dedupe_ignore_patterns = [ "\\s*\\([A-Za-z]+ at \\d+(:\\d{2})?\\)\\s*$" ];
@@ -317,7 +319,14 @@ in
 
       lockscreen = {
         blur_intensity = 1.0;
-        blurred_desktop = true;
+        blurred_desktop = false;
+        grace_period_seconds = 5;
+        transition = [
+          "fade"
+          "melt"
+          "wipe"
+          "zoom"
+        ];
         tint_intensity = 0.5;
       };
 

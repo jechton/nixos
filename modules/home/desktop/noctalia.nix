@@ -20,10 +20,6 @@ let
       show_project = false;
     };
     network.show_label = false;
-    nixos-updates = {
-      hide_when_up_to_date = true;
-      type = "dmopp/nixos-updates:updates";
-    };
     notifications.hide_when_no_unread = true;
     phone-connect = {
       type = "icefish/phone-connect:bar";
@@ -169,7 +165,6 @@ in
         ];
         end = [
           "tray"
-          "nixos-updates"
           "udiskie"
           "kimai"
           "screen-toolkit"
@@ -404,18 +399,6 @@ in
           # Panel setting: prefix each project in the picker with its customer name.
           show_client = false;
         };
-        "dmopp/nixos-updates" = {
-          # Same steps as the devshell's `update` and `gc` commands. The
-          # plugin's own cleanup button only follows nix-gc.service, which this
-          # config doesn't use (nh-clean does), so it is off.
-          cleanup_button = false;
-          update_command = lib.concatStringsSep " && " [
-            "nix flake update --flake /etc/nixos"
-            "git -C /etc/nixos commit -m 'chore: update inputs' flake.lock"
-            "nh os switch -d always /etc/nixos"
-            "nh clean all -k 4 --keep-one --optimise"
-          ];
-        };
         "yuuto/calculator" = {
           panel_placement = "floating";
           panel_position = "center";
@@ -426,7 +409,6 @@ in
         enabled = [
           "alexander/screen-toolkit"
           "aristides/udiskie"
-          "dmopp/nixos-updates"
           "icefish/phone-connect"
           "jechton/home-assistant"
           "jechton/kimai"

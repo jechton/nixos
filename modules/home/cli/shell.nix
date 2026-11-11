@@ -803,22 +803,129 @@ in
     recursive = true;
   };
 
-  # Markdown files piped through less/bat (e.g. via batpipe) render with glow
-  # instead of bat's plain syntax highlighting.
-  xdg.configFile."batpipe/viewers.d/markdown.sh".text = ''
-    BATPIPE_VIEWERS+=("glow")
+  # Extra batpipe viewers for file types bat would show as plain text or raw
+  # bytes. Matching is by lowercased file name; $1 is the file in each command.
+  # lazy: extension globs only, no content sniffing. Upgrade path: test
+  # `file --mime-type` in the supports function.
+  xdg.configFile."batpipe/viewers.d/viewers.sh".text =
+    let
+      viewers = [
+        {
+          name = "glow";
+          globs = [ "*.md" ];
+          cmd = ''CLICOLOR_FORCE=1 ${getExe pkgs.glow} -- "$1"'';
+        }
+        {
+          name = "pdf";
+          globs = [ "*.pdf" ];
+          cmd = ''${lib.getExe' pkgs.poppler-utils "pdftotext"} -layout -- "$1" -'';
+        }
+        {
+          name = "image";
+          globs = [
+            "*.avif"
+            "*.bmp"
+            "*.gif"
+            "*.jpeg"
+            "*.jpg"
+            "*.png"
+            "*.tiff"
+            "*.webp"
+          ];
+          cmd = ''
+            ${getExe pkgs.chafa} -- "$1"
+            ${getExe pkgs.exiftool} -- "$1"
+          '';
+        }
+        {
+          name = "json";
+          globs = [ "*.json" ];
+          cmd = ''${getExe pkgs.jq} -C . "$1"'';
+        }
+        {
+          name = "media";
+          globs = [
+            "*.flac"
+            "*.m4a"
+            "*.mkv"
+            "*.mov"
+            "*.mp3"
+            "*.mp4"
+            "*.ogg"
+            "*.opus"
+            "*.wav"
+            "*.webm"
+          ];
+          cmd = ''${lib.getExe' pkgs.ffmpeg "ffprobe"} -hide_banner -- "$1" 2>&1'';
+        }
+        {
+          name = "archive";
+          globs = [
+            "*.7z"
+            "*.rar"
+            "*.tar.zst"
+            "*.tzst"
+          ];
+          cmd = ''${lib.getExe' pkgs.libarchive "bsdtar"} -tvf "$1"'';
+        }
+        {
+          name = "sqlite";
+          globs = [
+            "*.db"
+            "*.sqlite"
+            "*.sqlite3"
+          ];
+          cmd = ''${getExe pkgs.sqlite} "$1" .schema'';
+        }
+        {
+          name = "csv";
+          globs = [ "*.csv" ];
+          cmd = ''${lib.getExe' pkgs.csvkit "csvlook"} --no-inference "$1"'';
+        }
+        {
+          name = "tsv";
+          globs = [ "*.tsv" ];
+          cmd = ''${lib.getExe' pkgs.csvkit "csvlook"} --no-inference --tabs "$1"'';
+        }
+        {
+          name = "document";
+          globs = [
+            "*.docx"
+            "*.epub"
+            "*.odt"
+          ];
+          cmd = ''${getExe pkgs.pandoc} -t plain -- "$1"'';
+        }
+        {
+          name = "hex";
+          globs = [
+            "*.bin"
+            "*.dll"
+            "*.elf"
+            "*.exe"
+            "*.o"
+            "*.so"
+          ];
+          cmd = ''${getExe pkgs.hexyl} -n 4KiB -- "$1"'';
+        }
+      ];
+      mkViewer = v: ''
+        BATPIPE_VIEWERS+=("${v.name}")
 
-    viewer_glow_supports() {
-      case "$1" in
-        *.md) return 0 ;;
-      esac
-      return 1
-    }
+        viewer_${v.name}_supports() {
+          case "''${1,,}" in
+            ${lib.concatStringsSep "|" v.globs}) return 0 ;;
+          esac
+          return 1
+        }
 
-    viewer_glow_process() {
-      CLICOLOR_FORCE=1 ${getExe pkgs.glow} -- "$1"
-    }
-  '';
+        viewer_${v.name}_process() {
+          ${v.cmd}
+        }
+
+      '';
+    in
+    lib.concatMapStrings mkViewer viewers;
 
   # comma ships no completions. Complete the first token against command names
   # from the nix-index database (the set comma can actually run), and everything

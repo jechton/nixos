@@ -14,6 +14,7 @@ in
   "kimai-credentials.age".publicKeys = [ personal ];
   "home-assistant-credentials.age".publicKeys = [ personal ];
   "bunpi-credentials.age".publicKeys = [ personal ];
+  "jira-credentials.age".publicKeys = [ personal ];
   "memos-credentials.age".publicKeys = [ personal ];
   # tar archive of all wallpaper image files, decrypted and recolored at login
   # by modules/home/desktop/wallpapers.nix.

@@ -37,6 +37,12 @@ in
       bunpi-credentials = {
         file = ../../../secrets/bunpi-credentials.age;
       };
+      # Three lines: the Jira Cloud URL, the account email, then an API token.
+      # Read by the `jira` picker (see modules/home/desktop/jira.nix).
+      jira-credentials = {
+        file = ../../../secrets/jira-credentials.age;
+        owner = "jeremiah";
+      };
       # Two lines: the Memos URL, then an access token. Read by the `memo`
       # picker (see modules/home/desktop/memos.nix).
       memos-credentials = {

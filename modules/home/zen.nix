@@ -1,4 +1,9 @@
-{ inputs, config, ... }:
+{
+  inputs,
+  config,
+  lib,
+  ...
+}:
 let
   mkLockedAttrs = builtins.mapAttrs (
     _: value: {
@@ -66,7 +71,7 @@ in
     zen-twilight = {
       name = "Zen Twilight";
       genericName = "Web browser";
-      exec = "zen-twilight %u";
+      exec = "${lib.getExe config.programs.zen-browser.package} %u";
       categories = [
         "Network"
         "WebBrowser"

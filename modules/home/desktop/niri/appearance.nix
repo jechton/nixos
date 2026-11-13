@@ -29,7 +29,7 @@ let
         { app-id = "^zen-twilight$"; }
       ];
       draw-border-with-background = false;
-      default-column-width.proportion = columnWidths.full;
+      open-maximized = true;
     }
     {
       matches = [ { title = "^Extension: \\(Bitwarden Password Manager\\)"; } ];

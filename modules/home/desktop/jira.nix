@@ -22,7 +22,7 @@
             printf '%s\n' \
               "jira" \
               "" \
-              "Rofi picker for your open Jira issues. Pick one to open, copy its" \
+              "Rofi picker for open Jira issues. Pick one to open, copy its" \
               "key, move it to another status, or comment (Alt+o/c/t/m act directly)." \
               "Ctrl+Enter on typed text creates a new issue."
             exit 0
@@ -43,18 +43,18 @@
           curl -fsS -u "$user:$token" -H "Content-Type: application/json" "$@"
         }
 
-        # lazy: only the latest 100 are listed; rofi filters client-side.
+        # lazy: only the latest 500 open issues are listed (Jira may return fewer per page); rofi filters client-side.
         # TSV per issue: key, display line.
         issues=$(api -G "$base/rest/api/3/search/jql" \
-          --data-urlencode 'jql=assignee = currentUser() AND statusCategory != Done ORDER BY updated DESC' \
+          --data-urlencode 'jql=statusCategory != Done ORDER BY updated DESC' \
           --data-urlencode 'fields=summary,status' \
-          --data-urlencode 'maxResults=100' \
+          --data-urlencode 'maxResults=500' \
           | jq -r '.issues[] | [.key, "\(.key)  [\(.fields.status.name)]  \(.fields.summary)"] | @tsv')
 
         # Typed text (Ctrl+Enter, or Enter with no match) is the summary of a new
         # issue. Prompts for the project and issue type, then assigns it to you.
         create_issue() {
-          prows=$(api -G "$base/rest/api/3/project/search" --data-urlencode 'maxResults=100' \
+          prows=$(api -G "$base/rest/api/3/project/search" --data-urlencode 'maxResults=500' \
             | jq -r '.values[] | [.key, "\(.key)  \(.name)"] | @tsv')
           # A single project is used without asking.
           if [ "$(printf '%s\n' "$prows" | wc -l)" -eq 1 ]; then

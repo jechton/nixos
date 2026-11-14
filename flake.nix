@@ -55,10 +55,6 @@
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    helium-browser = {
-      url = "github:oxcl/nix-flake-helium-browser";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     humanizer = {
       url = "github:blader/humanizer";
       flake = false;

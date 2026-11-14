@@ -8,6 +8,8 @@
 # - actions: { name, key, run }; `run` is a shell command. `key` is the Alt+key
 #   that triggers it directly, plain Enter asks which action to run.
 # - newLabel: what Ctrl+Enter on typed text creates.
+# - reload: optional { key, label, run }. Alt+key runs `run` (shell that may
+#   change $rows) and shows the list again.
 # - rofiArgs: extra rofi arguments.
 {
   name,
@@ -17,6 +19,7 @@
   onSelect,
   actions,
   newLabel,
+  reload ? null,
   rofiArgs ? [ ],
 }:
 let
@@ -29,6 +32,17 @@ let
 
   keys = lib.concatMapStringsSep "/" (a: a.key) actions;
   names = lib.concatMapStringsSep "/" (a: a.name) actions;
+
+  # The reload key follows the action keys, so it exits rofi with 10 + number of actions.
+  reloadFlag =
+    lib.optionalString (reload != null)
+      " -kb-custom-${toString (lib.length actions + 1)} Alt+${reload.key}";
+  reloadMesg = lib.optionalString (reload != null) "  |  Alt+${reload.key}: ${reload.label}";
+  reloadCase = lib.optionalString (reload != null) ''
+    if [ "$rc" -eq ${toString (10 + lib.length actions)} ]; then
+          ${reload.run}
+          continue
+        fi'';
 in
 pkgs.writeShellApplication {
   inherit name;
@@ -55,11 +69,15 @@ pkgs.writeShellApplication {
     # Enter picks the highlighted row (index >= 0) and asks for an action.
     # Alt+key runs an action directly (rofi exits 10 and up). Ctrl+Enter, or
     # Enter with no match, gives index -1 and the typed text, which creates one.
-    rc=0
-    res=$(printf '%s\n' "$rows" | sed 's/.*\t//' \
-      | rofi -dmenu -i -format 'i|f' -p "${name}" -l 15 ${keyFlags} \
-          ${lib.escapeShellArgs rofiArgs} \
-          -mesg "Alt+${keys}: ${names}  |  Ctrl+Enter: ${newLabel}") || rc=$?
+    while :; do
+      rc=0
+      res=$(printf '%s\n' "$rows" | sed 's/.*\t//' \
+        | rofi -dmenu -i -format 'i|f' -p "${name}" -l 15 ${keyFlags}${reloadFlag} \
+            ${lib.escapeShellArgs rofiArgs} \
+            -mesg "Alt+${keys}: ${names}${reloadMesg}  |  Ctrl+Enter: ${newLabel}") || rc=$?
+      ${reloadCase}
+      break
+    done
     [ "$rc" -eq 0 ] || [ "$rc" -ge 10 ] || exit 0
     idx=''${res%%|*}
     if [ "$idx" -lt 0 ]; then

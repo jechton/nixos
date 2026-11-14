@@ -24,6 +24,22 @@ let
           "${template}" > "$note"
     }
   '';
+
+  # append_under HEADING LINE FILE: add LINE at the end of HEADING's section,
+  # keeping a single blank line before the next heading. Blank lines inside the
+  # section are buffered so they don't accumulate across runs.
+  appendUnder = ''
+    append_under() {
+      awk -v head="$1" -v add="$2" '
+        $0 == head { in_s = 1; print; next }
+        in_s && /^[[:space:]]*$/ { held++; next }
+        in_s && /^#/ { print add; print ""; in_s = 0; held = 0 }
+        in_s { while (held-- > 0) print ""; held = 0 }
+        { print }
+        END { if (in_s) print add }
+      ' "$3" > "$3.tmp" && mv "$3.tmp" "$3"
+    }
+  '';
 in
 {
   home.packages = [
@@ -62,24 +78,13 @@ in
         [ -n "''${entry:-}" ] || exit 0
 
         ${ensureDaily}
+        ${appendUnder}
         ensure_daily
 
         time=$(date '+%-I:%M %p')
         line="- $time $entry"
 
-        # Append the entry to the end of the "## Journal" section, keeping a
-        # single blank line before the following heading. Blank lines inside the
-        # section are buffered so they don't accumulate across runs.
-        awk -v line="$line" '
-          /^## Journal$/ { in_journal = 1; print; next }
-          in_journal && /^[[:space:]]*$/ { held++; next }
-          in_journal && /^## / {
-            print line; print ""; in_journal = 0; held = 0
-          }
-          in_journal { while (held-- > 0) print ""; held = 0 }
-          { print }
-          END { if (in_journal) print line }
-        ' "$note" > "$note.tmp" && mv "$note.tmp" "$note"
+        append_under "## Journal" "$line" "$note"
 
         notify-send "Daily note" "$time  $entry" || echo "added: $line"
       '';
@@ -102,6 +107,7 @@ in
         note="$vault/journal/$(date +%y)/$(date +%m)/$(date +%y%m%d).md"
         tasks_file="$vault/tasks/tasks.md"
         ${ensureDaily}
+        ${appendUnder}
 
         # Free-text prompt. $1 label, $2 placeholder, $3 optional prefilled value.
         ask() {
@@ -257,14 +263,7 @@ in
           case "$dest" in
             1)
               ensure_daily
-              awk -v add="$item" '
-                /^## Goals$/ { in_s = 1; print; next }
-                in_s && /^[[:space:]]*$/ { held++; next }
-                in_s && /^#/ { print add; print ""; in_s = 0; held = 0 }
-                in_s { while (held-- > 0) print ""; held = 0 }
-                { print }
-                END { if (in_s) print add }
-              ' "$note" > "$note.tmp" && mv "$note.tmp" "$note"
+              append_under "## Goals" "$item" "$note"
               notify_open "Task added" "$text" "$note"
               ;;
             *)

@@ -6,6 +6,11 @@
       system,
       ...
     }:
+    let
+      # Runs a command in its own cgroup so a runaway eval is throttled, then
+      # killed alone, before the kernel OOM killer picks a victim system-wide.
+      memcap = "systemd-run --user --scope --quiet -p MemoryHigh=8G -p MemoryMax=10G";
+    in
     {
       devshells.default = {
         motd = "";
@@ -38,25 +43,25 @@
             name = "check";
             category = "sanity";
             help = "Format and verify flake evaluation validity";
-            command = "nix fmt \"$PRJ_ROOT\" && nix flake check --no-build \"$PRJ_ROOT\"";
+            command = "nix fmt \"$PRJ_ROOT\" && ${memcap} nix flake check --no-build \"$PRJ_ROOT\"";
           }
           {
             name = "os-test";
             category = "system";
             help = "Dry-test the system configuration with nh";
-            command = "nh os test -d always \"$@\"";
+            command = "${memcap} nh os test -d always \"$@\"";
           }
           {
             name = "plugin-test";
             category = "system";
             help = "Dry-test with the local noctalia-plugins working tree (no commit/lock)";
-            command = "nh os test -d always --override-input noctalia-plugins \"$HOME/Projects/noctalia-plugins\" \"$@\"";
+            command = "${memcap} nh os test -d always --override-input noctalia-plugins \"$HOME/Projects/noctalia-plugins\" \"$@\"";
           }
           {
             name = "sw";
             category = "system";
             help = "Build and apply system configurations with nh";
-            command = "nh os switch -d always \"$@\"";
+            command = "${memcap} nh os switch -d always \"$@\"";
           }
           {
             name = "update";
@@ -78,7 +83,7 @@
               else
                 git -C "$PRJ_ROOT" commit -m "chore: update inputs"
               fi
-              nh os switch -d always
+              ${memcap} nh os switch -d always
             '';
           }
           {

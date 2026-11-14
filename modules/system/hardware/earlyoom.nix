@@ -48,10 +48,13 @@ in
       enableNotifications = true; # annoying, but we want to know what's killed
 
       reportInterval = 0;
-      freeSwapThreshold = 5;
-      freeSwapKillThreshold = 2;
-      freeMemThreshold = 5;
-      freeMemKillThreshold = 2;
+      # earlyoom kills only when both free memory and free swap are below
+      # their kill thresholds. The memory kill threshold must be high enough
+      # that earlyoom acts before the kernel OOM killer does.
+      freeSwapThreshold = 20;
+      freeSwapKillThreshold = 10;
+      freeMemThreshold = 10;
+      freeMemKillThreshold = 5;
 
       extraArgs = [
         "-g"

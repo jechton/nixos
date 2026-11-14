@@ -179,7 +179,7 @@ in
       enable = true;
       algorithm = "zstd";
       priority = 5;
-      memoryPercent = 50;
+      memoryPercent = 100;
     };
 
     environment.systemPackages = [ pkgs.btrfs-progs ] ++ lib.optional cfg.luks pkgs.cryptsetup;

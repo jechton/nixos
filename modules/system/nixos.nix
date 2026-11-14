@@ -9,6 +9,13 @@
   # daemon needs a writable cache dir, so redirect it to the persisted /var/lib.
   systemd.services.nix-daemon.environment.XDG_CACHE_HOME = "/var/lib";
 
+  # Cap daemon builds so a runaway build is throttled, then killed inside its
+  # own cgroup, before the kernel OOM killer picks a victim system-wide.
+  systemd.services.nix-daemon.serviceConfig = {
+    MemoryHigh = "10G";
+    MemoryMax = "12G";
+  };
+
   # Background maintenance yields CPU and disk to interactive work.
   systemd.services.fstrim.serviceConfig = {
     Nice = 19;
@@ -38,7 +45,7 @@
 
       max-substitution-jobs = 128;
       http-connections = 128;
-      max-jobs = "auto";
+      max-jobs = 2;
       cores = 4;
 
       # Free up to 20GiB whenever there is less than 5GB left.

@@ -267,6 +267,20 @@ in
     };
 
     home.packages = [
+      # Separate login, history and state under ~/.claude-work; config is shared
+      # by symlinking the home-manager-managed files from ~/.claude.
+      (pkgs.writeShellScriptBin "claude-work" ''
+        work="$HOME/.claude-work"
+        mkdir -p "$work/plugins"
+        for f in CLAUDE.md settings.json claude-statusline .i-have-adhd-always skills; do
+          ln -sfn "$HOME/.claude/$f" "$work/$f"
+        done
+        # Plugin installs and marketplaces; plugins/store and plugins/synced stay per-account.
+        for f in data marketplaces known_marketplaces.json; do
+          ln -sfn "$HOME/.claude/plugins/$f" "$work/plugins/$f"
+        done
+        CLAUDE_CONFIG_DIR="$work" exec claude "$@"
+      '')
       # keep-sorted start
       inputs.claude-desktop.packages.${pkgs.stdenv.hostPlatform.system}.claude-desktop
       pkgs.ast-grep
@@ -289,6 +303,7 @@ in
     home.persistence."/persist" = {
       directories = [
         ".claude"
+        ".claude-work"
         ".config/Claude" # Claude Desktop login session and app state
         "Claude" # Claude Desktop artifacts and scheduled tasks
       ];

@@ -313,6 +313,8 @@ in
       location.auto_locate = true;
 
       lockscreen = {
+        # Enter on an empty field starts the PAM stack, which runs the Howdy face scan.
+        allow_empty_password = true;
         blur_intensity = 1.0;
         blurred_desktop = false;
         grace_period_seconds = 5;

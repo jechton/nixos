@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 let
@@ -181,11 +180,7 @@ in
           ])
         );
         "Mod+Ctrl+N" = withTitle "Toggle DND" (spawn (noctalia [ "notification-dnd-toggle" ]));
-        "Mod+Ctrl+Shift+N" = withTitle "Toggle Night Light" (spawn [
-          "sh"
-          "-c"
-          "systemctl --user is-active --quiet gammastep && { systemctl --user stop gammastep; notify-send 'Night Light' 'Off'; } || { systemctl --user start gammastep; notify-send 'Night Light' 'On'; }"
-        ]);
+        "Mod+Ctrl+Shift+N" = withTitle "Toggle Night Light" (spawn "night-light-toggle");
         "Mod+Slash" = withTitle "Keybind Cheatsheet" (spawn "niri-keybind-cheatsheet");
         "Mod+Ctrl+Q" = withTitle "Calculator" (
           spawn (noctalia [
@@ -203,23 +198,23 @@ in
         "XF86AudioMicMute" = hidden (spawn (noctalia [ "mic-mute" ]));
         "XF86MonBrightnessUp" = hidden (spawn (noctalia [ "brightness-up" ]));
         "XF86MonBrightnessDown" = hidden (spawn (noctalia [ "brightness-down" ]));
-        "XF86AudioPlay" = hidden (spawn [
-          "playerctl"
-          "play-pause"
-        ]);
-        "XF86AudioStop" = hidden (spawn [
-          "playerctl"
-          "stop"
-        ]);
-        "XF86AudioPrev" = hidden (spawn [
-          "playerctl"
-          "previous"
-        ]);
-        "XF86AudioNext" = hidden (spawn [
-          "playerctl"
-          "next"
-        ]);
       }
+
+      (lib.mapAttrs
+        (
+          _: command:
+          hidden (spawn [
+            "playerctl"
+            command
+          ])
+        )
+        {
+          XF86AudioNext = "next";
+          XF86AudioPlay = "play-pause";
+          XF86AudioPrev = "previous";
+          XF86AudioStop = "stop";
+        }
+      )
 
       (lib.optionalAttrs config.burrow.desktop.voxtype.enable {
         "Mod+Ctrl+X" = withTitle "Toggle Dictation" (spawn [
@@ -325,7 +320,4 @@ in
       (mkWorkspaceNumberBinds "Mod+Shift" "move-column-to-workspace" "Move Column to Workspace")
     ];
   };
-
-  # notify-send, used by the night light toggle bind above.
-  home.packages = [ pkgs.libnotify ];
 }

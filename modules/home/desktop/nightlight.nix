@@ -19,4 +19,20 @@
 
     Install.WantedBy = [ "graphical-session.target" ];
   };
+
+  home.packages = [
+    (pkgs.writeShellApplication {
+      name = "night-light-toggle";
+      runtimeInputs = [ pkgs.libnotify ];
+      text = ''
+        if systemctl --user is-active --quiet gammastep; then
+          systemctl --user stop gammastep
+          notify-send "Night Light" "Off"
+        else
+          systemctl --user start gammastep
+          notify-send "Night Light" "On"
+        fi
+      '';
+    })
+  ];
 }

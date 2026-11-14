@@ -211,6 +211,8 @@ if is_set "$ctx"; then
 fi
 
 out=""
+# The claude-work wrapper sets CLAUDE_CONFIG_DIR=~/.claude-work; tag that account.
+[ "${CLAUDE_CONFIG_DIR##*/}" = ".claude-work" ] && join $'\033[1;30;43m work \033[0m'
 join "$modelseg"
 join "$dirseg"
 join "$ctxseg"

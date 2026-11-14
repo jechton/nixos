@@ -48,6 +48,10 @@ let
 in
 {
   config = lib.mkIf (!config.burrow.profiles.vm.enable) {
+    # Claude Code rewrites settings.json as a plain file; overwrite it on
+    # activation instead of failing on a backup collision.
+    home.file."${config.home.homeDirectory}/.claude/settings.json".force = true;
+
     programs.claude-code = {
       enable = true;
       # numtide's llm-agents.nix rebuilds claude-code daily; nixpkgs-unstable

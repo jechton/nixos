@@ -1,37 +1,32 @@
 {
+  lib,
   osConfig,
   pkgs,
   ...
 }:
+let
+  mkPicker = import ./_rofi-picker.nix { inherit lib pkgs; };
+in
 {
   home.packages = [
-    (pkgs.writeShellApplication {
+    (mkPicker {
       name = "jira";
+      help = [
+        "jira"
+        ""
+        "Rofi picker for open Jira issues. Pick one to open, copy its"
+        "key, move it to another status, or comment (Alt+o/c/t/m act directly)."
+        "Ctrl+Enter on typed text creates a new issue."
+      ];
       runtimeInputs = [
-        pkgs.coreutils
         pkgs.curl
         pkgs.jq
-        pkgs.libnotify
-        pkgs.rofi
         pkgs.wl-clipboard
         pkgs.xdg-utils
       ];
-      text = ''
-        case "''${1:-}" in
-          -h | --help)
-            printf '%s\n' \
-              "jira" \
-              "" \
-              "Rofi picker for open Jira issues. Pick one to open, copy its" \
-              "key, move it to another status, or comment (Alt+o/c/t/m act directly)." \
-              "Ctrl+Enter on typed text creates a new issue."
-            exit 0
-            ;;
-        esac
+      newLabel = "new issue";
 
-        # Keybind launches have no terminal, so surface failures as a notification.
-        trap 'notify-send -u critical "jira failed" "line $LINENO"' ERR
-
+      setup = ''
         # Credentials file: line 1 is the Jira Cloud URL, line 2 the account
         # email, line 3 an API token.
         creds="${osConfig.age.secrets.jira-credentials.path}"
@@ -45,7 +40,7 @@
 
         # lazy: only the latest 500 open issues are listed (Jira may return fewer per page); rofi filters client-side.
         # TSV per issue: key, display line.
-        issues=$(api -G "$base/rest/api/3/search/jql" \
+        rows=$(api -G "$base/rest/api/3/search/jql" \
           --data-urlencode 'jql=statusCategory != Done ORDER BY updated DESC' \
           --data-urlencode 'fields=summary,status' \
           --data-urlencode 'maxResults=500' \
@@ -53,7 +48,7 @@
 
         # Typed text (Ctrl+Enter, or Enter with no match) is the summary of a new
         # issue. Prompts for the project and issue type, then assigns it to you.
-        create_issue() {
+        create() {
           prows=$(api -G "$base/rest/api/3/project/search" --data-urlencode 'maxResults=500' \
             | jq -r '.values[] | [.key, "\(.key)  \(.name)"] | @tsv')
           # A single project is used without asking.
@@ -77,27 +72,13 @@
           notify-send "Jira" "Created $new: $1"
         }
 
-        rc=0
-        res=$(printf '%s\n' "$issues" | cut -f2 \
-          | rofi -dmenu -i -format 'i|f' -p "Jira" -l 15 \
-              -kb-custom-1 "Alt+o" -kb-custom-2 "Alt+c" \
-              -kb-custom-3 "Alt+t" -kb-custom-4 "Alt+m" \
-              -mesg "Alt+o/c/t/m: open/copy key/transition/comment  |  Ctrl+Enter: new issue") || rc=$?
-        [ "$rc" -eq 0 ] || [ "$rc" -ge 10 ] || exit 0
-        idx=''${res%%|*}
-        if [ "$idx" -lt 0 ]; then
-          [ "$rc" -eq 0 ] && [ -n "''${res#*|}" ] && create_issue "''${res#*|}"
-          exit 0
-        fi
-
-        key=$(printf '%s\n' "$issues" | sed -n "$((idx + 1))p" | cut -f1)
-
+        # Issue actions read $key.
         transition() {
           # Rows are "id<TAB>target status name".
-          rows=$(api "$base/rest/api/3/issue/$key/transitions" \
+          trows=$(api "$base/rest/api/3/issue/$key/transitions" \
             | jq -r '.transitions[] | [.id, .to.name] | @tsv')
-          pick=$(printf '%s\n' "$rows" | cut -f2 | rofi -dmenu -i -no-custom -format i -p "Move $key" -l 8) || exit 0
-          id=$(printf '%s\n' "$rows" | sed -n "$((pick + 1))p" | cut -f1)
+          pick=$(printf '%s\n' "$trows" | cut -f2 | rofi -dmenu -i -no-custom -format i -p "Move $key" -l 8) || exit 0
+          id=$(printf '%s\n' "$trows" | sed -n "$((pick + 1))p" | cut -f1)
           api -X POST "$base/rest/api/3/issue/$key/transitions" \
             -d "$(jq -n --arg id "$id" '{transition: {id: $id}}')" > /dev/null
           notify-send "Jira" "$key moved"
@@ -112,21 +93,32 @@
               '{body: {type: "doc", version: 1, content: [{type: "paragraph", content: [{type: "text", text: $t}]}]}}')" > /dev/null
           notify-send "Jira" "Commented on $key"
         }
-
-        case "$rc" in
-          10) act=open ;;
-          11) act=copy ;;
-          12) act=transition ;;
-          13) act=comment ;;
-          *) act=$(printf '%s\n' open copy transition comment | rofi -dmenu -i -no-custom -p "Action" -l 4) || exit 0 ;;
-        esac
-        case "$act" in
-          open) xdg-open "$base/browse/$key" > /dev/null 2>&1 ;;
-          copy) printf '%s' "$key" | wl-copy && notify-send "Jira" "Copied $key" ;;
-          transition) transition ;;
-          comment) comment ;;
-        esac
       '';
+
+      onSelect = ''key=$(printf '%s' "$row" | cut -f1)'';
+
+      actions = [
+        {
+          name = "open";
+          key = "o";
+          run = ''xdg-open "$base/browse/$key" > /dev/null 2>&1'';
+        }
+        {
+          name = "copy";
+          key = "c";
+          run = ''printf '%s' "$key" | wl-copy && notify-send "Jira" "Copied $key"'';
+        }
+        {
+          name = "transition";
+          key = "t";
+          run = "transition";
+        }
+        {
+          name = "comment";
+          key = "m";
+          run = "comment";
+        }
+      ];
     })
   ];
 }

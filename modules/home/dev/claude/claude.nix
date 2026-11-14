@@ -236,6 +236,8 @@ in
       # keep-sorted start
       inputs.claude-desktop.packages.${pkgs.stdenv.hostPlatform.system}.claude-desktop
       pkgs.ast-grep
+      # impeccable's URL scanning only auto-detects Chrome, Chromium, Edge and Brave.
+      pkgs.chromium
       pkgs.fastmod
       pkgs.rtk
       pkgs.sox

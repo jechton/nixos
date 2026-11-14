@@ -4,8 +4,7 @@ let
   template = "${vault}/_meta/templates/TEMPLATE-daily.md";
 
   # Render today's daily note from the template if it doesn't exist yet.
-  # lazy: this block is duplicated in the daily-note script below; if it
-  # changes a third time, factor it into a shared sourced snippet.
+  # Interpolated into both the daily-note and task scripts.
   ensureDaily = ''
     ensure_daily() {
       [ -f "$note" ] && return

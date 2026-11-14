@@ -33,7 +33,8 @@ let
   # `secret wallpapers` in the devshell), so their plaintext only exists once
   # the secret is decrypted to /run. This unit rebuilds outDir from the archive
   # at login: images under recolor/ are remapped to the active base16 palette
-  # with lutgen, everything else is copied through. The baked-in palette makes
+  # with lutgen (Gaussian RBF, full-size LUT, original luminosity kept so
+  # gradients stay smooth), everything else is copied through. The baked-in palette makes
   # the unit's script change when burrow.theme.colorScheme does, so a switch
   # re-runs it.
   refresh = pkgs.writeShellApplication {
@@ -60,7 +61,7 @@ let
         mkdir -p "$out/$(dirname "$f")"
         case "$f" in
           ./recolor/*.png | ./recolor/*.jpg | ./recolor/*.jpeg | ./recolor/*.webp)
-            lutgen apply -o "$out/$f" "$f" -- ${palette}
+            lutgen apply -R -s 120 -n 4 -P -l 16 -o "$out/$f" "$f" -- ${palette}
             ;;
           *)
             cp "$f" "$out/$f"

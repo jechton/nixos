@@ -212,7 +212,7 @@ fi
 
 out=""
 # The claude-work wrapper sets CLAUDE_CONFIG_DIR=~/.claude-work; tag that account.
-if [ "${CLAUDE_CONFIG_DIR##*/}" = ".claude-work" ]; then
+if [ "${CLAUDE_CONFIG_DIR:-}" = "$HOME/.claude-work" ]; then
   join $'\033[1;30;43m work \033[0m'
 fi
 join "$modelseg"

@@ -177,7 +177,41 @@ in
         };
 
       # Upstream plugins used as-is: their repo (or subdirectory) is the plugin.
-      plugins.i-have-adhd = "${inputs.i-have-adhd}";
+      # i-have-adhd with its time-estimate rules removed (the estimates are often wrong).
+      plugins.i-have-adhd =
+        let
+          skillMd = pkgs.writeText "SKILL.md" (
+            lib.replaceStrings
+              [
+                "give specific time estimates, "
+                "Five facts"
+                "4. Time estimates feel uniform. \"A bit of work\" and \"a few hours\" register the same. Vague estimates fail.\n5. Dopamine"
+                "### 6. Give specific time estimates\n\nVague estimates fail. Ballpark in concrete units.\n\nBad: \"This will take some work.\"\nGood: \"About 15 minutes if tests already cover this. An afternoon if not.\"\n\n"
+                "### 7. "
+                "### 8. "
+                "### 9. "
+                "### 10. "
+                ",\" point time estimates at whoever executes the steps."
+              ]
+              [
+                ""
+                "Four facts"
+                "4. Dopamine"
+                ""
+                "### 6. "
+                "### 7. "
+                "### 8. "
+                "### 9. "
+                ".\""
+              ]
+              (builtins.readFile "${inputs.i-have-adhd}/skills/i-have-adhd/SKILL.md")
+          );
+        in
+        pkgs.runCommand "i-have-adhd-plugin" { } ''
+          cp -r ${inputs.i-have-adhd} "$out"
+          chmod -R u+w "$out"
+          cp ${skillMd} "$out/skills/i-have-adhd/SKILL.md"
+        '';
       plugins.impeccable = "${inputs.impeccable}/plugin";
 
       # Anthropic's /commit and /commit-and-push slash commands, amended to

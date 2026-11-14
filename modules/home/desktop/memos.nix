@@ -39,9 +39,14 @@ in
         }
 
         create() {
-          api -X POST "$base/api/memos" \
-            -d "$(jq -n --arg c "$1" '{content: $c, visibility: "PRIVATE"}')" > /dev/null
-          notify-send "Memo added" "$1"
+          if api -X POST "$base/api/memos" \
+            -d "$(jq -n --arg c "$1" '{content: $c, visibility: "PRIVATE"}')" > /dev/null; then
+            notify-send "Memo added" "$1"
+          else
+            # The notification carries the text so it isn't lost before a retry.
+            notify-send -u critical "Memo failed to send" "$1"
+            exit 1
+          fi
         }
 
         if [ "$#" -gt 0 ]; then

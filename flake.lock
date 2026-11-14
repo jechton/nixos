@@ -925,11 +925,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793807598,
-        "narHash": "sha256-wJYxH56wOyft5u2nFdq0HRASQhdoQExJIE6W/yzF+LA=",
+        "lastModified": 1794632118,
+        "narHash": "sha256-2nR2ESuhyRmryKii+3Ut4SPRktWRN5jErePd4KG60rc=",
         "owner": "jechton",
         "repo": "noctalia-plugins",
-        "rev": "7be7c81bd5bc7bd425115903d949c7669974de37",
+        "rev": "7a6401d1c5c24e95dfbca108d2f1f7026a6e517d",
         "type": "github"
       },
       "original": {

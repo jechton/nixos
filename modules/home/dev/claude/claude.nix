@@ -256,6 +256,7 @@ in
     home.persistence."/persist" = {
       directories = [
         ".claude"
+        ".config/Claude" # Claude Desktop login session and app state
         "Claude" # Claude Desktop artifacts and scheduled tasks
       ];
       files = [ ".claude.json" ];

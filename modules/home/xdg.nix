@@ -95,7 +95,7 @@ in
     {
       enable = true;
       defaultApplications =
-        forEach imageTypes "imv.desktop"
+        forEach imageTypes "org.gnome.Loupe.desktop"
         // forEach videoTypes "mpv.desktop"
         // forEach audioTypes "mpv.desktop"
         // forEach textTypes "Helix.desktop"

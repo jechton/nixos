@@ -86,14 +86,11 @@
         diff = {
           algorithm = "histogram";
           colorMoved = "plain";
-          mnemonixPrefix = true;
+          mnemonicPrefix = true;
           renames = "copy";
           interHunkContext = 10;
         };
-        fetch = {
-          fsckObjects = true;
-          prune = true;
-        };
+        fetch.prune = true;
         help.autocorrect = "prompt";
         init.defaultBranch = "main";
         merge = {
@@ -112,7 +109,6 @@
           missingCommitsCheck = "warn";
           updateRefs = true;
         };
-        receive.fsckObjects = true;
         rerere = {
           enabled = true;
           autoupdate = true;

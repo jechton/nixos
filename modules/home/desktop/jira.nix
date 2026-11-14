@@ -68,10 +68,11 @@ in
                 | @tsv')
         }
 
-        # Choose one of your saved Jira filters, or all open issues, then reload.
+        # Choose one of your saved Jira filters (not the per-board "Filter for X"
+        # ones), or all open issues, then reload.
         # Cancelling keeps the current list.
         pick_filter() {
-          frows=$(api "$base/rest/api/3/filter/my" | jq -r '.[] | [.id, .name] | @tsv')
+          frows=$(api "$base/rest/api/3/filter/my" | jq -r '.[] | select(.name | startswith("Filter for ") | not) | [.id, (.name | sub(" \\([0-9]+\\)$"; ""))] | @tsv')
           pick=$(printf 'All open issues\n%s\n' "$(printf '%s\n' "$frows" | cut -f2)" \
             | rofi -dmenu -i -no-custom -format i -p "Filter" -l 10) || return 0
           if [ "$pick" -eq 0 ]; then

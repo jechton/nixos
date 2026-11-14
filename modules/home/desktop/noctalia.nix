@@ -386,6 +386,10 @@ in
       };
 
       plugin_settings = {
+        "ashur-d/wallpaper-widget" = {
+          close_on_apply = true;
+          notify_on_change = false;
+        };
         "icefish/phone-connect" = {
           battery_display = "hidden";
         };
@@ -409,6 +413,7 @@ in
         enabled = [
           "alexander/screen-toolkit"
           "aristides/udiskie"
+          "ashur-d/wallpaper-widget"
           "icefish/phone-connect"
           "jechton/home-assistant"
           "jechton/kimai"

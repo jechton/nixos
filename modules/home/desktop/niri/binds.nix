@@ -168,7 +168,7 @@ in
         "Mod+Shift+W" = withTitle "Wallpaper Panel" (
           spawn (noctalia [
             "panel-toggle"
-            "wallpaper"
+            "ashur-d/wallpaper-widget:hub"
           ])
         );
         "Mod+N" = withTitle "Clear Notification" (spawn (noctalia [ "notification-clear-active" ]));

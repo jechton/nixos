@@ -106,8 +106,6 @@ in
       diff = getExe pkgs.bat-extras.batdiff;
       du = getExe pkgs.dust;
       man = getExe pkgs.bat-extras.batman;
-      md = "mkdir";
-      rd = "rmdir";
       rg = getExe pkgs.bat-extras.batgrep;
       # keep-sorted end
     };
@@ -386,22 +384,6 @@ in
               | awk '{print $1}')
             test -n "$pids"; or return
             kill -9 $pids
-          '';
-        };
-
-        rg-fzf = {
-          description = "Search with ripgrep and preview with fzf+bat";
-          argumentNames = [ "pattern" ];
-          # fish
-          body = ''
-            if test -z "$pattern"
-              echo "Usage: rg-fzf <pattern>"
-              return 1
-            end
-            ${getExe pkgs.ripgrep} --color=always --line-number --no-heading -- "$pattern" | \
-              ${getExe pkgs.fzf} --ansi --delimiter : \
-                --preview '${getExe pkgs.bat} --color=always --style=numbers --highlight-line {2} -- {1}' \
-                --preview-window 'up,60%,+{2}-10'
           '';
         };
       };
@@ -750,41 +732,6 @@ in
     };
 
     vivid.enable = true;
-
-    wezterm = {
-      enable = true;
-      settings = {
-        default_cursor_style = "SteadyBar";
-        # mirrors ghostty's unfocused-split-opacity
-        inactive_pane_hsb = {
-          saturation = 1.0;
-          brightness = 0.85;
-        };
-      };
-      # mirrors ghostty's split keybinds; wezterm has no equalize-splits action
-      extraConfig = ''
-        return {
-          keys = {
-            { key = "Enter", mods = "ALT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },
-            { key = "Enter", mods = "ALT|SHIFT", action = wezterm.action.SplitVertical { domain = "CurrentPaneDomain" } },
-            { key = "w", mods = "ALT", action = wezterm.action.CloseCurrentPane { confirm = false } },
-            { key = "LeftArrow", mods = "ALT|SHIFT", action = wezterm.action.ActivatePaneDirection "Left" },
-            { key = "RightArrow", mods = "ALT|SHIFT", action = wezterm.action.ActivatePaneDirection "Right" },
-            { key = "UpArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection "Up" },
-            { key = "DownArrow", mods = "ALT", action = wezterm.action.ActivatePaneDirection "Down" },
-            { key = "z", mods = "ALT|SHIFT", action = wezterm.action.TogglePaneZoomState },
-          },
-          -- mirrors ghostty's copy-on-select = clipboard
-          mouse_bindings = {
-            {
-              event = { Up = { streak = 1, button = "Left" } },
-              mods = "NONE",
-              action = wezterm.action.CompleteSelection "ClipboardAndPrimarySelection",
-            },
-          },
-        }
-      '';
-    };
 
     zoxide = {
       enable = true;

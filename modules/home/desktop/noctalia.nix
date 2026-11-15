@@ -388,6 +388,7 @@ in
       };
 
       plugin_settings = {
+        # keep-sorted start block=yes
         "ashur-d/wallpaper-widget" = {
           close_on_apply = true;
           notify_on_change = false;
@@ -405,10 +406,14 @@ in
           # Panel setting: prefix each project in the picker with its customer name.
           show_client = false;
         };
+        "jechton/phone-media" = {
+          "lyrics_context_lines" = 2;
+        };
         "yuuto/calculator" = {
           panel_placement = "floating";
           panel_position = "center";
         };
+        # keep-sorted end
       };
 
       plugins = {

@@ -276,7 +276,7 @@ in
       (pkgs.writeShellScriptBin "claude-work" ''
         work="$HOME/.claude-work"
         mkdir -p "$work/plugins"
-        for f in CLAUDE.md settings.json claude-statusline .i-have-adhd-always skills; do
+        for f in CLAUDE.md settings.json keybindings.json claude-statusline .i-have-adhd-always skills; do
           ln -sfn "$HOME/.claude/$f" "$work/$f"
         done
         # Plugin installs and marketplaces; plugins/store and plugins/synced stay per-account.
@@ -299,6 +299,17 @@ in
     home.file.".claude/claude-statusline" = {
       source = "${statusline}/bin/claude-statusline";
       executable = true;
+    };
+
+    # ctrl+enter is taken by the terminal; "send now" stays on its ctrl+x ctrl+s default.
+    home.file.".claude/keybindings.json".text = builtins.toJSON {
+      "$schema" = "https://www.schemastore.org/claude-code-keybindings.json";
+      bindings = [
+        {
+          context = "Chat";
+          bindings."ctrl+enter" = null;
+        }
+      ];
     };
 
     # Opts in to the i-have-adhd SessionStart hook injecting its ruleset every session.

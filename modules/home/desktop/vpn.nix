@@ -53,12 +53,17 @@
     };
 
     claude = {
-      description = "Run claude; bypasses the VPN tunnel when it's connected";
+      description = "Run claude (claude-work inside ~/Projects/Driftwood); bypasses the VPN tunnel when it's connected";
       body = ''
+        set -l cmd claude
+        set -l driftwood "$HOME/Projects/Driftwood"
+        if test "$PWD" = "$driftwood"; or string match -q -- "$driftwood/*" "$PWD"
+          set cmd claude-work
+        end
         if ivpn status 2>/dev/null | string match -q '*: CONNECTED*'
-          ivpn exclude claude $argv
+          ivpn exclude $cmd $argv
         else
-          command claude $argv
+          command $cmd $argv
         end
       '';
     };

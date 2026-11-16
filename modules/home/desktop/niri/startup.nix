@@ -49,10 +49,6 @@ let
 
   chatApps = lib.optionals (!config.burrow.profiles.vm.enable) (
     map trayApp [
-      [
-        "equibop"
-        "--start-minimized"
-      ]
       [ "signal-desktop" ]
       [
         "slack"

@@ -1,44 +1,43 @@
-A personal NixOS flake config (flake-parts based) for two hosts: `floptop` (laptop) and `vm`. Uses home-manager, disko, impermanence, agenix, niri (Wayland compositor), and stylix for theming.
+Personal NixOS flake (flake-parts) for two hosts: `floptop` (laptop) and `vm`. Uses home-manager, disko, impermanence, agenix, niri, and stylix.
 
 ## Commands
 
-Run from inside the devshell (`use flake` via direnv, or `nix develop`). Type `menu` in the devshell to list these.
+Run from the devshell (`use flake` via direnv, or `nix develop`). Type `menu` to list them.
 
-- `check`: `nix fmt "$PRJ_ROOT" && nix flake check --no-build "$PRJ_ROOT"`. Run this after any change.
-- `os-test`: `nh os test -d always "$@"`, dry-test a system config without making it the boot default.
-- `sw`: `nh os switch -d always "$@"`, build and switch to a system config.
-- `update [inputs...]`: `nix flake update` (all inputs, or only the named ones) then commits the lockfile and switches.
-- `gc`: `nh clean all -k 4 --keep-one --optimise "$@"`.
-- `hash-url <url>`: prefetch a URL and print its SRI sha256.
-- `nix fmt` alone runs the treefmt suite (nixfmt, statix, deadnix, keep-sorted, typos).
+- `check`: format, then `nix flake check --no-build`. Run after any change.
+- `os-test`: test a system config without making it the boot default.
+- `sw`: build and switch to a system config.
+- `update [inputs...]`: update flake inputs (`-p` to pick), commit the lockfile, switch.
+- `check-updates`: list inputs with newer revisions. Does not touch `flake.lock`.
+- `plugin-test`: dry-test with the local noctalia-plugins checkout (no commit or lock change).
+- `gc`: garbage collect and optimise the store.
+- `hash-url <url>`: print the SRI sha256 of a URL.
+- `secret <list|edit|show|rekey|wallpapers> [name]`: manage agenix secrets.
+- `nix fmt`: run treefmt (nixfmt, statix, deadnix, keep-sorted, typos).
 
-There is no test suite beyond `nix flake check`; correctness is "does it evaluate and build."
+No test suite. Correct means it evaluates and builds.
 
-Pre-commit hooks (git-hooks.nix, installed by the devshell) run `treefmt --fail-on-change` and `betterleaks` (secret scanning) on every commit. Don't bypass with `--no-verify`.
+Pre-commit hooks run `treefmt --fail-on-change` and `betterleaks` (secret scan). Never use `--no-verify`.
 
 ## Architecture
 
-**Entry point:** `flake.nix` defines `mkHost` and builds `nixosConfigurations.floptop` / `.vm`. Each host is `mkHost { hostModule = ./hosts/<name>; }`. System modules are pulled in automatically via `import-tree ./modules/system`; there is no manual module list to edit when adding a file there. Dropping a `.nix` file under `modules/system/` (or `modules/home/`) is enough for it to be imported.
-
-**Custom options live under the `burrow.*` namespace**, e.g. `burrow.users`, `burrow.storage`, `burrow.profiles`, `burrow.theme`, `burrow.agenix`. Each module both *declares* (`options.burrow.x`) and *implements* (`config = lib.mkIf cfg.enable { ... }`) its own option. Grep for `options.burrow` to find where a given knob is defined before assuming it exists.
-
-**Host files** (`hosts/floptop/default.nix`, `hosts/vm/default.nix`) are thin: hostname, hardware facter report path, `burrow.storage`/`burrow.agenix`/`burrow.profiles` toggles, and `system.stateVersion`. All actual behavior lives in `modules/system/**`, gated behind profile/feature flags so hosts opt in rather than hardcoding.
-
-**Profiles** (`burrow.profiles.laptop` / `.vm`) are declared once in `modules/system/profiles.nix` and mirrored into home-manager scope via `modules/home/profiles.nix`, which reads them back off `osConfig`. This is the pattern for any option that both system and home modules need to see: declare it system-side, re-expose it home-side by reading `osConfig`.
-
-**Home-manager wiring:** `modules/system/users.nix` is what actually turns on the primary user. It sets up the Linux user account *and* imports `home/<username>/default.nix` into `home-manager.users.<username>`, passing `username`/`displayName`/`gitEmail` as `_module.args`. `home/jeremiah/default.nix` in turn imports all of `modules/home/**` via `import-tree`. So home-manager modules are auto-discovered the same way system modules are.
-
-**Secrets** are agenix-encrypted (`secrets/*.age`), keyed off the age public key in `secrets/agenix-rules.nix`. Reference a secret in a module as `config.age.secrets.<name>.path`. To add one: add an entry to `secrets/agenix-rules.nix`, then `secret edit <name>` in the devshell (`secret list` / `secret show <name>` / `secret rekey` also exist; the wrapper pulls the root-owned age key via sudo). `secret wallpapers` decrypts `wallpapers.tar.age` to a scratch dir and opens a shell to edit it in place, re-packing on exit (see `modules/home/desktop/wallpapers.nix`). Requires `burrow.agenix.enable = true` on the host.
-
-**Install flow:** `install.sh` is a standalone bash script (no flake dependency) meant to run from the NixOS live ISO. It re-execs as root, brings up networking with tools already on the ISO, then hands off to `nix run .#install`, which is `parts/install.nix` (disko partitioning, impermanence snapshot setup, `nixos-install`). Networking setup is deliberately kept out of the flake since `nix run` itself needs network already.
-
-**Impermanence:** root is wiped on boot; persistent state is opted into explicitly per-host/module (see `modules/system/impermanence.nix` and `home/jeremiah/impermanence.nix`) rather than persisted by default.
+- **Entry point:** `flake.nix` defines `mkHost`. Each host is `mkHost { hostModule = ./hosts/<name>; }`. Files under `modules/system/` and `modules/home/` are imported automatically by `import-tree`. Adding a file is enough, there is no module list to edit.
+- **Options:** custom options live under `burrow.*`. A module both declares (`options.burrow.x`) and implements (`config = lib.mkIf cfg.enable { ... }`) its option. Grep `options.burrow` before assuming an option exists.
+- **Hosts:** `hosts/<name>/default.nix` is thin: hostname, facter report, `burrow.*` toggles, `system.stateVersion`. Behavior lives in `modules/system/**`, behind flags.
+- **Profiles:** `burrow.profiles.laptop` / `.vm` are declared in `modules/system/profiles.nix` and read back in home scope by `modules/home/profiles.nix` via `osConfig`. Use this pattern for any option both sides need.
+- **Home-manager:** `modules/system/users.nix` creates the user and imports `home/<username>/default.nix`, which imports `modules/home/**`.
+- **Secrets:** agenix, `secrets/*.age`, keyed by `secrets/agenix-rules.nix`. Use `config.age.secrets.<name>.path`. To add one: add an entry to the rules file, then `secret edit <name>`. Needs `burrow.agenix.enable = true`.
+- **Install:** `install.sh` runs on the live ISO, sets up networking, then runs `nix run .#install` (`parts/install.nix`: disko, impermanence, `nixos-install`). Networking stays out of the flake because `nix run` needs it first.
+- **Impermanence:** root is wiped on boot. Each module persists its own state (grep `persistence`). Shared pieces are in `modules/system/impermanence.nix` and `home/jeremiah/impermanence.nix`. When you add a service that keeps state, persist its paths in the same module.
+- **Research notes:** `docs/research/` holds saved findings. Check there before researching again.
 
 ## Conventions
 
-- No AI-isms: no filler, no hedging, no "as an AI". No em dashes, use a comma, colon, or period instead. Applies to code, comments, commit messages, and docs.
-- Comments describe the code as it stands now (what it does, why it's there), not the history of changes made to reach it. Don't write comments like "now does X" or "changed to Y", write what X or Y is.
-- Prefer simple, readable code over clever or terse one-liners. DRY.
-- Sorted lists in Nix files are bounded by keep-sorted marker comments (see any module for the exact syntax; enforced by treefmt's keep-sorted formatter): keep entries alphabetical within those blocks and add new entries inside them, not appended after.
-- Colors in stylix-themed modules: use `config.lib.stylix.colors.withHashtag.baseXX` (already includes the `#` prefix).
-- Formatting/linting is entirely delegated to `nix fmt` (treefmt), don't hand-format Nix files.
+- No AI-isms: no filler, no hedging. No em dashes, use a comma, colon, or period. Applies to code, comments, commits, and docs.
+- Comments say what the code is and why, not how it changed. No "now does X" or "changed to Y".
+- Simple, readable code over clever one-liners. DRY.
+- Sorted lists sit between keep-sorted markers. Add entries inside them, alphabetically.
+- Stylix colors: `config.lib.stylix.colors.withHashtag.baseXX` (already has `#`).
+- Do not hand-format Nix. Run `nix fmt`.
+- Noctalia changes: write Luau plugins (own plugins in `~/Projects/noctalia-plugins`). Do not patch noctalia source with `overrideAttrs`.
+- Do not commit unless asked.

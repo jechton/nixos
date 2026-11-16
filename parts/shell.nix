@@ -17,8 +17,12 @@
 
         env = [
           {
+            # The gh token lifts GitHub's anonymous API rate limit for flake fetches.
             name = "NIX_CONFIG";
-            value = "extra-experimental-features = nix-command flakes";
+            eval = ''
+              "extra-experimental-features = nix-command flakes
+              access-tokens = github.com=$(gh auth token 2>/dev/null)"
+            '';
           }
           {
             # Lets `nix fmt`/`nix flake check`/`nh` resolve the flake regardless of cwd.

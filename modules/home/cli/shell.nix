@@ -560,7 +560,7 @@ in
       };
     };
 
-    lazydocker.enable = true;
+    lazydocker.enable = !config.burrow.profiles.vm.enable;
 
     nix-index = {
       enable = true;

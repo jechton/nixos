@@ -11,6 +11,13 @@
     fi
   '';
 
+  home.persistence."/persist".directories = [
+    {
+      directory = ".ssh";
+      mode = "0700";
+    }
+  ];
+
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;

@@ -32,7 +32,6 @@ in
         # keep-sorted start
         "audio"
         "dialout"
-        "docker"
         "games"
         "input"
         "network"
@@ -43,7 +42,8 @@ in
         "video"
         "wheel"
         # keep-sorted end
-      ];
+      ]
+      ++ lib.optional config.virtualisation.docker.enable "docker";
       hashedPasswordFile = config.age.secrets.user-password.path;
     };
 

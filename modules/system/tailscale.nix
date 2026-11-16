@@ -1,17 +1,19 @@
-{ config, ... }:
+{ config, lib, ... }:
 {
-  services.tailscale = {
-    enable = true;
-    openFirewall = true;
-    extraSetFlags = [
-      "--accept-dns"
-      "--accept-routes"
-      "--operator=${config.burrow.users.username}"
-      "-ssh"
-    ];
-  };
+  config = lib.mkIf (!config.burrow.profiles.vm.enable) {
+    services.tailscale = {
+      enable = true;
+      openFirewall = true;
+      extraSetFlags = [
+        "--accept-dns"
+        "--accept-routes"
+        "--operator=${config.burrow.users.username}"
+        "-ssh"
+      ];
+    };
 
-  networking.firewall = {
-    trustedInterfaces = [ "tailscale0" ];
+    networking.firewall = {
+      trustedInterfaces = [ "tailscale0" ];
+    };
   };
 }

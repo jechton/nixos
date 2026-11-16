@@ -42,6 +42,8 @@ let
   '';
 in
 {
+  home.persistence."/persist".directories = [ ".config/obsidian" ];
+
   home.packages = [
     (pkgs.writeShellApplication {
       name = "daily-note";

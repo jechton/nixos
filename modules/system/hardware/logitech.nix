@@ -1,3 +1,4 @@
+{ config, ... }:
 {
-  programs.solaar.enable = true;
+  programs.solaar.enable = !config.burrow.profiles.vm.enable;
 }

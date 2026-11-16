@@ -10,15 +10,6 @@ _: {
       "Projects"
 
       "Games"
-
-      # No owning module for these
-      {
-        directory = ".ssh";
-        mode = "0700";
-      }
-      ".local/share/keyrings"
-      ".docker"
-      ".config/obsidian"
     ];
   };
 }

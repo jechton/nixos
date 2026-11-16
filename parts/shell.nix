@@ -87,6 +87,25 @@
             '';
           }
           {
+            name = "check-updates";
+            category = "system";
+            help = "List flake inputs that have newer revisions, without touching flake.lock";
+            command = ''
+              new="$(mktemp)"
+              trap 'rm -f "$new"' EXIT
+              nix flake update --flake "$PRJ_ROOT" --output-lock-file "$new" 2>/dev/null
+              # Top-level inputs only; transitive duplicates (nixpkgs_3, ...) are skipped.
+              jq -r --slurpfile new "$new" '
+                .nodes as $old
+                | ($old.root.inputs | to_entries[] | select(.value | type == "string")) as $in
+                | select($old[$in.value].locked.rev != $new[0].nodes[$in.value].locked.rev)
+                | $old[$in.value].locked as $a
+                | $new[0].nodes[$in.value].locked as $b
+                | "\($in.key)\t\($a.rev[0:7]) (\($a.lastModified | strftime("%Y-%m-%d"))) -> \($b.rev[0:7]) (\($b.lastModified | strftime("%Y-%m-%d")))"
+              ' "$PRJ_ROOT/flake.lock" | column -t
+            '';
+          }
+          {
             name = "gc";
             category = "maintenance";
             help = "Garbage collect system profile and optimize nix-store, keeping each direnv project's current environment";

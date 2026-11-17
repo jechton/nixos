@@ -23,6 +23,38 @@ let
     '';
   };
 
+  # Live Mermaid preview for Ghostty: redraws the diagram each time the file is saved.
+  mermaidPreview = pkgs.writeShellApplication {
+    name = "mermaid-preview";
+    runtimeInputs = with pkgs; [
+      chafa
+      entr
+      mermaid-cli
+      ncurses
+    ];
+    text = ''
+      file="''${1:-}"
+      [ -z "$file" ] && { echo "usage: mermaid-preview file.mmd"; exit 1; }
+      out="''${XDG_RUNTIME_DIR:-/tmp}/mermaid-preview.png"
+
+      render() {
+        clear
+        if mmdc -i "$file" -o "$out" -b white -s 2 -q; then
+          chafa -f kitty -s "$(tput cols)x$(tput lines)" "$out"
+        fi
+      }
+
+      if [ "''${2:-}" = "--once" ]; then
+        render
+        exit
+      fi
+
+      render
+      # entr re-runs this script in --once mode on every save.
+      echo "$file" | entr -n -s "'$0' '$file' --once"
+    '';
+  };
+
   niriWorkspaceCycle = pkgs.writeShellApplication {
     name = "niri-workspace-cycle";
     runtimeInputs = with pkgs; [
@@ -93,6 +125,7 @@ in
     packages = [
       # keep-sorted start
       focusOrSpawnSignal
+      mermaidPreview
       niriWorkspaceCycle
       ocrRegion
       # keep-sorted end

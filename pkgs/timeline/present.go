@@ -16,7 +16,7 @@ func present(doc *Doc) error {
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(dir)
+	defer func() { _ = os.RemoveAll(dir) }()
 
 	total := len(doc.Periods)
 	if total == 0 {

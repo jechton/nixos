@@ -34,6 +34,8 @@
         packages = [
           # keep-sorted start
           inputs.agenix.packages.${system}.default
+          pkgs.go
+          pkgs.golangci-lint
           pkgs.jq
           pkgs.mkpasswd
           #keep-sorted end
@@ -46,8 +48,8 @@
           {
             name = "check";
             category = "sanity";
-            help = "Format and verify flake evaluation validity";
-            command = "nix fmt \"$PRJ_ROOT\" && ${memcap} nix flake check --no-build \"$PRJ_ROOT\"";
+            help = "Format, lint and test the Go tool, verify flake evaluation";
+            command = "nix fmt \"$PRJ_ROOT\" && (cd \"$PRJ_ROOT/pkgs/timeline\" && CGO_ENABLED=0 golangci-lint run ./... && CGO_ENABLED=0 go test ./...) && ${memcap} nix flake check --no-build \"$PRJ_ROOT\"";
           }
           {
             name = "os-test";

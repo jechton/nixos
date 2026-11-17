@@ -36,14 +36,6 @@ func (i Item) label() string {
 	return "<small>" + i.Date + "</small><br/>" + i.Text
 }
 
-// shown is the one-line form for the editor.
-func (i Item) shown() string {
-	if i.Date == "" {
-		return i.Text
-	}
-	return i.Date + "  " + i.Text
-}
-
 // sortDated orders the dated entries by start date. Undated entries stay where they are.
 func sortDated[T any](xs []T, date func(T) string) {
 	var slots []int

@@ -705,7 +705,7 @@ func main() {
 		if err := preview.Start(); err != nil {
 			fail(fmt.Errorf("preview window: %v", err))
 		}
-		defer preview.Process.Kill()
+		defer func() { _ = preview.Process.Kill() }()
 	}
 	if _, err := tea.NewProgram(newModel(doc, path), tea.WithAltScreen()).Run(); err != nil {
 		fail(err)

@@ -53,6 +53,7 @@ var (
 	// Lines the writer regenerates, so they are dropped on parse.
 	spineRe = regexp.MustCompile(`^\s*(-->\s*)?\w+$`)
 	classRe = regexp.MustCompile(`^\s*class\s+\S+\s+period$`)
+	chainRe = regexp.MustCompile(`^\s*\w+(\s+~~~\s+\w+)+$`) // invisible links that pin event order
 	colorRe = regexp.MustCompile(`^\s*class\s+(\w+)\s+tag_(\w+)$`)
 )
 
@@ -107,7 +108,7 @@ func Parse(text string) (*Doc, error) {
 				return nil, fmt.Errorf("line %d not understood, would be lost on save: %s", i+1, trim)
 			}
 			d.item(m[1]).Color = m[2]
-		case spineRe.MatchString(line) || classRe.MatchString(line):
+		case spineRe.MatchString(line) || classRe.MatchString(line) || chainRe.MatchString(line):
 		default:
 			return nil, fmt.Errorf("line %d not understood, would be lost on save: %s", i+1, trim)
 		}
@@ -146,8 +147,14 @@ func (d *Doc) Render() string {
 	line("    %%%% ---- PERIODS. Each box holds events that happen in the same span. ----")
 	for _, p := range d.Periods {
 		line("    subgraph %s[\"%s\"]", p.ID, p.label())
-		for _, e := range p.Events {
+		ids := make([]string, len(p.Events))
+		for i, e := range p.Events {
 			line("        %s[\"%s\"]:::event", e.ID, e.label())
+			ids[i] = e.ID
+		}
+		// The elk renderer orders unlinked nodes arbitrarily, so chain the events invisibly.
+		if len(ids) > 1 {
+			line("        %s", strings.Join(ids, " ~~~ "))
 		}
 		line("    end")
 	}

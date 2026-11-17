@@ -317,3 +317,18 @@ func TestJump(t *testing.T) {
 		t.Fatal("jump")
 	}
 }
+
+func TestEventOrderChain(t *testing.T) {
+	d, err := Parse(defaultHeader + "\n    subgraph p[\"1990s\"]\n        a[\"A\"]:::event\n        b[\"B\"]:::event\n        c[\"C\"]:::event\n    end\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := d.Render()
+	if !strings.Contains(out, "a ~~~ b ~~~ c") {
+		t.Fatalf("no chain in output:\n%s", out)
+	}
+	again, err := Parse(out)
+	if err != nil || again.Render() != out {
+		t.Fatalf("chain does not round-trip: %v", err)
+	}
+}

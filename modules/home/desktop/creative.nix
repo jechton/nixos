@@ -22,6 +22,7 @@
       inkscape
       libreoffice-stable
       obsidian
+      orca-slicer
       # keep-sorted end
     ];
 
@@ -38,6 +39,7 @@
       };
 
     home.persistence."/persist".directories = [
+      ".config/OrcaSlicer"
       ".config/libreoffice"
     ];
   };

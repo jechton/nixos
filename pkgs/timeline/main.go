@@ -82,7 +82,7 @@ const keysHelp = `Add (press a, then)
   w  person       f  free note
 
 Edit
-  r or enter  edit the item     d  delete (asks first)
+  e or enter  edit the item     d  delete (asks first)
   y  duplicate the item     t  cycle an event color
 
 Move
@@ -385,6 +385,8 @@ func (m *model) updateBrowse(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.cursor = max(0, m.cursor-1)
 	case "down", "j":
 		m.cursor = min(len(m.rows)-1, m.cursor+1)
+	case "esc":
+		clear(m.marked)
 	case "a":
 		m.mode = menu
 	case "?":
@@ -421,7 +423,7 @@ func (m *model) updateBrowse(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.refresh(focus)
 	case "g":
 		return m, m.ask([]prompt{{"Jump to date", ""}}, func(a []string) string { return m.jump(a[0]) })
-	case "enter", "r":
+	case "enter", "e", "r":
 		if !ok {
 			return m, nil
 		}
@@ -646,9 +648,20 @@ func (m *model) View() string {
 	case menu:
 		b.WriteString(box.Render("add:  p period   e event   n note   w person   f free note") + "\n" + dim.Render("esc cancel"))
 	default:
-		b.WriteString(status + "\n" + dim.Render("a add  r edit  d delete  u undo  ? keys  q quit"))
+		b.WriteString(status + "\n" + dim.Render(m.hint()))
 	}
 	return b.String()
+}
+
+// hint is the bottom key line, chosen by the marks and the row under the cursor.
+func (m *model) hint() string {
+	if n := len(m.marked); n > 0 {
+		return fmt.Sprintf("%d marked: l links them all, space marks more, esc clears", n)
+	}
+	if r, ok := m.current(); ok && (r.kind == "note" || r.kind == "person") {
+		return "e edit  space mark  l link  x unlink  m move  d delete  ? more"
+	}
+	return "a add  e edit  J/K move  y copy  t color  d delete  u undo  ? more"
 }
 
 func fail(err error) {

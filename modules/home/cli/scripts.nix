@@ -116,6 +116,9 @@ let
       fi
     '';
   };
+
+  # Terminal editor for timeline .mmd files, see pkgs/timeline.
+  timeline = pkgs.callPackage ../../../pkgs/timeline { mermaid-preview = mermaidPreview; };
   # keep-sorted end
 in
 {
@@ -128,6 +131,7 @@ in
       mermaidPreview
       niriWorkspaceCycle
       ocrRegion
+      timeline
       # keep-sorted end
     ];
   };

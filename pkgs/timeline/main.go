@@ -130,6 +130,7 @@ type model struct {
 	marked  map[string]bool         // notes and people picked with space, linked together by l
 	batch   []string                // what pickParent links, when linking
 	status  string
+	backed  bool // this session's .bak is settled, no more attempts
 }
 
 var (
@@ -175,6 +176,9 @@ func (m *model) Init() tea.Cmd { return nil }
 
 // refresh redraws the rows, saves, and moves the cursor to focus.
 func (m *model) refresh(focus string) {
+	if !m.backed {
+		m.backed = backup(m.path, m.doc.Render())
+	}
 	if err := m.doc.Save(m.path); err != nil {
 		m.status = "save failed: " + err.Error()
 	}
@@ -711,7 +715,6 @@ func main() {
 		}
 		return
 	}
-	backup(path)
 	if cmd == "live" {
 		// A second terminal window redraws the diagram on every save, see mermaid-preview.
 		preview := exec.Command("ghostty", "-e", "mermaid-preview", path)
@@ -725,11 +728,18 @@ func main() {
 	}
 }
 
-// backup copies the file to path.bak once per session, before any edit.
-func backup(path string) {
-	if data, err := os.ReadFile(path); err == nil {
-		_ = os.WriteFile(path+".bak", data, 0o644)
+// backup copies the file to path.bak right before the session's first save that
+// changes it. Sessions that change nothing leave the previous .bak alone.
+// It reports whether the session needs no further attempts.
+func backup(path, next string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return true
 	}
+	if string(data) == next {
+		return false
+	}
+	return os.WriteFile(path+".bak", data, 0o644) == nil
 }
 
 // travel restores the newest snapshot in from, and keeps the current file in to

@@ -121,7 +121,24 @@ func Parse(text string) (*Doc, error) {
 		}
 	}
 	d.Header = trimBlank(d.Header)
+	d.splitBare()
 	return d, nil
+}
+
+// splitBare gives every event in a bare period its own bare period. The spine
+// arrows run between periods, so events sharing one would have no arrow.
+func (d *Doc) splitBare() {
+	for i := 0; i < len(d.Periods); i++ {
+		p := d.Periods[i]
+		if !p.Bare() || len(p.Events) < 2 {
+			continue
+		}
+		d.Periods[i].Events = p.Events[:1]
+		for j, e := range p.Events[1:] {
+			bare := Period{Item: Item{ID: d.NewID("p", e.Text)}, Events: []Item{e}}
+			d.Periods = slices.Insert(d.Periods, i+1+j, bare)
+		}
+	}
 }
 
 func trimBlank(lines []string) []string {
@@ -320,6 +337,11 @@ func (d *Doc) AddPeriod(after int, title, date, firstEvent string) string {
 // AddEvent inserts at index at of period pi.
 func (d *Doc) AddEvent(pi, at int, text, date string) string {
 	e := Item{ID: d.NewID("n", text), Text: Clean(text), Date: date}
+	if d.Periods[pi].Bare() { // standalone events each get their own period, after this one
+		bare := Period{Item: Item{ID: d.NewID("p", text)}, Events: []Item{e}}
+		d.Periods = slices.Insert(d.Periods, pi+1, bare)
+		return e.ID
+	}
 	evs := d.Periods[pi].Events
 	evs = append(evs, Item{})
 	copy(evs[at+1:], evs[at:])
@@ -506,8 +528,25 @@ func (d *Doc) Move(id string, dir int) bool {
 		return true
 	}
 	np := pi + dir
-	if np < 0 || np >= len(d.Periods) {
-		return false
+	inRange := np >= 0 && np < len(d.Periods)
+	if !inRange || d.Periods[np].Bare() {
+		if d.Periods[pi].Bare() { // a standalone event moves as a whole
+			if !inRange {
+				return false
+			}
+			d.Periods[pi], d.Periods[np] = d.Periods[np], d.Periods[pi]
+			return true
+		}
+		// Leaving a period: the event becomes standalone just past its edge.
+		e := evs[ei]
+		d.Periods[pi].Events = append(evs[:ei:ei], evs[ei+1:]...)
+		bare := Period{Item: Item{ID: d.NewID("p", e.Text)}, Events: []Item{e}}
+		at := pi
+		if dir > 0 {
+			at++
+		}
+		d.Periods = slices.Insert(d.Periods, at, bare)
+		return true
 	}
 	e := evs[ei]
 	d.Periods[pi].Events = append(evs[:ei:ei], evs[ei+1:]...)

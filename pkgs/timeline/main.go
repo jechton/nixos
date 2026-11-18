@@ -671,7 +671,7 @@ func (m *model) View() string {
 		}
 		b.WriteString(status + "\n" + box.Render(title+m.input.View()) + "\n" + dim.Render("enter next, esc cancel"))
 	case menu:
-		b.WriteString(box.Render("add:  p period   e event   n note   w person   f free note") + "\n" + dim.Render("esc cancel"))
+		b.WriteString(box.Render("add:  p period   e event   s standalone event   n note   w person   f free note") + "\n" + dim.Render("esc cancel"))
 	default:
 		b.WriteString(status + "\n" + dim.Render(m.hint()))
 	}

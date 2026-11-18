@@ -342,3 +342,30 @@ func TestBarePeriodRoundTrip(t *testing.T) {
 		t.Fatalf("bare period did not round trip: %v\n%s", err, out)
 	}
 }
+
+func TestMoveEventOutOfPeriod(t *testing.T) {
+	d, _ := Parse(defaultHeader)
+	d.AddPeriod(-1, "Era", "", "First")
+	id := d.AddEvent(0, 1, "Second", "")
+	if !d.Move(id, 1) || len(d.Periods) != 2 || !d.Periods[1].Bare() || d.Periods[1].Events[0].ID != id {
+		t.Fatalf("event did not leave its period: %+v", d.Periods)
+	}
+	if !d.Move(id, -1) || len(d.Periods[0].Events) != 2 || d.Periods[0].Events[1].ID != id {
+		t.Fatalf("bare event did not re-enter the period: %+v", d.Periods)
+	}
+}
+
+func TestStandaloneEventsGetOwnPeriod(t *testing.T) {
+	d, _ := Parse(defaultHeader)
+	d.AddPeriod(-1, "", "", "One")
+	d.AddEvent(0, 1, "Two", "")
+	if len(d.Periods) != 2 {
+		t.Fatalf("AddEvent put a second event in a bare period: %+v", d.Periods)
+	}
+	// A file where two events share a bare period is split on load.
+	shared := defaultHeader + "\n    subgraph p_x[\" \"]\n        a[\"A\"]:::event\n        b[\"B\"]:::event\n        a ~~~ b\n    end\n"
+	d2, err := Parse(shared)
+	if err != nil || len(d2.Periods) != 2 || len(d2.Periods[1].Events) != 1 {
+		t.Fatalf("shared bare period not split: %v %+v", err, d2.Periods)
+	}
+}

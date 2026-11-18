@@ -344,6 +344,8 @@ func (m *model) updatePickParent(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.cursor = max(0, m.cursor-1)
 	case "down", "j":
 		m.cursor = min(len(m.rows)-1, m.cursor+1)
+	case "ctrl+c":
+		return m, tea.Quit
 	case "esc":
 		m.mode, m.status = browse, "cancelled"
 	case "enter":

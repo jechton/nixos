@@ -512,3 +512,27 @@ func TestRefreshSavesOnlyChanges(t *testing.T) {
 		t.Fatalf("outside edit not kept: %q", b)
 	}
 }
+
+func TestParseRefusesMissingParent(t *testing.T) {
+	if _, err := Parse(sample + "\n    ghost -.- n_x>\"lost\"]:::note\n"); err == nil {
+		t.Fatal("note with a missing parent was accepted")
+	}
+}
+
+func TestValidDateRejectsImpossibleDay(t *testing.T) {
+	if ValidDate("2001-02-31") || ValidDate("2001-01-05 to 2001-04-31") || !ValidDate("2000-02-29") {
+		t.Fatal("day check")
+	}
+}
+
+func TestRoughDatesSortInOrder(t *testing.T) {
+	want := []string{"1990s", "early 1990s", "mid 1990s", "1996", "late 1990s", "2002", "early 2002", "mid 2002", "2002-07", "late 2002", "2002-11", "2003"}
+	got := slices.Clone(want)
+	slices.Reverse(got)
+	slices.SortStableFunc(got, func(a, b string) int { return strings.Compare(dateStart(a), dateStart(b)) })
+	for i, g := range got {
+		if dateStart(g) != dateStart(want[i]) {
+			t.Fatalf("order %v, want %v", got, want)
+		}
+	}
+}

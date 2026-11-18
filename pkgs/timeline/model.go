@@ -125,6 +125,13 @@ func Parse(text string) (*Doc, error) {
 			return nil, fmt.Errorf("line %d not understood, would be lost on save: %s", i+1, trim)
 		}
 	}
+	for _, a := range d.Attaches {
+		for _, from := range append([]string{a.From}, a.Also...) {
+			if !d.hasID(from) {
+				return nil, fmt.Errorf("%s hangs from %s, which is not in the file", a.ID, from)
+			}
+		}
+	}
 	d.Header = trimBlank(d.Header)
 	d.splitBare()
 	return d, nil

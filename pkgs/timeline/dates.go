@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Dates are 1994, 1994-06, 1994-06-15, a decade like 1990s, "early", "mid" or "late" before a year or decade, optionally as a range ("1990 to 1999").
@@ -19,7 +20,20 @@ var (
 	labelDateRe = regexp.MustCompile(`^<small>(` + dateP + `(?: to ` + dateP + `)?)</small><br/>(.*)$`)
 )
 
-func ValidDate(s string) bool { return validDateRe.MatchString(s) }
+// ValidDate accepts the forms above, and rejects days that do not exist, like 2001-02-31.
+func ValidDate(s string) bool {
+	if !validDateRe.MatchString(s) {
+		return false
+	}
+	for _, part := range strings.Split(s, " to ") {
+		if strings.Count(part, "-") == 2 {
+			if _, err := time.Parse(time.DateOnly, part); err != nil {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 // newItem reads a label, splitting off its date.
 func newItem(id, label string) Item {

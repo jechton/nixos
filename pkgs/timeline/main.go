@@ -109,7 +109,7 @@ Undo
   u  undo       ctrl+r  redo`
 
 // dateLabel starts every date prompt, see updateTyping.
-const dateLabel = "Date, optional (1994, 1994-06-15, 1990s, 1990 to 1999)"
+const dateLabel = "Date, optional (1994, 1994-06-15, 1990s, early 1994, Sep 2001)"
 
 type prompt struct{ label, initial string }
 
@@ -252,12 +252,15 @@ func (m *model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case "enter":
 		val := strings.TrimSpace(m.input.Value())
+		isDate := strings.HasPrefix(m.prompts[m.step].label, "Date") // Date prompts are the ones labelled "Date..."
+		if isDate {
+			val = NormalizeDate(val)
+		}
 		if m.step == 0 && val == "" {
 			return m, nil // the first answer is required
 		}
-		// Date prompts are the ones labelled "Date...".
-		if strings.HasPrefix(m.prompts[m.step].label, "Date") && val != "" && !ValidDate(val) {
-			m.status = "date must look like 1994, 1994-06, 1994-06-15, 1990s or 1990 to 1999"
+		if isDate && val != "" && !ValidDate(val) {
+			m.status = "date must look like 1994, 1994-06, 1994-06-15, 1990s, 1990 to 1999 or September 2001"
 			return m, nil
 		}
 		m.answers = append(m.answers, val)

@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 )
 
-// Dates are 1994, 1994-06, 1994-06-15 or a decade like 1990s, optionally as a range ("1990 to 1999").
+// Dates are 1994, 1994-06, 1994-06-15, a decade like 1990s, "early", "mid" or "late" before a year or decade, optionally as a range ("1990 to 1999").
 // They sort correctly as plain text: a shorter date sorts before a longer one
 // that starts with it.
-const dateP = `(?:\d{3}0s|\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?)`
+const dateP = `(?:(?:early|mid|late) (?:\d{3}0s|\d{4})|\d{3}0s|\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?)`
 
 var (
 	validDateRe = regexp.MustCompile(`^` + dateP + `(?: to ` + dateP + `)?$`)
@@ -136,5 +137,55 @@ func (d *Doc) Duplicate(id string) string {
 // dateStart is the first day a date covers, for sorting: "1990s" counts as 1990.
 func dateStart(date string) string {
 	s, _, _ := strings.Cut(date, " to ")
-	return strings.TrimSuffix(s, "s")
+	when, year, rough := strings.Cut(s, " ") // early/mid/late 1994: placed inside the year
+	if !rough {
+		return strings.TrimSuffix(s, "s")
+	}
+	if strings.HasSuffix(year, "s") { // a decade: early 1990, mid 1994, late 1997
+		return year[:3] + map[string]string{"early": "0", "mid": "4", "late": "7"}[when]
+	}
+	return year + map[string]string{"early": "-01", "mid": "-05", "late": "-09"}[when]
+}
+
+var roughRe = regexp.MustCompile(`(?i)^(early|mid|late)[ -]+(\d{3}0s|\d{4})$`)
+
+var months = []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"}
+
+var (
+	monthFirstRe = regexp.MustCompile(`(?i)^([a-z]{3,9})\.?\s+(?:(\d{1,2})(?:st|nd|rd|th)?,?\s+)?(\d{4})$`) // September 2001, Sep 11, 2001
+	dayFirstRe   = regexp.MustCompile(`(?i)^(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]{3,9})\.?,?\s+(\d{4})$`)      // 11 September 2001
+)
+
+// NormalizeDate turns typed dates like "September 2001" or "Sep 11, 2001" into
+// the stored form (2001-09, 2001-09-11). A range is normalized on both sides.
+// Anything it does not recognize is returned as typed, for ValidDate to judge.
+func NormalizeDate(s string) string {
+	parts := strings.Split(s, " to ")
+	for i, p := range parts {
+		parts[i] = normalizeOne(strings.TrimSpace(p))
+	}
+	return strings.Join(parts, " to ")
+}
+
+func normalizeOne(s string) string {
+	if m := roughRe.FindStringSubmatch(s); m != nil { // Early 1994, mid-1990s
+		return strings.ToLower(m[1]) + " " + m[2]
+	}
+	var month, day, year string
+	if m := monthFirstRe.FindStringSubmatch(s); m != nil {
+		month, day, year = m[1], m[2], m[3]
+	} else if m := dayFirstRe.FindStringSubmatch(s); m != nil {
+		day, month, year = m[1], m[2], m[3]
+	} else {
+		return strings.Replace(s, "0's", "0s", 1) // 1990's
+	}
+	n := slices.IndexFunc(months, func(name string) bool { return strings.HasPrefix(name, strings.ToLower(month)) })
+	if n < 0 {
+		return s
+	}
+	if day == "" {
+		return fmt.Sprintf("%s-%02d", year, n+1)
+	}
+	d, _ := strconv.Atoi(day)
+	return fmt.Sprintf("%s-%02d-%02d", year, n+1, d)
 }

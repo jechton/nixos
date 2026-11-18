@@ -396,3 +396,35 @@ func TestPeriodAttachmentsStayInsideBox(t *testing.T) {
 		t.Fatalf("did not round trip: %v", err)
 	}
 }
+
+func TestNormalizeDate(t *testing.T) {
+	for in, want := range map[string]string{
+		"September 2001": "2001-09", "sep 2001": "2001-09", "Sept. 2001": "2001-09",
+		"September 11, 2001": "2001-09-11", "11 Sep 2001": "2001-09-11", "Sep 1st 2001": "2001-09-01",
+		"1990's": "1990s", "March 1994 to June 1995": "1994-03 to 1995-06", "2001-09": "2001-09", "1994": "1994",
+		"Smarch 2001": "Smarch 2001",
+	} {
+		if got := NormalizeDate(in); got != want {
+			t.Errorf("NormalizeDate(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestRoughDates(t *testing.T) {
+	for in, want := range map[string]string{"Early 1994": "early 1994", "mid-1990s": "mid 1990s", "late 2001": "late 2001"} {
+		if got := NormalizeDate(in); got != want || !ValidDate(got) {
+			t.Errorf("NormalizeDate(%q) = %q, want a valid %q", in, got, want)
+		}
+	}
+	for _, bad := range []string{"early", "early 94", "soon 1994", "early 1995s"} {
+		if ValidDate(bad) {
+			t.Errorf("%q should be invalid", bad)
+		}
+	}
+	// Rough dates sort inside their year: 1994, early 1994, mid 1994, late 1994, 1995.
+	got := []string{"1995", "late 1994", "1994", "mid 1994", "early 1994"}
+	sortDated(got, func(s string) string { return s })
+	if want := "1994 early 1994 mid 1994 late 1994 1995"; strings.Join(got, " ") != want {
+		t.Errorf("sorted %v, want %s", got, want)
+	}
+}

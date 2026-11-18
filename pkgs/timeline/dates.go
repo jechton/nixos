@@ -55,7 +55,12 @@ func sortDated[T any](xs []T, date func(T) string) {
 
 // SortByDate orders periods, and the events inside each, by date.
 func (d *Doc) SortByDate() {
-	sortDated(d.Periods, func(p Period) string { return p.Date })
+	sortDated(d.Periods, func(p Period) string {
+		if p.Bare() && len(p.Events) > 0 { // a standalone event sorts by its own date
+			return p.Events[0].Date
+		}
+		return p.Date
+	})
 	for i := range d.Periods {
 		sortDated(d.Periods[i].Events, func(e Item) string { return e.Date })
 	}

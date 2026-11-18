@@ -210,8 +210,21 @@ func (d *Doc) Render() string {
 			line("        %s", strings.Join(ids, " ~~~ "))
 		}
 		// An edge leaving a box makes elk drop direction LR, so notes and people of a period's events stay inside it.
+		// That includes notes hanging from those notes, and so on.
+		inside := map[string]bool{}
+		for _, id := range ids {
+			inside[id] = true
+		}
+		for grew := true; grew; {
+			grew = false
+			for _, a := range d.Attaches {
+				if !inside[a.ID] && len(a.Also) == 0 && inside[a.From] {
+					inside[a.ID], grew = true, true
+				}
+			}
+		}
 		for _, a := range d.Attaches {
-			if len(a.Also) == 0 && slices.Contains(ids, a.From) {
+			if inside[a.ID] && !slices.Contains(ids, a.ID) {
 				attach("        ", a)
 			}
 		}

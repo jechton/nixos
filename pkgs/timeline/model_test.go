@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -462,4 +464,51 @@ func TestAddPeriodWithoutEvent(t *testing.T) {
 		t.Fatal("blank event added")
 	}
 	d.Render()
+}
+
+func TestSortOrdersStandaloneEvents(t *testing.T) {
+	d, _ := Parse(defaultHeader)
+	d.AddPeriod(-1, "", "", "late one")
+	d.SetDate(d.Periods[0].Events[0].ID, "2001")
+	d.AddPeriod(0, "", "", "early one")
+	d.SetDate(d.Periods[1].Events[0].ID, "1990")
+	d.SortByDate()
+	if d.Periods[0].Events[0].Text != "early one" {
+		t.Fatal("standalone events not sorted")
+	}
+}
+
+func TestNestedNotesStayInsideBox(t *testing.T) {
+	d, _ := Parse(defaultHeader)
+	d.AddPeriod(-1, "Era", "", "ev")
+	n := d.AddAttach(d.Periods[0].Events[0].ID, "note", "a", "a")
+	d.AddAttach(n, "note", "child", "child")
+	out := d.Render()
+	if strings.Index(out, "child") > strings.Index(out, "    end") {
+		t.Fatal("nested note drawn outside the box")
+	}
+}
+
+func TestRefreshSavesOnlyChanges(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "t.mmd")
+	d, _ := Parse(defaultHeader)
+	m := newModel(d, path)
+	m.refresh("")
+	if _, err := os.Stat(path); err == nil {
+		t.Fatal("unchanged doc was written")
+	}
+	d.AddPeriod(-1, "Era", "", "ev")
+	m.refresh("")
+	m.refresh("")
+	if _, err := os.Stat(path + ".bak"); err == nil {
+		t.Fatal("new file got a .bak")
+	}
+	if err := os.WriteFile(path, []byte("outside edit\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	d.AddEvent(0, 1, "more", "")
+	m.refresh("")
+	if b, _ := os.ReadFile(path + ".bak"); string(b) != "outside edit\n" {
+		t.Fatalf("outside edit not kept: %q", b)
+	}
 }

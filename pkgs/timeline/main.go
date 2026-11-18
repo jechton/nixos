@@ -163,7 +163,7 @@ func statusStyle(s string) lipgloss.Style {
 	case strings.HasSuffix(s, "y/n") || strings.HasPrefix(s, "move to"):
 		color = "3"
 	default:
-		for _, bad := range []string{"cannot", "failed", "must", "no match", "pick ", "nothing to", "only link", "no row"} {
+		for _, bad := range []string{"cannot", "failed", "must", "no match", "pick ", "nothing to", "only link", "no row", "outside"} {
 			if strings.Contains(s, bad) {
 				color = "1"
 			}
@@ -190,7 +190,9 @@ func (m *model) refresh(focus string) {
 	if text := m.doc.Render(); text != m.rendered {
 		cur, err := os.ReadFile(m.path)
 		// Back up the file before the first changing save, and again if something else edited it since.
-		if err == nil && (!m.backed || string(cur) != m.disk) {
+		if err != nil {
+			m.backed = true // a new file has nothing to back up
+		} else if !m.backed || string(cur) != m.disk {
 			if string(cur) != m.disk {
 				m.status = "file changed outside, its old text is in the .bak"
 			}

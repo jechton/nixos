@@ -181,6 +181,12 @@ func (d *Doc) Render() string {
 	}
 	line("")
 	drawn := map[string]bool{}
+	single := map[string][]int{} // attaches with one parent, by parent: the ones that can sit inside a box
+	for i, a := range d.Attaches {
+		if len(a.Also) == 0 {
+			single[a.From] = append(single[a.From], i)
+		}
+	}
 	attach := func(indent string, a Attach) {
 		drawn[a.ID] = true
 		if a.Kind == "person" {
@@ -218,22 +224,16 @@ func (d *Doc) Render() string {
 		}
 		// An edge leaving a box makes elk drop direction LR, so notes and people of a period's events stay inside it.
 		// That includes notes hanging from those notes, and so on.
-		inside := map[string]bool{}
-		for _, id := range ids {
-			inside[id] = true
-		}
-		for grew := true; grew; {
-			grew = false
-			for _, a := range d.Attaches {
-				if !inside[a.ID] && len(a.Also) == 0 && inside[a.From] {
-					inside[a.ID], grew = true, true
-				}
+		var inside []int // indexes into d.Attaches, kept in file order
+		for queue := slices.Clone(ids); len(queue) > 0; queue = queue[1:] {
+			for _, i := range single[queue[0]] {
+				inside = append(inside, i)
+				queue = append(queue, d.Attaches[i].ID)
 			}
 		}
-		for _, a := range d.Attaches {
-			if inside[a.ID] && !slices.Contains(ids, a.ID) {
-				attach("        ", a)
-			}
+		slices.Sort(inside)
+		for _, i := range inside {
+			attach("        ", d.Attaches[i])
 		}
 		line("    end")
 	}
@@ -539,6 +539,9 @@ func (d *Doc) Date(id string) string {
 // SetDate changes the date of a period or event. Callers check ValidDate first.
 func (d *Doc) SetDate(id, date string) {
 	if it := d.item(id); it != nil && (d.Kind(id) == "period" || d.Kind(id) == "event") {
+		if date == "" && d.Kind(id) == "period" && it.Text == "" { // an untitled, undated period is a hidden box, its notes would vanish
+			return
+		}
 		it.Date = date
 	}
 }

@@ -35,14 +35,18 @@ func plain(s string) string {
 	return tagRe.ReplaceAllString(strings.ReplaceAll(s, "<br/>", " | "), "")
 }
 
-func (d *Doc) addChildren(from string, depth int, out []row) []row {
-	for _, a := range d.Attaches {
-		switch {
-		case a.From == from:
-			out = append(out, row{id: a.ID, kind: a.Kind, parent: from, depth: depth, text: plain(a.Text)})
-			out = d.addChildren(a.ID, depth+1, out)
-		case slices.Contains(a.Also, from): // shown again here, its own children only under the first parent
-			out = append(out, row{id: a.ID, kind: a.Kind, parent: from, depth: depth, text: plain(a.Text), linked: true})
+// kid is a note or person listed under one parent. linked marks an extra parent.
+type kid struct {
+	a      Attach
+	linked bool
+}
+
+// addChildren lists what hangs from an item. A linked note shows its own children only under the first parent.
+func addChildren(kids map[string][]kid, from string, depth int, out []row) []row {
+	for _, k := range kids[from] {
+		out = append(out, row{id: k.a.ID, kind: k.a.Kind, parent: from, depth: depth, text: plain(k.a.Text), linked: k.linked})
+		if !k.linked {
+			out = addChildren(kids, k.a.ID, depth+1, out)
 		}
 	}
 	return out
@@ -51,17 +55,24 @@ func (d *Doc) addChildren(from string, depth int, out []row) []row {
 // Rows flattens the doc into the lines shown on screen.
 func (d *Doc) Rows() []row {
 	var out []row
+	kids := map[string][]kid{}
+	for _, a := range d.Attaches {
+		kids[a.From] = append(kids[a.From], kid{a, false})
+		for _, x := range a.Also {
+			kids[x] = append(kids[x], kid{a, true})
+		}
+	}
 	for _, p := range d.Periods {
 		depth := 1
 		if p.Bare() { // no header row, its events stand alone
 			depth = 0
 		} else {
 			out = append(out, row{id: p.ID, kind: "period", text: plain(p.Text), date: p.Date})
-			out = d.addChildren(p.ID, 1, out)
+			out = addChildren(kids, p.ID, 1, out)
 		}
 		for _, e := range p.Events {
 			out = append(out, row{id: e.ID, kind: "event", depth: depth, text: plain(e.Text), date: e.Date, color: e.Color})
-			out = d.addChildren(e.ID, depth+1, out)
+			out = addChildren(kids, e.ID, depth+1, out)
 		}
 	}
 	for _, f := range d.Frees {
@@ -83,30 +94,23 @@ const (
 
 // keysHelp is the key list, shown by ? and by --help.
 const keysHelp = `Add (press a, then)
-  p  period       e  event (no period)   n  note
-  w  person       f  free note
-
+  p  period   e  event (no period)   n  note   w  person   f  free note
 Edit
-  e or enter  edit the item     d  delete (asks first)
-  y  duplicate the item     t  cycle an event color
-
+  e or enter  edit the item   d  delete (asks first)
+  y  duplicate the item       t  cycle an event color
 Move
-  up/down or j/k  move the cursor
+  up/down or j/k  move the cursor   pgup/pgdn  page   home/end  first/last
   J/K or shift+up/down  move the item down or up
   m  re-attach a note or person to a new parent
-
 Links
   space  mark notes and people, then l links all marked
   l  link a note or person to one more parent
   x  remove the link under the cursor
-
 View
-  /  search     s  sort by date
-  g  jump to a date
-  ?  this list  q  quit
-
+  /  search   n  next match   s  sort by date   g  jump to a date
+  ?  this list   q  quit
 Undo
-  u  undo       ctrl+r  redo`
+  u  undo   ctrl+r  redo`
 
 // dateLabel starts every date prompt, see updateTyping.
 const dateLabel = "Date, optional (1994, 1994-06-15, 1990s, early 1994, Sep 2001)"
@@ -297,10 +301,16 @@ func (m *model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+// maxUndo caps the undo history, each step holds the whole file text.
+const maxUndo = 200
+
 // remember saves the file text from before a change, unless nothing changed.
 func (m *model) remember(before string) {
 	if m.doc.Render() != before {
 		m.undo = append(m.undo, before)
+		if len(m.undo) > maxUndo {
+			m.undo = m.undo[1:]
+		}
 		m.redo = nil
 	}
 }
@@ -416,6 +426,20 @@ func (m *model) updateBrowse(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.cursor = max(0, m.cursor-1)
 	case "down", "j":
 		m.cursor = min(len(m.rows)-1, m.cursor+1)
+	case "pgup", "ctrl+u":
+		m.cursor = max(0, m.cursor-max(1, m.height-10))
+	case "pgdown", "ctrl+d":
+		m.cursor = min(len(m.rows)-1, m.cursor+max(1, m.height-10))
+	case "home":
+		m.cursor = 0
+	case "end":
+		m.cursor = max(0, len(m.rows)-1)
+	case "n":
+		if m.query == "" {
+			m.status = "no search yet, press / first"
+			return m, nil
+		}
+		m.refresh(m.search())
 	case "esc":
 		clear(m.marked)
 	case "a":

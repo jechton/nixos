@@ -536,3 +536,12 @@ func TestRoughDatesSortInOrder(t *testing.T) {
 		}
 	}
 }
+
+func TestSetDateKeepsUntitledPeriodVisible(t *testing.T) {
+	d := &Doc{}
+	id := d.AddPeriod(-1, "", "1990", "first")
+	d.SetDate(id, "")
+	if d.item(id).Date != "1990" {
+		t.Fatal("cleared the date of an untitled period")
+	}
+}

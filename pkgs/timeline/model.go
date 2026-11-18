@@ -59,6 +59,7 @@ var (
 	classRe = regexp.MustCompile(`^\s*class\s+\S+\s+period$`)
 	chainRe = regexp.MustCompile(`^\s*\w+(\s+~~~\s+\w+)+$`) // invisible links that pin event order
 	colorRe = regexp.MustCompile(`^\s*class\s+(\w+)\s+tag_(\w+)$`)
+	dirRe   = regexp.MustCompile(`^\s*direction LR$`)                        // lays a period's events out in a row
 	bareRe  = regexp.MustCompile(`^\s*style\s+\w+\s+fill:none,stroke:none$`) // hides a bare period's box
 )
 
@@ -115,7 +116,7 @@ func Parse(text string) (*Doc, error) {
 				return nil, fmt.Errorf("line %d not understood, would be lost on save: %s", i+1, trim)
 			}
 			d.item(m[1]).Color = m[2]
-		case spineRe.MatchString(line) || classRe.MatchString(line) || chainRe.MatchString(line) || bareRe.MatchString(line):
+		case spineRe.MatchString(line) || classRe.MatchString(line) || chainRe.MatchString(line) || bareRe.MatchString(line) || dirRe.MatchString(line):
 		default:
 			return nil, fmt.Errorf("line %d not understood, would be lost on save: %s", i+1, trim)
 		}
@@ -171,12 +172,15 @@ func (d *Doc) Render() string {
 	line("    %%%% ---- PERIODS. Each box holds events that happen in the same span. ----")
 	for _, p := range d.Periods {
 		line("    subgraph %s[\"%s\"]", p.ID, cmp.Or(p.label(), " "))
+		if !p.Bare() {
+			line("        direction LR")
+		}
 		ids := make([]string, len(p.Events))
 		for i, e := range p.Events {
 			line("        %s[\"%s\"]:::event", e.ID, e.label())
 			ids[i] = e.ID
 		}
-		// The elk renderer orders unlinked nodes arbitrarily, so chain the events invisibly.
+		// The elk renderer orders unlinked nodes arbitrarily, so chain the events invisibly. With direction LR the chain lays them out left to right.
 		if len(ids) > 1 {
 			line("        %s", strings.Join(ids, " ~~~ "))
 		}

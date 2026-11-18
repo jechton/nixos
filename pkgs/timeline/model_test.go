@@ -369,3 +369,16 @@ func TestStandaloneEventsGetOwnPeriod(t *testing.T) {
 		t.Fatalf("shared bare period not split: %v %+v", err, d2.Periods)
 	}
 }
+
+func TestPeriodEventsLayOutInARow(t *testing.T) {
+	d, _ := Parse(defaultHeader)
+	d.AddPeriod(-1, "Era", "", "One")
+	d.AddEvent(0, 1, "Two", "")
+	out := d.Render()
+	if !strings.Contains(out, "direction LR") {
+		t.Fatalf("period lacks direction LR:\n%s", out)
+	}
+	if d2, err := Parse(out); err != nil || d2.Render() != out {
+		t.Fatalf("direction line does not round-trip: %v", err)
+	}
+}

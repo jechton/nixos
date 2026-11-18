@@ -83,8 +83,7 @@ const (
 
 // keysHelp is the key list, shown by ? and by --help.
 const keysHelp = `Add (press a, then)
-  p  period       e  event       n  note
-  s  standalone event (no period)
+  p  period       e  event (no period)   n  note
   w  person       f  free note
 
 Edit
@@ -534,7 +533,7 @@ func (m *model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, m.ask([]prompt{{"Period", ""}, {dateLabel, ""}, {"First event", ""}},
 			func(a []string) string { return m.doc.AddPeriod(after, a[0], a[1], a[2]) })
-	case "s": // a standalone event: its own invisible period
+	case "e": // a standalone event: its own invisible period. J/K moves it into a period
 		after := len(m.doc.Periods) - 1
 		if pi, _, found := m.doc.Where(r.id); ok && found {
 			after = pi
@@ -546,15 +545,6 @@ func (m *model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.doc.SetDate(id, a[1])
 				return id
 			})
-	case "e":
-		pi, ei, found := m.doc.Where(r.id)
-		if !ok || !found {
-			m.status = "pick a period or event first"
-			return m, nil
-		}
-		at := ei + 1 // ei is -1 on a period row, so this adds at its top
-		return m, m.ask([]prompt{{"Event", ""}, {dateLabel, ""}},
-			func(a []string) string { return m.doc.AddEvent(pi, at, a[0], a[1]) })
 	case "n", "w":
 		if needsParent {
 			m.status = "pick a period, event, note or person to attach to"
@@ -671,7 +661,7 @@ func (m *model) View() string {
 		}
 		b.WriteString(status + "\n" + box.Render(title+m.input.View()) + "\n" + dim.Render("enter next, esc cancel"))
 	case menu:
-		b.WriteString(box.Render("add:  p period   e event   s standalone event   n note   w person   f free note") + "\n" + dim.Render("esc cancel"))
+		b.WriteString(box.Render("add:  p period   e event   n note   w person   f free note") + "\n" + dim.Render("esc cancel"))
 	default:
 		b.WriteString(status + "\n" + dim.Render(m.hint()))
 	}

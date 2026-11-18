@@ -428,3 +428,38 @@ func TestRoughDates(t *testing.T) {
 		t.Errorf("sorted %v, want %s", got, want)
 	}
 }
+
+func TestEmptiedBareNeverRenders(t *testing.T) {
+	d, _ := Parse(defaultHeader)
+	d.AddPeriod(-1, "", "", "solo")
+	d.Delete(d.Periods[0].Events[0].ID)
+	if len(d.Periods) != 0 {
+		t.Fatal("empty bare period kept")
+	}
+	d.AddPeriod(-1, "", "", "solo")
+	d.AddPeriod(0, "Era", "", "x")
+	if !d.Move(d.Periods[0].Events[0].ID, 1) || len(d.Periods) != 1 || len(d.Periods[0].Events) != 2 {
+		t.Fatal("standalone event did not join the period")
+	}
+	d.Render()
+}
+
+func TestLinkRefusesCycle(t *testing.T) {
+	d, _ := Parse(defaultHeader)
+	d.AddPeriod(-1, "Era", "", "ev")
+	ev := d.Periods[0].Events[0].ID
+	a := d.AddAttach(ev, "note", "a", "a")
+	b := d.AddAttach(ev, "note", "b", "b")
+	if !d.Link(b, a) || d.Link(a, b) || d.Reattach(a, b) {
+		t.Fatal("cycle allowed")
+	}
+}
+
+func TestAddPeriodWithoutEvent(t *testing.T) {
+	d, _ := Parse(defaultHeader)
+	d.AddPeriod(-1, "Era", "", "")
+	if len(d.Periods[0].Events) != 0 {
+		t.Fatal("blank event added")
+	}
+	d.Render()
+}

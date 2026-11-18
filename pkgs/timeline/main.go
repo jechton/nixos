@@ -114,28 +114,30 @@ const dateLabel = "Date, optional (1994, 1994-06-15, 1990s, early 1994, Sep 2001
 type prompt struct{ label, initial string }
 
 type model struct {
-	doc     *Doc
-	path    string
-	rows    []row
-	cursor  int
-	offset  int
-	height  int
-	width   int
-	mode    mode
-	prompts []prompt
-	step    int
-	answers []string
-	input   textinput.Model
-	finish  func(a []string) string // returns the id to put the cursor on
-	pending string                  // id awaiting delete confirmation, or the note being re-attached
-	undo    []string                // rendered files from before each change
-	redo    []string                // files set aside by undo, cleared by any new change
-	query   string                  // last search
-	linking bool                    // pickParent adds a link instead of moving the note
-	marked  map[string]bool         // notes and people picked with space, linked together by l
-	batch   []string                // what pickParent links, when linking
-	status  string
-	backed  bool // this session's .bak is settled, no more attempts
+	doc      *Doc
+	path     string
+	rows     []row
+	cursor   int
+	offset   int
+	height   int
+	width    int
+	mode     mode
+	prompts  []prompt
+	step     int
+	answers  []string
+	input    textinput.Model
+	finish   func(a []string) string // returns the id to put the cursor on
+	pending  string                  // id awaiting delete confirmation, or the note being re-attached
+	undo     []string                // rendered files from before each change
+	redo     []string                // files set aside by undo, cleared by any new change
+	query    string                  // last search
+	linking  bool                    // pickParent adds a link instead of moving the note
+	marked   map[string]bool         // notes and people picked with space, linked together by l
+	batch    []string                // what pickParent links, when linking
+	status   string
+	rendered string // the doc as last saved or loaded, so an unchanged doc is not rewritten
+	disk     string // what this program last read from or wrote to the file
+	backed   bool   // the first changing save has made its .bak
 }
 
 var (
@@ -174,6 +176,10 @@ func newModel(doc *Doc, path string) *model {
 	m := &model{doc: doc, path: path, height: 24, input: textinput.New()}
 	m.input.CharLimit = 300
 	m.rows = doc.Rows()
+	m.rendered = doc.Render()
+	if b, err := os.ReadFile(path); err == nil {
+		m.disk = string(b)
+	}
 	return m
 }
 
@@ -181,11 +187,20 @@ func (m *model) Init() tea.Cmd { return nil }
 
 // refresh redraws the rows, saves, and moves the cursor to focus.
 func (m *model) refresh(focus string) {
-	if !m.backed {
-		m.backed = backup(m.path, m.doc.Render())
-	}
-	if err := m.doc.Save(m.path); err != nil {
-		m.status = "save failed: " + err.Error()
+	if text := m.doc.Render(); text != m.rendered {
+		cur, err := os.ReadFile(m.path)
+		// Back up the file before the first changing save, and again if something else edited it since.
+		if err == nil && (!m.backed || string(cur) != m.disk) {
+			if string(cur) != m.disk {
+				m.status = "file changed outside, its old text is in the .bak"
+			}
+			m.backed = os.WriteFile(m.path+".bak", cur, 0o644) == nil
+		}
+		if err := m.doc.Save(m.path); err != nil {
+			m.status = "save failed: " + err.Error()
+		} else {
+			m.rendered, m.disk = text, text
+		}
 	}
 	m.rows = m.doc.Rows()
 	for i, r := range m.rows {
@@ -291,10 +306,7 @@ func (m *model) remember(before string) {
 // offerEmpty asks to delete the period with this id if it has no events left.
 func (m *model) offerEmpty(periodID string) {
 	for _, p := range m.doc.Periods {
-		if p.ID == periodID && len(p.Events) == 0 && p.Bare() {
-			m.doc.Delete(p.ID) // nothing to keep, no need to ask
-			m.refresh("")
-		} else if p.ID == periodID && len(p.Events) == 0 {
+		if p.ID == periodID && len(p.Events) == 0 {
 			m.pending, m.mode = p.ID, confirm
 			m.status = fmt.Sprintf("Period %q is empty. Delete it too? y/n", plain(p.Text))
 		}
@@ -437,7 +449,7 @@ func (m *model) updateBrowse(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.remember(before)
 		m.refresh(focus)
 	case "g":
-		return m, m.ask([]prompt{{"Jump to date", ""}}, func(a []string) string { return m.jump(a[0]) })
+		return m, m.ask([]prompt{{"Date to jump to", ""}}, func(a []string) string { return m.jump(a[0]) })
 	case "enter", "e", "r":
 		if !ok {
 			return m, nil
@@ -648,8 +660,9 @@ func (m *model) View() string {
 		m.offset = m.cursor - room + 1
 	}
 	end := min(len(m.rows), m.offset+room)
+	clip := lipgloss.NewStyle().MaxWidth(max(m.width, 20)) // a long row must not wrap and break the scroll math
 	for i := m.offset; i < end; i++ {
-		b.WriteString(m.line(i, dateWidth) + "\n")
+		b.WriteString(clip.Render(m.line(i, dateWidth)) + "\n")
 	}
 	if len(m.rows) == 0 {
 		b.WriteString(dim.Render("empty: press a then p to add a period") + "\n")
@@ -740,20 +753,6 @@ func main() {
 	if _, err := tea.NewProgram(newModel(doc, path), tea.WithAltScreen()).Run(); err != nil {
 		fail(err)
 	}
-}
-
-// backup copies the file to path.bak right before the session's first save that
-// changes it. Sessions that change nothing leave the previous .bak alone.
-// It reports whether the session needs no further attempts.
-func backup(path, next string) bool {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return true
-	}
-	if string(data) == next {
-		return false
-	}
-	return os.WriteFile(path+".bak", data, 0o644) == nil
 }
 
 // travel restores the newest snapshot in from, and keeps the current file in to

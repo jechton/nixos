@@ -189,6 +189,9 @@ func (d *Doc) Render() string {
 	var spine, boxes []string // spine: what the arrows connect. boxes: titled periods, which share a color.
 	for _, p := range d.Periods {
 		if p.Bare() { // a standalone event is a plain node, no box
+			if len(p.Events) == 0 {
+				continue
+			}
 			e := p.Events[0]
 			line("    %s[\"%s\"]:::event", e.ID, e.label())
 			spine = append(spine, e.ID)
@@ -346,9 +349,8 @@ func (d *Doc) Where(id string) (pi, ei int, ok bool) {
 
 func (d *Doc) AddPeriod(after int, title, date, firstEvent string) string {
 	p := Period{Item: Item{ID: d.NewID("p", cmp.Or(title, firstEvent)), Text: Clean(title), Date: date}}
-	p.Events = []Item{{ID: d.NewID("n", firstEvent), Text: Clean(firstEvent)}}
-	if p.Events[0].ID == p.ID {
-		p.Events[0].ID += "_e"
+	if firstEvent != "" {
+		p.Events = []Item{{ID: d.NewID("n", firstEvent), Text: Clean(firstEvent)}}
 	}
 	d.Periods = append(d.Periods, Period{})
 	copy(d.Periods[after+2:], d.Periods[after+1:])
@@ -444,6 +446,9 @@ func (d *Doc) Delete(id string) {
 			}
 		}
 		p.Events = evs
+		if p.Bare() && len(evs) == 0 { // nothing left to stand alone
+			continue
+		}
 		periods = append(periods, p)
 	}
 	d.Periods = periods
@@ -577,6 +582,9 @@ func (d *Doc) Move(id string, dir int) bool {
 	} else {
 		d.Periods[np].Events = append(d.Periods[np].Events, e)
 	}
+	if d.Periods[pi].Bare() { // the standalone event joined a period, its empty box goes
+		d.Periods = slices.Delete(d.Periods, pi, pi+1)
+	}
 	return true
 }
 
@@ -633,6 +641,19 @@ func ParsePerson(label string) Person {
 	return p
 }
 
+// below lists id and everything under it through any link, first parent or extra.
+func (d *Doc) below(id string) []string {
+	out := []string{id}
+	for i := 0; i < len(out); i++ {
+		for _, a := range d.Attaches {
+			if (a.From == out[i] || slices.Contains(a.Also, out[i])) && !slices.Contains(out, a.ID) {
+				out = append(out, a.ID)
+			}
+		}
+	}
+	return out
+}
+
 // Reattach hangs a note or person from another item. It refuses free notes as
 // parents, and loops (a note cannot hang from itself or from something under it).
 func (d *Doc) Reattach(id, to string) bool {
@@ -640,7 +661,7 @@ func (d *Doc) Reattach(id, to string) bool {
 	if k != "note" && k != "person" {
 		return false
 	}
-	if d.Kind(to) == "free" || d.Kind(to) == "" || slices.Contains(d.Cascade(id), to) {
+	if d.Kind(to) == "free" || d.Kind(to) == "" || slices.Contains(d.below(id), to) {
 		return false
 	}
 	for i := range d.Attaches {
@@ -655,7 +676,7 @@ func (d *Doc) Reattach(id, to string) bool {
 // several events. Same refusals as Reattach, plus duplicates.
 func (d *Doc) Link(id, to string) bool {
 	i := slices.IndexFunc(d.Attaches, func(a Attach) bool { return a.ID == id })
-	if i < 0 || d.Kind(to) == "free" || d.Kind(to) == "" || slices.Contains(d.Cascade(id), to) {
+	if i < 0 || d.Kind(to) == "free" || d.Kind(to) == "" || slices.Contains(d.below(id), to) {
 		return false
 	}
 	a := &d.Attaches[i]

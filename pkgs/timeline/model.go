@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"os"
 	"regexp"
@@ -26,6 +27,9 @@ type Period struct {
 	Item
 	Events []Item
 }
+
+// Bare is a period with no title or date: an invisible box, so its events stand alone.
+func (p Period) Bare() bool { return p.Text == "" && p.Date == "" }
 
 // Attach is a note or person linked from another item.
 type Attach struct {
@@ -55,6 +59,7 @@ var (
 	classRe = regexp.MustCompile(`^\s*class\s+\S+\s+period$`)
 	chainRe = regexp.MustCompile(`^\s*\w+(\s+~~~\s+\w+)+$`) // invisible links that pin event order
 	colorRe = regexp.MustCompile(`^\s*class\s+(\w+)\s+tag_(\w+)$`)
+	bareRe  = regexp.MustCompile(`^\s*style\s+\w+\s+fill:none,stroke:none$`) // hides a bare period's box
 )
 
 // Parse reads a timeline. It refuses files with lines it would lose on save.
@@ -78,7 +83,9 @@ func Parse(text string) (*Doc, error) {
 		case trim == "" || strings.HasPrefix(trim, "%%") || strings.HasPrefix(trim, "classDef tag_"): // the last is rewritten by Render
 		case subRe.MatchString(line):
 			m := subRe.FindStringSubmatch(line)
-			d.Periods = append(d.Periods, Period{Item: newItem(m[1], m[2])})
+			p := Period{Item: newItem(m[1], m[2])}
+			p.Text = strings.TrimSpace(p.Text)
+			d.Periods = append(d.Periods, p)
 			cur = &d.Periods[len(d.Periods)-1]
 		case endRe.MatchString(line):
 			cur = nil
@@ -108,7 +115,7 @@ func Parse(text string) (*Doc, error) {
 				return nil, fmt.Errorf("line %d not understood, would be lost on save: %s", i+1, trim)
 			}
 			d.item(m[1]).Color = m[2]
-		case spineRe.MatchString(line) || classRe.MatchString(line) || chainRe.MatchString(line):
+		case spineRe.MatchString(line) || classRe.MatchString(line) || chainRe.MatchString(line) || bareRe.MatchString(line):
 		default:
 			return nil, fmt.Errorf("line %d not understood, would be lost on save: %s", i+1, trim)
 		}
@@ -146,7 +153,7 @@ func (d *Doc) Render() string {
 	line("")
 	line("    %%%% ---- PERIODS. Each box holds events that happen in the same span. ----")
 	for _, p := range d.Periods {
-		line("    subgraph %s[\"%s\"]", p.ID, p.label())
+		line("    subgraph %s[\"%s\"]", p.ID, cmp.Or(p.label(), " "))
 		ids := make([]string, len(p.Events))
 		for i, e := range p.Events {
 			line("        %s[\"%s\"]:::event", e.ID, e.label())
@@ -157,6 +164,9 @@ func (d *Doc) Render() string {
 			line("        %s", strings.Join(ids, " ~~~ "))
 		}
 		line("    end")
+		if p.Bare() {
+			line("    style %s fill:none,stroke:none", p.ID)
+		}
 	}
 	if len(d.Periods) > 0 {
 		ids := make([]string, len(d.Periods))
@@ -296,7 +306,7 @@ func (d *Doc) Where(id string) (pi, ei int, ok bool) {
 }
 
 func (d *Doc) AddPeriod(after int, title, date, firstEvent string) string {
-	p := Period{Item: Item{ID: d.NewID("p", title), Text: Clean(title), Date: date}}
+	p := Period{Item: Item{ID: d.NewID("p", cmp.Or(title, firstEvent)), Text: Clean(title), Date: date}}
 	p.Events = []Item{{ID: d.NewID("n", firstEvent), Text: Clean(firstEvent)}}
 	if p.Events[0].ID == p.ID {
 		p.Events[0].ID += "_e"

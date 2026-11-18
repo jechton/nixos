@@ -332,3 +332,13 @@ func TestEventOrderChain(t *testing.T) {
 		t.Fatalf("chain does not round-trip: %v", err)
 	}
 }
+
+func TestBarePeriodRoundTrip(t *testing.T) {
+	d, _ := Parse(defaultHeader)
+	d.AddPeriod(-1, "", "", "Alone")
+	out := d.Render()
+	d2, err := Parse(out)
+	if err != nil || !d2.Periods[0].Bare() || d2.Render() != out {
+		t.Fatalf("bare period did not round trip: %v\n%s", err, out)
+	}
+}

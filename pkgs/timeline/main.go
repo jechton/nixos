@@ -52,11 +52,16 @@ func (d *Doc) addChildren(from string, depth int, out []row) []row {
 func (d *Doc) Rows() []row {
 	var out []row
 	for _, p := range d.Periods {
-		out = append(out, row{id: p.ID, kind: "period", text: plain(p.Text), date: p.Date})
-		out = d.addChildren(p.ID, 1, out)
+		depth := 1
+		if p.Bare() { // no header row, its events stand alone
+			depth = 0
+		} else {
+			out = append(out, row{id: p.ID, kind: "period", text: plain(p.Text), date: p.Date})
+			out = d.addChildren(p.ID, 1, out)
+		}
 		for _, e := range p.Events {
-			out = append(out, row{id: e.ID, kind: "event", depth: 1, text: plain(e.Text), date: e.Date, color: e.Color})
-			out = d.addChildren(e.ID, 2, out)
+			out = append(out, row{id: e.ID, kind: "event", depth: depth, text: plain(e.Text), date: e.Date, color: e.Color})
+			out = d.addChildren(e.ID, depth+1, out)
 		}
 	}
 	for _, f := range d.Frees {
@@ -79,6 +84,7 @@ const (
 // keysHelp is the key list, shown by ? and by --help.
 const keysHelp = `Add (press a, then)
   p  period       e  event       n  note
+  s  standalone event (no period)
   w  person       f  free note
 
 Edit
@@ -283,7 +289,10 @@ func (m *model) remember(before string) {
 // offerEmpty asks to delete the period with this id if it has no events left.
 func (m *model) offerEmpty(periodID string) {
 	for _, p := range m.doc.Periods {
-		if p.ID == periodID && len(p.Events) == 0 {
+		if p.ID == periodID && len(p.Events) == 0 && p.Bare() {
+			m.doc.Delete(p.ID) // nothing to keep, no need to ask
+			m.refresh("")
+		} else if p.ID == periodID && len(p.Events) == 0 {
 			m.pending, m.mode = p.ID, confirm
 			m.status = fmt.Sprintf("Period %q is empty. Delete it too? y/n", plain(p.Text))
 		}
@@ -525,6 +534,18 @@ func (m *model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, m.ask([]prompt{{"Period", ""}, {dateLabel, ""}, {"First event", ""}},
 			func(a []string) string { return m.doc.AddPeriod(after, a[0], a[1], a[2]) })
+	case "s": // a standalone event: its own invisible period
+		after := len(m.doc.Periods) - 1
+		if pi, _, found := m.doc.Where(r.id); ok && found {
+			after = pi
+		}
+		return m, m.ask([]prompt{{"Event", ""}, {dateLabel, ""}},
+			func(a []string) string {
+				m.doc.AddPeriod(after, "", "", a[0])
+				id := m.doc.Periods[after+1].Events[0].ID
+				m.doc.SetDate(id, a[1])
+				return id
+			})
 	case "e":
 		pi, ei, found := m.doc.Where(r.id)
 		if !ok || !found {

@@ -382,3 +382,17 @@ func TestPeriodEventsLayOutInARow(t *testing.T) {
 		t.Fatalf("direction line does not round-trip: %v", err)
 	}
 }
+
+func TestPeriodAttachmentsStayInsideBox(t *testing.T) {
+	d, _ := Parse(defaultHeader)
+	d.AddPeriod(-1, "Era", "", "First")
+	d.AddAttach(d.Periods[0].Events[0].ID, "note", "A note", "A note")
+	out := d.Render()
+	if strings.Index(out, "A note") > strings.Index(out, "    end") {
+		t.Fatalf("note drawn outside its period box:\n%s", out)
+	}
+	d2, err := Parse(out)
+	if err != nil || d2.Render() != out {
+		t.Fatalf("did not round trip: %v", err)
+	}
+}

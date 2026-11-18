@@ -71,7 +71,7 @@ func Parse(text string) (*Doc, error) {
 	for i, line := range strings.Split(strings.TrimRight(text, "\n"), "\n") {
 		trim := strings.TrimSpace(line)
 		if !body {
-			if subRe.MatchString(line) || strings.Contains(line, "---- PERIODS") {
+			if subRe.MatchString(line) || strings.Contains(line, "---- PERIODS") || strings.Contains(line, "---- EVENTS") {
 				body = true
 			} else {
 				if !strings.HasPrefix(trim, "classDef tag_") { // Render writes these
@@ -93,6 +93,10 @@ func Parse(text string) (*Doc, error) {
 		case cur != nil && eventRe.MatchString(line):
 			m := eventRe.FindStringSubmatch(line)
 			cur.Events = append(cur.Events, newItem(m[1], m[2]))
+		case eventRe.MatchString(line): // outside any box: a standalone event
+			m := eventRe.FindStringSubmatch(line)
+			e := newItem(m[1], m[2])
+			d.Periods = append(d.Periods, Period{Item: Item{ID: "p_" + e.ID}, Events: []Item{e}})
 		case attachRe.MatchString(line):
 			m := attachRe.FindStringSubmatch(line)
 			a := Attach{From: m[1], Kind: m[5], Item: Item{ID: m[2], Text: m[3]}}
@@ -169,12 +173,30 @@ func (d *Doc) Render() string {
 		line("%s", h)
 	}
 	line("")
-	line("    %%%% ---- PERIODS. Each box holds events that happen in the same span. ----")
-	for _, p := range d.Periods {
-		line("    subgraph %s[\"%s\"]", p.ID, cmp.Or(p.label(), " "))
-		if !p.Bare() {
-			line("        direction LR")
+	drawn := map[string]bool{}
+	attach := func(indent string, a Attach) {
+		drawn[a.ID] = true
+		if a.Kind == "person" {
+			line("%s%s -.- %s(\"%s\"):::person", indent, a.From, a.ID, a.Text)
+		} else {
+			line("%s%s -.- %s>\"%s\"]:::note", indent, a.From, a.ID, a.Text)
 		}
+		for _, x := range a.Also {
+			line("%s%s -.- %s", indent, x, a.ID)
+		}
+	}
+	line("    %%%% ---- EVENTS. A box holds events in the same span. The rest stand alone. ----")
+	var spine, boxes []string // spine: what the arrows connect. boxes: titled periods, which share a color.
+	for _, p := range d.Periods {
+		if p.Bare() { // a standalone event is a plain node, no box
+			e := p.Events[0]
+			line("    %s[\"%s\"]:::event", e.ID, e.label())
+			spine = append(spine, e.ID)
+			continue
+		}
+		spine, boxes = append(spine, p.ID), append(boxes, p.ID)
+		line("    subgraph %s[\"%s\"]", p.ID, p.label())
+		line("        direction LR")
 		ids := make([]string, len(p.Events))
 		for i, e := range p.Events {
 			line("        %s[\"%s\"]:::event", e.ID, e.label())
@@ -184,37 +206,33 @@ func (d *Doc) Render() string {
 		if len(ids) > 1 {
 			line("        %s", strings.Join(ids, " ~~~ "))
 		}
+		// An edge leaving a box makes elk drop direction LR, so notes and people of a period's events stay inside it.
+		for _, a := range d.Attaches {
+			if len(a.Also) == 0 && slices.Contains(ids, a.From) {
+				attach("        ", a)
+			}
+		}
 		line("    end")
-		if p.Bare() {
-			line("    style %s fill:none,stroke:none", p.ID)
-		}
 	}
-	if len(d.Periods) > 0 {
-		ids := make([]string, len(d.Periods))
-		for i, p := range d.Periods {
-			ids[i] = p.ID
-		}
+	if len(spine) > 0 {
 		line("")
-		line("    %%%% ---- SPINE. Order of the periods. ----")
-		line("    %s", ids[0])
-		for _, id := range ids[1:] {
+		line("    %%%% ---- SPINE. Order of the periods and standalone events. ----")
+		line("    %s", spine[0])
+		for _, id := range spine[1:] {
 			line("        --> %s", id)
 		}
+	}
+	if len(boxes) > 0 {
 		line("")
 		line("    %%%% All periods share one color.")
-		line("    class %s period", strings.Join(ids, ","))
+		line("    class %s period", strings.Join(boxes, ","))
 	}
 	d.renderColors(line)
 	line("")
 	line("    %%%% ---- NOTES AND PEOPLE (dotted line) ----")
 	for _, a := range d.Attaches {
-		if a.Kind == "person" {
-			line("    %s -.- %s(\"%s\"):::person", a.From, a.ID, a.Text)
-		} else {
-			line("    %s -.- %s>\"%s\"]:::note", a.From, a.ID, a.Text)
-		}
-		for _, x := range a.Also {
-			line("    %s -.- %s", x, a.ID)
+		if !drawn[a.ID] {
+			attach("    ", a)
 		}
 	}
 	line("")

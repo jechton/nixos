@@ -158,12 +158,12 @@ func TestMoveFree(t *testing.T) {
 }
 
 func TestDates(t *testing.T) {
-	for _, ok := range []string{"1994", "1994-06", "1994-06-15", "1990 to 1999", "1994-06 to 1995"} {
+	for _, ok := range []string{"1994", "1994-06", "1994-06-15", "1990 to 1999", "1994-06 to 1995", "1990s", "1990s to 2000s"} {
 		if !ValidDate(ok) {
 			t.Fatalf("%q should be valid", ok)
 		}
 	}
-	for _, bad := range []string{"", "94", "1994-13", "1994-06-32", "June 1994", "1994 to"} {
+	for _, bad := range []string{"", "94", "1994-13", "1994-06-32", "June 1994", "1994 to", "1995s", "199s"} {
 		if ValidDate(bad) {
 			t.Fatalf("%q should be invalid", bad)
 		}

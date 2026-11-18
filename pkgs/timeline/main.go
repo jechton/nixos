@@ -110,7 +110,7 @@ Undo
   u  undo       ctrl+r  redo`
 
 // dateLabel starts every date prompt, see updateTyping.
-const dateLabel = "Date, optional (1994, 1994-06-15, 1990 to 1999)"
+const dateLabel = "Date, optional (1994, 1994-06-15, 1990s, 1990 to 1999)"
 
 type prompt struct{ label, initial string }
 
@@ -258,7 +258,7 @@ func (m *model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		// Date prompts are the ones labelled "Date...".
 		if strings.HasPrefix(m.prompts[m.step].label, "Date") && val != "" && !ValidDate(val) {
-			m.status = "date must look like 1994, 1994-06, 1994-06-15 or 1990 to 1999"
+			m.status = "date must look like 1994, 1994-06, 1994-06-15, 1990s or 1990 to 1999"
 			return m, nil
 		}
 		m.answers = append(m.answers, val)
@@ -359,8 +359,8 @@ func (m *model) updatePickParent(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 // jump finds the first row dated on or after date (a prefix like 1994 works).
 func (m *model) jump(date string) string {
 	for _, r := range m.rows {
-		start, _, _ := strings.Cut(r.date, " to ")
-		if start != "" && start >= date {
+		start := dateStart(r.date)
+		if start != "" && start >= dateStart(date) {
 			return r.id
 		}
 	}

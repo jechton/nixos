@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-// Dates are 1994, 1994-06 or 1994-06-15, optionally as a range ("1990 to 1999").
+// Dates are 1994, 1994-06, 1994-06-15 or a decade like 1990s, optionally as a range ("1990 to 1999").
 // They sort correctly as plain text: a shorter date sorts before a longer one
 // that starts with it.
-const dateP = `\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?`
+const dateP = `(?:\d{3}0s|\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?)`
 
 var (
 	validDateRe = regexp.MustCompile(`^` + dateP + `(?: to ` + dateP + `)?$`)
@@ -45,7 +45,7 @@ func sortDated[T any](xs []T, date func(T) string) {
 			slots, dated = append(slots, i), append(dated, x)
 		}
 	}
-	start := func(x T) string { s, _, _ := strings.Cut(date(x), " to "); return s }
+	start := func(x T) string { return dateStart(date(x)) }
 	slices.SortStableFunc(dated, func(a, b T) int { return strings.Compare(start(a), start(b)) })
 	for k, i := range slots {
 		xs[i] = dated[k]
@@ -131,4 +131,10 @@ func (d *Doc) Duplicate(id string) string {
 		return d.AddFree(d.Text(id), d.Text(id))
 	}
 	return ""
+}
+
+// dateStart is the first day a date covers, for sorting: "1990s" counts as 1990.
+func dateStart(date string) string {
+	s, _, _ := strings.Cut(date, " to ")
+	return strings.TrimSuffix(s, "s")
 }

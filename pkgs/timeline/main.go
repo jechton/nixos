@@ -4,7 +4,9 @@ package main
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
+	"io/fs"
 	"maps"
 	"os"
 	"os/exec"
@@ -772,6 +774,12 @@ func main() {
 	}
 	if cmd == "live" {
 		// A second terminal window redraws the diagram on every save, see mermaid-preview.
+		// entr, which the preview runs on, exits on a file that does not exist yet.
+		if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
+			if err := os.WriteFile(path, []byte(doc.Render()), 0o644); err != nil {
+				fail(err)
+			}
+		}
 		preview := exec.Command("ghostty", "-e", "mermaid-preview", path)
 		if err := preview.Start(); err != nil {
 			fail(fmt.Errorf("preview window: %v", err))

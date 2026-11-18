@@ -545,3 +545,14 @@ func TestSetDateKeepsUntitledPeriodVisible(t *testing.T) {
 		t.Fatal("cleared the date of an untitled period")
 	}
 }
+
+func TestLoadBlankFileGetsHeader(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "new.mmd")
+	if err := os.WriteFile(path, []byte("\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	d, err := Load(path)
+	if err != nil || !strings.HasPrefix(d.Render(), "%%{init") {
+		t.Fatalf("blank file lost the mermaid header: %v\n%s", err, d.Render())
+	}
+}

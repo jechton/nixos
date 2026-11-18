@@ -169,7 +169,7 @@ func statusStyle(s string) lipgloss.Style {
 	case strings.HasSuffix(s, "y/n") || strings.HasPrefix(s, "move to"):
 		color = "3"
 	default:
-		for _, bad := range []string{"cannot", "failed", "must", "no match", "pick ", "nothing to", "only link", "no row", "outside"} {
+		for _, bad := range []string{"cannot", "failed", "must", "no match", "pick ", "nothing to", "only link", "no row", "outside", "needs a"} {
 			if strings.Contains(s, bad) {
 				color = "1"
 			}
@@ -279,7 +279,7 @@ func (m *model) updateTyping(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if isDate {
 			val = NormalizeDate(val)
 		}
-		if m.step == 0 && val == "" {
+		if m.step == 0 && val == "" && !strings.Contains(m.prompts[0].label, "optional") {
 			return m, nil // the first answer is required
 		}
 		if isDate && val != "" && !ValidDate(val) {
@@ -489,10 +489,17 @@ func (m *model) updateBrowse(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				func(a []string) string { m.doc.SetText(r.id, personFrom(a).Label()); return r.id })
 		}
 		if r.kind == "period" || r.kind == "event" {
-			return m, m.ask([]prompt{{"Text", m.doc.Text(r.id)}, {dateLabel, m.doc.Date(r.id)}},
+			label := "Text"
+			if r.kind == "period" && m.doc.Text(r.id) == "" {
+				label = "Text (optional)" // an untitled period, dated instead
+			}
+			return m, m.ask([]prompt{{label, m.doc.Text(r.id)}, {dateLabel, m.doc.Date(r.id)}},
 				func(a []string) string {
 					m.doc.SetText(r.id, a[0])
 					m.doc.SetDate(r.id, a[1])
+					if m.doc.Date(r.id) != a[1] {
+						m.status = "an untitled period needs a date or a title"
+					}
 					return r.id
 				})
 		}
@@ -698,7 +705,7 @@ func (m *model) View() string {
 		b.WriteString(dim.Render("empty: press a then p to add a period") + "\n")
 	}
 	b.WriteString("\n")
-	status := statusStyle(m.status).Render(m.status)
+	status := clip.Render(statusStyle(m.status).Render(m.status))
 	switch m.mode {
 	case typing:
 		title := ""
@@ -709,7 +716,7 @@ func (m *model) View() string {
 	case menu:
 		b.WriteString(box.Render("add:  p period   e event   n note   w person   f free note") + "\n" + dim.Render("esc cancel"))
 	default:
-		b.WriteString(status + "\n" + dim.Render(m.hint()))
+		b.WriteString(status + "\n" + clip.Render(dim.Render(m.hint())))
 	}
 	return b.String()
 }

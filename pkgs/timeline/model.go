@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"cmp"
 	"fmt"
 	"os"
@@ -160,7 +161,7 @@ func trimBlank(lines []string) []string {
 	return lines
 }
 
-// Load reads path, or starts a new timeline if the file does not exist.
+// Load reads path, or starts a new timeline if the file is missing or blank.
 func Load(path string) (*Doc, error) {
 	b, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
@@ -168,6 +169,9 @@ func Load(path string) (*Doc, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+	if len(bytes.TrimSpace(b)) == 0 { // a file made with touch has no header yet
+		return Parse(defaultHeader)
 	}
 	return Parse(string(b))
 }

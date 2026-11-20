@@ -14,6 +14,12 @@ in
   # and also covers the post-resume throughput crater the driver option targeted.
   boot.kernelParams = lib.mkIf hasWifi [ "pcie_aspm=off" ];
 
+  # Without a country code the kernel stays in the world regulatory domain,
+  # which disables every 5 GHz channel on this card. Set it at module load.
+  boot.extraModprobeConfig = lib.mkIf hasWifi ''
+    options cfg80211 ieee80211_regdom=US
+  '';
+
   # NetworkManager owns DHCP on every managed interface. Without this, facter's
   # auto-detection also points dhcpcd at wlan0, so two DHCP clients race on the
   # same link (dhcpcd's start times out waiting for carrier during rebuilds).

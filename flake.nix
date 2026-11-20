@@ -174,6 +174,12 @@
         (import-tree ./parts)
       ];
 
+      flake.homeConfigurations.pi = inputs.home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.aarch64-linux;
+        extraSpecialArgs = { inherit inputs; };
+        modules = [ ./home/pi ];
+      };
+
       flake.nixosConfigurations =
         let
           mkHost =

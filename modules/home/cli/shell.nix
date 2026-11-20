@@ -1,406 +1,37 @@
 {
   pkgs,
   lib,
-  inputs,
   config,
   ...
 }:
 let
   inherit (lib) getExe;
-
-  # Appended by the --help and -h abbreviations. The trailing test makes the
-  # command's exit status the real command's, not bat's, so history filters
-  # such as sponge see failures.
-  helpPipe = "2>&1 | bat --style=plain --language=help; test $pipestatus[1] -eq 0";
-
-  # Built-in television channels for tools this system doesn't use.
-  unusedChannels = [
-    # keep-sorted start
-    "aerospace-windows"
-    "apt-packages"
-    "aws-buckets"
-    "aws-instances"
-    "aws-profiles"
-    "bash-history"
-    "brew-packages"
-    "cargo-commands"
-    "cargo-crates"
-    "crontab"
-    "diskutil"
-    "distrobox-list"
-    "dnf-packages"
-    "fj-issues"
-    "fj-prs"
-    "flatpak"
-    "gradle-tasks"
-    "guix"
-    "k8s-contexts"
-    "k8s-deployments"
-    "k8s-pods"
-    "k8s-services"
-    "launchd-services"
-    "node-packages"
-    "npm-packages"
-    "nu-history"
-    "opencode-sessions"
-    "pacman-packages"
-    "pip-packages"
-    "podman-containers"
-    "podman-images"
-    "podman-networks"
-    "podman-volumes"
-    "python-venvs"
-    "rustup"
-    "sesh"
-    "snap"
-    "snap-interfaces"
-    "snap-services"
-    "tea-issues"
-    "tea-prs"
-    "zsh-history"
-    # keep-sorted end
-  ];
 in
 {
-  imports = [ inputs.nix-index-database.homeModules.nix-index ];
+  home.packages = [
+    # keep-sorted start
+    pkgs.fastfetch
+    pkgs.file
+    pkgs.glow
+    pkgs.gping
+    pkgs.just
+    pkgs.ookla-speedtest
+    pkgs.pnpm
+    pkgs.procs
+    pkgs.trash-cli
+    # keep-sorted end
 
-  home = {
-    packages = [
-      # keep-sorted start
-      pkgs.fishPlugins.autopair
-      pkgs.fishPlugins.bang-bang
-      pkgs.fishPlugins.bass
-      pkgs.fishPlugins.puffer
-      pkgs.fishPlugins.sponge
-      # keep-sorted end
-
-      # keep-sorted start
-      pkgs.fastfetch
-      pkgs.file
-      pkgs.glow
-      pkgs.gping
-      pkgs.just
-      pkgs.ookla-speedtest
-      pkgs.p7zip
-      pkgs.pnpm
-      pkgs.procs
-      pkgs.trash-cli
-      pkgs.unzip
-      # keep-sorted end
-
-      # Nix tools
-      # keep-sorted start
-      pkgs.nix-diff
-      pkgs.nix-init
-      pkgs.nix-tree
-      pkgs.nurl
-      # keep-sorted end
-    ];
-
-    shell.enableFishIntegration = true;
-    shellAliases = {
-      # keep-sorted start
-      archive = "${getExe pkgs.p7zip} a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $argv";
-      cat = "${getExe pkgs.bat} -pp";
-      df = getExe pkgs.duf;
-      diff = getExe pkgs.bat-extras.batdiff;
-      du = getExe pkgs.dust;
-      man = getExe pkgs.bat-extras.batman;
-      rg = getExe pkgs.bat-extras.batgrep;
-      # keep-sorted end
-    };
-    sessionVariables = {
-      PAGER = "bat";
-      # Designate Unicode Private Use Areas as printable so Nerd Font icon
-      # glyphs display properly instead of being hidden by less.
-      LESSUTFCHARDEF = "E000-F8FF:p,F0000-FFFFD:p,100000-10FFFD:p";
-    };
-  };
+    # Nix tools
+    # keep-sorted start
+    pkgs.nix-diff
+    pkgs.nix-init
+    pkgs.nix-tree
+    pkgs.nurl
+    # keep-sorted end
+  ];
 
   programs = {
-    fish = {
-      enable = true;
-      # fish
-      interactiveShellInit = ''
-        set fish_greeting
-        # sponge purges a failed command from history after this many
-        # subsequent commands, instead of immediately
-        set --universal sponge_delay 10
-        set --universal sponge_filters sponge_filter_help_pipe sponge_filter_failed sponge_filter_matched
-      '';
-
-      # fish
-      shellInit = ''
-        eval (${lib.getExe pkgs.bat-extras.batpipe})
-      '';
-
-      shellAbbrs = {
-        cpr = "cp -rf";
-        rmr = "rm -rf";
-        md = "mkdir -p";
-        rd = "rmdir";
-
-        lg = "lazygit";
-        gp = "git push";
-        gpf = "git push --force-with-lease";
-        "gpf!" = "git push --force";
-        gu = "git pull";
-        ns = "tv nix";
-        gs = "git switch";
-        gst = "git status -s";
-
-        mr = "mise run";
-
-        q = "exit";
-        c = "clear";
-
-        "--help" = {
-          position = "anywhere";
-          regex = "^--help$";
-          expansion = "--help ${helpPipe}";
-        };
-
-        "-h" = {
-          position = "anywhere";
-          regex = "^-h$";
-          expansion = "-h ${helpPipe}";
-        };
-      };
-
-      functions = {
-        fish_command_not_found = {
-          description = "List packages providing the missing command, then suggest running it via comma";
-          # fish
-          body = ''
-            set -l attrs (${lib.getExe' pkgs.nix-index "nix-locate"} --minimal --no-group --type x --type s --whole-name --at-root "/bin/$argv[1]" 2>/dev/null | string replace -r '\.out$' ''' | sort -u)
-            if test -z "$attrs"
-              echo "fish: Unknown command: $argv[1]" >&2
-              return 127
-            end
-            echo "The program '$argv[1]' is not installed. It is provided by:" >&2
-            printf '  %s\n' $attrs >&2
-            echo "Run it once with comma: , "(string escape -- $argv | string join ' ') >&2
-          '';
-        };
-
-        fish_should_add_to_history = {
-          description = "Record --help and -h commands without the bat pipe their abbreviations add";
-          # fish
-          body = ''
-            set -l suffix ' ${helpPipe}'
-            if string match -q -- "*$suffix" $argv
-              history append (string replace -- $suffix ''' $argv)
-              return 1
-            end
-            return 0
-          '';
-        };
-
-        sponge_filter_help_pipe = {
-          description = "Purge failed --help commands under the name fish_should_add_to_history recorded";
-          argumentNames = [
-            "command"
-            "exit_code"
-          ];
-          # fish
-          body = ''
-            set -l suffix ' ${helpPipe}'
-            string match -q -- "*$suffix" $command; or return 1
-            test $exit_code -ne 0; or return 1
-            set --global _sponge_current_command (string replace -- $suffix ''' $command)
-          '';
-        };
-
-        starship_transient_prompt_func = {
-          body = "starship module character";
-        };
-
-        backup = {
-          description = "Backup file";
-          argumentNames = "item";
-          # fish
-          body = ''
-            cp -r "$item" "$item.bak.(date +%Y%m%d%H%M%S)"
-          '';
-        };
-
-        help = {
-          description = "Show command help with syntax highlighting";
-          argumentNames = [ "cmd" ];
-          # fish
-          body = ''
-            if test -z "$cmd"
-              echo "Usage: help <command>"
-              return 1
-            end
-            $cmd --help 2>&1 | bat --style=plain --language=help
-          '';
-        };
-
-        mkcd = {
-          description = "Create directory and cd into it";
-          argumentNames = [ "dir" ];
-          # fish
-          body = ''
-            if test -z "$dir"
-              echo "Usage: mkcd <directory>"
-              return 1
-            end
-            mkdir -p -- "$dir" && cd -- "$dir"
-          '';
-        };
-
-        spf = {
-          description = "Superfile, cd to the last directory on quit";
-          # fish
-          body = ''
-            set -lx SPF_LAST_DIR ~/.local/state/superfile/lastdir
-            command superfile $argv
-            if test -f $SPF_LAST_DIR
-              source $SPF_LAST_DIR
-              rm -f -- $SPF_LAST_DIR
-            end
-          '';
-        };
-
-        fe = {
-          description = "Find and edit file with fzf preview";
-          # fish
-          body = ''
-            set -l file (${getExe pkgs.fd} --type f --hidden --follow --exclude .git | ${getExe pkgs.fzf} --query "$argv" --preview '${getExe pkgs.bat} --color=always --style=numbers --line-range=:500 {}')
-            if test -n "$file"
-              $EDITOR -- "$file"
-            end
-          '';
-        };
-
-        fcd = {
-          description = "Find directory and cd into it";
-          # fish
-          body = ''
-            set -l dir (${getExe pkgs.fd} --type d --hidden --follow --exclude .git | ${getExe pkgs.fzf} --query "$argv" --preview '${getExe pkgs.eza} --tree --level=1 --color=always -- {}')
-            if test -n "$dir"
-              cd -- "$dir"
-            end
-          '';
-        };
-
-        extract = {
-          description = "Extract an archive based on its extension";
-          argumentNames = [ "file" ];
-          # fish
-          body = ''
-            if test -z "$file"
-              echo "Usage: extract <file>"
-              return 1
-            end
-            if not test -f "$file"
-              echo "extract: no such file: $file"
-              return 1
-            end
-            switch (string lower -- $file)
-              case '*.tar' '*.tar.gz' '*.tgz' '*.tar.bz2' '*.tbz2' '*.tar.xz' '*.txz' '*.tar.zst'
-                ${getExe pkgs.gnutar} -xvf "$file"
-              case '*.zip'
-                ${getExe pkgs.unzip} "$file"
-              case '*.7z'
-                ${getExe pkgs.p7zip} x "$file"
-              case '*.gz'
-                ${getExe pkgs.gzip} -dk "$file"
-              case '*.bz2'
-                ${lib.getExe' pkgs.bzip2 "bzip2"} -dk "$file"
-              case '*.xz'
-                ${lib.getExe' pkgs.xz "xz"} -dk "$file"
-              case '*'
-                echo "extract: unsupported archive type: $file"
-                return 1
-            end
-          '';
-        };
-
-        tldr = {
-          description = "View a tldr page; with no argument, fuzzy-search pages with fzf";
-          # fish
-          body = ''
-            set -l tealdeer ${getExe pkgs.tealdeer}
-            if test (count $argv) -eq 0
-              set -l page ($tealdeer --list | ${getExe pkgs.fzf} --preview "env PAGER=cat $tealdeer {}")
-              test -n "$page"; or return
-              set argv $page
-            end
-            # tealdeer pages through $PAGER; override the global "bat" pager so its
-            # line numbers don't clutter the page's own formatting.
-            env PAGER='bat --plain' $tealdeer $argv
-          '';
-        };
-
-        "," = {
-          description = "Run a command once via comma; with no argument, fuzzy-search binaries by name with fzf first";
-          # fish
-          body = ''
-            if test (count $argv) -gt 0
-              command , $argv
-              return
-            end
-            # fzf substitutes {q}/{} as shell-quoted tokens, so the fixed parts of
-            # the regex must sit in their own adjacent quotes for the shell to
-            # concatenate them. Start from empty stdin so fzf doesn't fall back to
-            # its default file-listing command before the first keystroke.
-            set -l pick (printf ''' | ${getExe pkgs.fzf} --disabled --ansi \
-              --header 'fuzzy-search nix packages by binary name (comma)' \
-              --bind 'change:reload:[ -n {q} ] && ${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"{q}"[^/]*\$" 2>/dev/null | sed "s#.*/##" | sort -u || true' \
-              --preview '${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"{}"\$" 2>/dev/null')
-            test -n "$pick"; or return
-            command , $pick
-          '';
-        };
-
-        fge = {
-          description = "Find and edit a file by content match, searching interactively as you type";
-          # fish
-          body = ''
-            # Drive ripgrep from fzf's query on every keystroke, like fe drives fd.
-            # Any argument seeds the initial query. Guard the empty query so an
-            # unfiltered whole-tree search never runs.
-            set -l reload '[ -n {q} ] && ${getExe pkgs.ripgrep} --color=always --line-number --no-heading -- {q} 2>/dev/null || true'
-            set -l selection (printf ''' | ${getExe pkgs.fzf} --ansi --disabled --delimiter : \
-              --query "$argv" \
-              --bind "start:reload:$reload" --bind "change:reload:$reload" \
-              --preview '${getExe pkgs.bat} --color=always --style=numbers --highlight-line {2} -- {1}' \
-              --preview-window 'up,60%,+{2}-10')
-            if test -n "$selection"
-              set -l parts (string split -m2 : -- $selection)
-              $EDITOR "$parts[1]:$parts[2]"
-            end
-          '';
-        };
-
-        fkill = {
-          description = "Interactively pick and kill processes with fzf";
-          # fish
-          body = ''
-            set -l pids (ps -eo pid,ppid,%cpu,%mem,comm --sort=-%cpu \
-              | ${getExe pkgs.fzf} --multi --header-lines=1 \
-              | awk '{print $1}')
-            test -n "$pids"; or return
-            kill -9 $pids
-          '';
-        };
-      };
-    };
-
-    starship = {
-      enable = true;
-      enableTransience = true;
-      presets = [ "pure-preset" ];
-      settings = {
-        character = {
-          success_symbol = "[λ](purple)";
-          error_symbol = "[λ](red)";
-          vimcmd_symbol = "[λ](green)";
-        };
-      };
-    };
+    fish.shellAbbrs.ns = "tv nix";
 
     # keep-sorted start block=yes newline_separated=yes
     aria2 = {
@@ -435,10 +66,6 @@ in
               { print }
             ' "$theme" > $out
           '';
-      extraPackages = with pkgs.bat-extras; [
-        batpipe
-        batwatch
-      ];
     };
 
     btop = {
@@ -481,51 +108,6 @@ in
       '';
     };
 
-    eza = {
-      enable = true;
-      icons = "auto";
-      git = true;
-      extraOptions = [ "--group-directories-first" ];
-    };
-
-    fd = {
-      enable = true;
-      ignores = [
-        ".git/"
-        "node_modules/"
-        "dist/"
-        "build/"
-        "result/"
-        ".next/"
-        "__pycache__/"
-        ".pytest_cache/"
-        ".mypy_cache/"
-        ".ruff_cache/"
-        "*.pyc"
-        ".venv/"
-        "venv/"
-        "*.swp"
-        ".cache/"
-        "*.cache"
-      ];
-      extraOptions = [
-        "--follow"
-        "--hyperlink=auto"
-      ];
-    };
-
-    fzf = {
-      enable = true;
-      # television owns Ctrl+T and Ctrl+R
-      enableFishIntegration = false;
-      defaultCommand = "${getExe pkgs.fd} --type=f --hidden --exclude=.git";
-      defaultOptions = [
-        "--height=30%"
-        "--layout=reverse"
-        "--info=inline"
-      ];
-    };
-
     ghostty = {
       enable = true;
       settings = {
@@ -562,41 +144,10 @@ in
 
     lazydocker.enable = !config.burrow.profiles.vm.enable;
 
-    nix-index = {
-      enable = true;
-      # fish_command_not_found below replaces the stock handler to add a comma hint
-      enableFishIntegration = false;
-    };
-
-    nix-index-database.comma.enable = true;
-
     nix-search-tv.enable = true;
 
-    # thefuck replacement: `f` offers a corrected version of the last command.
-    pay-respects.enable = true;
-
-    ripgrep = {
-      enable = true;
-      arguments = [
-        "--smart-case"
-        "--hidden"
-        "--glob=!.git/*"
-        "-z"
-        "--max-columns=150"
-        "--max-columns-preview"
-      ];
-    };
-
     superfile = {
-      enable = true;
-      zoxidePackage = config.programs.zoxide.package;
-      settings = {
-        auto_check_update = false;
-        cd_on_quit = true;
-        editor = "hx";
-        theme = "stylix";
-        zoxide_support = true;
-      };
+      settings.theme = "stylix";
       themes.stylix =
         let
           inherit (config.lib.stylix.colors.withHashtag)
@@ -666,88 +217,10 @@ in
         };
     };
 
-    tealdeer = {
-      enable = true;
-      settings = {
-        display = {
-          use_pager = true;
-          compact = true;
-        };
-        updates.auto_update = true;
-      };
-    };
-
-    television = {
-      enable = true;
-      enableFishIntegration = true;
-      channels.alias = {
-        metadata = {
-          name = "alias";
-          description = "Select from shell aliases.";
-        };
-        # Fish prints `alias name value` (no `=`), and an interactive shell
-        # also emits terminal escape sequences, so keep only alias lines.
-        source = {
-          command = "$SHELL -ic alias | grep '^alias '";
-          output = "{split: :1}";
-        };
-        preview.command = "$SHELL -ic alias | grep '^alias {split: :1} '";
-        ui.preview_panel.size = 30;
-      };
-      channels.nix-search-tv.metadata.name = lib.mkForce "nix";
-      # Replaces the built-in channel: fd's global ignore file lists `.git/`,
-      # which hides the very directories this channel searches for.
-      channels.git-repos = {
-        metadata = {
-          name = "git-repos";
-          description = "Select from git repositories on this machine.";
-          requirements = [
-            "fd"
-            "git"
-          ];
-        };
-        source = {
-          command = "fd -g .git -HL -t d -d 10 --prune --no-global-ignore-file ~ --exec dirname '{}'";
-          display = "{split:/:-1}";
-        };
-        preview.command = "git -C '{}' log -n 200 --pretty=medium --all --graph --color";
-        keybindings = {
-          enter = "actions:cd";
-          ctrl-e = "actions:edit";
-        };
-        actions = {
-          cd = {
-            description = "Open a new shell in the selected repository";
-            command = "cd {} && $SHELL";
-            mode = "execute";
-          };
-          edit = {
-            description = "Open the repository in editor";
-            command = "\${EDITOR:-vim} {}";
-            shell = "bash";
-            mode = "execute";
-          };
-        };
-      };
-    };
+    television.channels.nix-search-tv.metadata.name = lib.mkForce "nix";
 
     vivid.enable = true;
-
-    zoxide = {
-      enable = true;
-      options = [ "--cmd cd" ];
-    };
     # keep-sorted end
-  };
-
-  # Television's built-in channels, pinned to the package version so they don't
-  # depend on `tv update-channels` writing into the wiped home. recursive keeps
-  # the directory writable-by-merge with channels declared in Nix.
-  xdg.configFile."television/cable" = {
-    source = builtins.filterSource (
-      path: _: !lib.elem (lib.removeSuffix ".toml" (baseNameOf path)) (unusedChannels ++ [ "git-repos" ])
-    ) "${pkgs.television.src}/cable/unix";
-    recursive = true;
   };
 
   # Extra batpipe viewers for file types bat would show as plain text or raw
@@ -873,31 +346,6 @@ in
       '';
     in
     lib.concatMapStrings mkViewer viewers;
-
-  # comma ships no completions. Complete the first token against command names
-  # from the nix-index database (the set comma can actually run), and everything
-  # after it as a nested command line so the wrapped command's own completions apply.
-  xdg.configFile."fish/completions/,.fish".text = ''
-    function __comma_complete_pkgs
-      set -l token (commandline -ct)
-      string length -q -- $token; or return
-      # nix-locate's line already carries the providing package attr (field 1)
-      # ahead of the store path (last field); surface it as the completion's
-      # description column instead of discarding it.
-      ${lib.getExe' pkgs.nix-index "nix-locate"} --regex --type x --type s "/bin/"$token"[^/]*\$" 2>/dev/null \
-        | while read -l line
-            set -l parts (string match -r '^(\S+)\s+\S+\s+\S+\s+(/nix/store/[a-z0-9]{32}-[^/]+/bin/[^/]+)$' -- $line)
-            test (count $parts) -eq 3; or continue
-            set -l bin (string replace -r '.*/' ''' -- $parts[3])
-            set -l pkg (string replace -r '\.(out|bin|man|doc|dev|lib)$' ''' -- $parts[2])
-            printf '%s\t%s\n' $bin $pkg
-          end \
-        | sort -u
-    end
-
-    complete -c , -n __fish_is_first_token -x -a '(__comma_complete_pkgs)'
-    complete -c , -n 'not __fish_is_first_token' -x -a '(__fish_complete_subcommand)'
-  '';
 
   home.persistence."/persist".directories = [
     ".cache/direnv"

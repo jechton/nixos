@@ -25,6 +25,15 @@
         "**/.claude/settings.local.json"
       ];
 
+      # Self-hosted Forgejo: use its no-reply address (needed for signature
+      # verification there). Needs the remote to exist when git reads config.
+      includes = [
+        {
+          condition = "hasconfig:remote.*.url:git@git.fluffle.party:*/**";
+          contents.user.email = "jechton@noreply.git.fluffle.party";
+        }
+      ];
+
       settings = {
         user = {
           name = displayName;

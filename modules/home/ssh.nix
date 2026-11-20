@@ -27,6 +27,10 @@
         ForwardAgent = false;
       };
       # keep-sorted start block=yes
+      "git.fluffle.party" = {
+        User = "git";
+        Port = 2222;
+      };
       bunpi = {
         HostName = "192.168.4.45";
         User = "jeremiah";

@@ -20,6 +20,8 @@
     username = "jeremiah";
     homeDirectory = "/home/jeremiah";
     stateVersion = "26.11";
+    # Tools like uv and claude install here.
+    sessionPath = [ "/home/jeremiah/.local/bin" ];
   };
 
   # Update the Pi from the pushed flake. --refresh skips the 1 hour flake cache
